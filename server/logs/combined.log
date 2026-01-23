@@ -1,0 +1,1379 @@
+2025-12-31T14:50:07.960Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T14:50:28.046Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T14:50:46.718Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T14:56:09.241Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T14:56:35.768Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T15:58:05.842Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:14:18.310Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:18:24.066Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:182:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:25:30.227Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:182:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:34:41.013Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:182:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:35:20.890Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:182:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:43:08.189Z [error]: AuthController error: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+ValidationError: User validation failed: password: Password must contain at least one uppercase, one lowercase, and one number
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at async Promise.all (index 3)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:43:36.964Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:182:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T16:52:45.203Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:106:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T17:33:41.515Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:106:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T17:35:26.884Z [error]: AuthController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\User\User.model.js:110:5)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async AuthController.createUser (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:162:20)
+    at async AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:52:20)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2025-12-31T17:40:10.688Z [error]: AuthController error: logger is not defined
+ReferenceError: logger is not defined
+    at AuthController.register (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:59:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+{
+  "path": "/register",
+  "method": "POST"
+}
+2026-01-01T12:21:47.285Z [error]: Get active users error: Cannot read properties of null (reading 'pipeline')
+TypeError: Cannot read properties of null (reading 'pipeline')
+    at PresenceService.getOnlineUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:94:34)
+    at exports.getActiveUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\presence.controller.js:81:48)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-01-01T14:04:27.032Z [error]: Get active users error: Cannot read properties of null (reading 'pipeline')
+TypeError: Cannot read properties of null (reading 'pipeline')
+    at PresenceService.getOnlineUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:94:34)
+    at exports.getActiveUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\presence.controller.js:81:48)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-01-01T14:04:40.603Z [error]: Get active users error: Cannot read properties of null (reading 'pipeline')
+TypeError: Cannot read properties of null (reading 'pipeline')
+    at PresenceService.getOnlineUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:94:34)
+    at exports.getActiveUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\presence.controller.js:81:48)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-01-01T14:20:47.532Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:22:10.978Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:22:22.126Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:23:50.928Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:34:27.556Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:34:32.654Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:34:43.566Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:34:52.300Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:51:02.548Z [error]: Failed to initialize Redis client: Redis client is null
+Error: Redis client is null
+    at PresenceService.initializeRedis (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:22:15)
+    at new PresenceService (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:9:10)
+    at Object.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\services\presence.service.js:244:18)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+2026-01-01T14:53:22.389Z [info]: PresenceService constructor called
+2026-01-01T14:53:22.394Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T14:55:18.184Z [info]: PresenceService constructor called
+2026-01-01T14:55:18.189Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T14:55:34.503Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T14:55:34.697Z [info]: Found 5 active users
+2026-01-01T14:55:34.699Z [info]: Lazy-loading Redis client...
+2026-01-01T14:55:34.699Z [warn]: Redis client is null after getClient()
+2026-01-01T14:55:34.700Z [warn]: Redis not available, returning default offline status
+2026-01-01T14:55:34.700Z [info]: Got online status for 5 users
+2026-01-01T14:59:31.996Z [info]: PresenceService constructor called
+2026-01-01T14:59:32.002Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:01:10.991Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T15:01:11.262Z [info]: Found 5 active users
+2026-01-01T15:01:11.264Z [info]: Lazy-loading Redis client...
+2026-01-01T15:01:11.283Z [warn]: Redis ping failed, client may not be ready:
+2026-01-01T15:01:11.285Z [warn]: Redis not available, returning default offline status
+2026-01-01T15:01:11.287Z [info]: Got online status for 5 users
+2026-01-01T15:01:11.347Z [info]: Redis connected successfully
+2026-01-01T15:01:11.392Z [info]: Redis clients initialized and tested
+2026-01-01T15:03:10.735Z [info]: PresenceService constructor called
+2026-01-01T15:03:10.741Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:04:59.374Z [info]: PresenceService constructor called
+2026-01-01T15:04:59.378Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:07:07.356Z [info]: PresenceService constructor called
+2026-01-01T15:07:07.363Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:10:19.952Z [info]: PresenceService constructor called
+2026-01-01T15:10:19.957Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:10:41.647Z [info]: PresenceService constructor called
+2026-01-01T15:10:41.653Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:10:49.339Z [info]: PresenceService constructor called
+2026-01-01T15:10:49.344Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:21:09.721Z [info]: PresenceService constructor called
+2026-01-01T15:21:09.726Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:32:32.257Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T15:32:32.452Z [info]: Found 5 active users
+2026-01-01T15:32:32.457Z [info]: Lazy-loading Redis client...
+2026-01-01T15:32:32.460Z [info]: Starting Redis lazy connection...
+2026-01-01T15:32:32.471Z [warn]: Redis ping failed, client may not be ready:
+2026-01-01T15:32:32.473Z [warn]: Redis not available, returning default offline status
+2026-01-01T15:32:32.474Z [info]: Got online status for 5 users
+2026-01-01T15:32:32.574Z [info]: Redis connected successfully (ping: 5ms)
+2026-01-01T15:32:32.576Z [info]: Redis lazy connection completed successfully
+2026-01-01T15:34:09.163Z [info]: PresenceService constructor called
+2026-01-01T15:34:09.168Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:44:29.741Z [info]: PresenceService constructor called
+2026-01-01T15:44:29.747Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:44:50.892Z [info]: PresenceService constructor called
+2026-01-01T15:44:50.900Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:45:54.815Z [info]: PresenceService constructor called
+2026-01-01T15:45:54.819Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:46:03.938Z [info]: PresenceService constructor called
+2026-01-01T15:46:03.944Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:49:11.506Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T15:49:11.706Z [info]: Found 5 active users
+2026-01-01T15:49:11.707Z [info]: Lazy-loading Redis client...
+2026-01-01T15:49:11.708Z [info]: Starting Redis lazy connection...
+2026-01-01T15:49:11.714Z [warn]: Redis ping failed, client may not be ready:
+2026-01-01T15:49:11.715Z [warn]: Redis not available, returning default offline status
+2026-01-01T15:49:11.716Z [info]: Got online status for 5 users
+2026-01-01T15:49:11.755Z [info]: Redis connected successfully (ping: 5ms)
+2026-01-01T15:49:11.756Z [info]: Redis lazy connection completed successfully
+2026-01-01T15:52:57.405Z [info]: PresenceService constructor called
+2026-01-01T15:52:57.411Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T15:53:09.040Z [error]: Send message error: Cannot destructure property 'receiverId' of 'data' as it is undefined.
+TypeError: Cannot destructure property 'receiverId' of 'data' as it is undefined.
+    at MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:8:13)
+    at ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:145:48)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:291:5)
+2026-01-01T15:53:09.043Z [error]: ChatController error: Cannot destructure property 'receiverId' of 'data' as it is undefined.
+TypeError: Cannot destructure property 'receiverId' of 'data' as it is undefined.
+    at MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:8:13)
+    at ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:145:48)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:291:5)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:03:37.983Z [info]: PresenceService constructor called
+2026-01-01T16:03:37.987Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:04:03.861Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T16:04:04.143Z [info]: Found 5 active users
+2026-01-01T16:04:04.146Z [info]: Lazy-loading Redis client...
+2026-01-01T16:04:04.149Z [info]: Starting Redis lazy connection...
+2026-01-01T16:04:04.161Z [warn]: Redis ping failed, client may not be ready:
+2026-01-01T16:04:04.163Z [warn]: Redis not available, returning default offline status
+2026-01-01T16:04:04.165Z [info]: Got online status for 5 users
+2026-01-01T16:04:04.248Z [info]: Redis connected successfully (ping: 7ms)
+2026-01-01T16:04:04.251Z [info]: Redis lazy connection completed successfully
+2026-01-01T16:04:53.460Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T16:04:53.646Z [info]: Found 5 active users
+2026-01-01T16:04:53.647Z [info]: Lazy-loading Redis client...
+2026-01-01T16:04:53.649Z [warn]: Redis ping failed, client may not be ready:
+2026-01-01T16:04:53.650Z [warn]: Redis not available, returning default offline status
+2026-01-01T16:04:53.651Z [info]: Got online status for 5 users
+2026-01-01T16:06:16.762Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:06:16.766Z [error]: Send message error:
+2026-01-01T16:06:16.769Z [error]: ChatController error: this.messageService.sendMessage is not a function
+TypeError: this.messageService.sendMessage is not a function
+    at ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:176:48)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\index.js:291:5)
+    at exports.protect (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\middleware\authmiddleware.js:85:5)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:15:36.514Z [info]: PresenceService constructor called
+2026-01-01T16:15:36.521Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:15:43.478Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:15:43.512Z [error]: Send message error:
+2026-01-01T16:15:43.515Z [error]: ChatController error: Message validation failed: conversationId: Path `conversationId` is required.
+ValidationError: Message validation failed: conversationId: Path `conversationId` is required.
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:15:59.082Z [info]: PresenceService constructor called
+2026-01-01T16:15:59.089Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:16:20.476Z [info]: PresenceService constructor called
+2026-01-01T16:16:20.480Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:16:37.523Z [info]: PresenceService constructor called
+2026-01-01T16:16:37.529Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:17:29.101Z [info]: PresenceService constructor called
+2026-01-01T16:17:29.105Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:18:20.685Z [info]: Getting active users: limit=50, offset=0
+2026-01-01T16:18:20.980Z [info]: Found 5 active users
+2026-01-01T16:18:20.983Z [info]: Lazy-loading Redis client...
+2026-01-01T16:18:20.985Z [info]: Starting Redis lazy connection...
+2026-01-01T16:18:20.997Z [warn]: Redis ping failed, client may not be ready:
+2026-01-01T16:18:20.999Z [warn]: Redis not available, returning default offline status
+2026-01-01T16:18:21.000Z [info]: Got online status for 5 users
+2026-01-01T16:18:21.087Z [info]: Redis connected successfully (ping: 5ms)
+2026-01-01T16:18:21.090Z [info]: Redis lazy connection completed successfully
+2026-01-01T16:18:41.650Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "9555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:18:41.661Z [error]: Send message error:
+2026-01-01T16:18:41.664Z [error]: ChatController error: Cast to ObjectId failed for value "9555ffa87cb0ff69c2a7b39" (type string) at path "_id" for model "User"
+CastError: Cast to ObjectId failed for value "9555ffa87cb0ff69c2a7b39" (type string) at path "_id" for model "User"
+    at SchemaObjectId.cast (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\schemaType.js:1280:12)
+    at SchemaType.castForQuery (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\schemaType.js:1706:17)
+    at cast (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:5016:12)
+    at Query._castConditions (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2380:10)
+    at model.Query._findOne (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2708:8)
+    at model.Query.exec (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:15:22)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:19:56.921Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:19:57.662Z [error]: Send message error:
+2026-01-01T16:19:57.666Z [error]: ChatController error: Message validation failed: conversationId: Path `conversationId` is required.
+ValidationError: Message validation failed: conversationId: Path `conversationId` is required.
+    at Document.invalidate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3377:32)
+    at validatePath (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3152:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async model.$__validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:3093:3)
+    at async model.validate (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\document.js:2670:5)
+    at async model.validateBeforeSave (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\plugins\validateBeforeSave.js:34:7)
+    at async Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:65:24)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:27:27.165Z [info]: PresenceService constructor called
+2026-01-01T16:27:27.174Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:27:33.012Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:27:33.535Z [error]: Send message error:
+2026-01-01T16:27:33.539Z [error]: ChatController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\Message.js:73:3)
+    at Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:63:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:51:21)
+    at async ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:177:22)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:29:30.741Z [info]: PresenceService constructor called
+2026-01-01T16:29:30.745Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:29:38.487Z [info]: PresenceService constructor called
+2026-01-01T16:29:38.492Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:31:36.681Z [info]: PresenceService constructor called
+2026-01-01T16:31:36.685Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:31:46.462Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:31:46.996Z [error]: Send message error:
+2026-01-01T16:31:47.000Z [error]: ChatController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\Message.js:72:3)
+    at Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:63:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:54:21)
+    at async ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:177:22)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:31:50.411Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:31:51.048Z [error]: Send message error:
+2026-01-01T16:31:51.061Z [error]: ChatController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\Message.js:72:3)
+    at Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:63:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:54:21)
+    at async ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:177:22)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:33:13.121Z [info]: PresenceService constructor called
+2026-01-01T16:33:13.129Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:33:39.355Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:33:39.958Z [error]: Send message error:
+2026-01-01T16:33:39.962Z [error]: ChatController error: next is not a function
+TypeError: next is not a function
+    at model.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\models\Message.js:72:3)
+    at Kareem.execPre (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\kareem\index.js:63:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async model.$__save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:369:5)
+    at async model.save (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:609:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2722:9
+    at async Promise.all (index 0)
+    at async Function.create (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\model.js:2707:11)
+    at async MessageService.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\MessageService.js:54:21)
+    at async ChatController.sendMessage (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\chat\chat.controller.js:177:22)
+{
+  "path": "/messages",
+  "method": "POST",
+  "userId": "6956774a7a8af398090b55ba"
+}
+2026-01-01T16:37:07.521Z [info]: PresenceService constructor called
+2026-01-01T16:37:07.532Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T16:37:13.902Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:37:14.816Z [info]: Message sent successfully
+{
+  "messageId": "6956a2baefcf16ca6e79256b"
+}
+2026-01-01T16:39:42.697Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "image"
+}
+2026-01-01T16:39:43.825Z [info]: Message sent successfully
+{
+  "messageId": "6956a34fefcf16ca6e792571"
+}
+2026-01-01T16:40:28.624Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:40:28.979Z [error]: Send message error:
+2026-01-01T16:43:16.405Z [info]: Sending message
+{
+  "userId": "6956774a7a8af398090b55ba",
+  "receiverId": "69555ffa87cb0ff69c2a7b39",
+  "type": "text"
+}
+2026-01-01T16:43:17.142Z [info]: Message sent successfully
+{
+  "messageId": "6956a424efcf16ca6e79257a"
+}
+2026-01-01T16:58:56.391Z [info]: PresenceService constructor called
+2026-01-01T16:58:56.397Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:04:34.501Z [info]: Starting Redis lazy connection...
+2026-01-01T17:04:34.547Z [info]: Redis connected successfully (ping: 3ms)
+2026-01-01T17:04:34.548Z [info]: Redis lazy connection completed successfully
+2026-01-01T17:04:35.218Z [info]: PresenceService constructor called
+2026-01-01T17:04:35.220Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:09:04.083Z [info]: Starting Redis lazy connection...
+2026-01-01T17:09:04.107Z [info]: Redis connected successfully (ping: 1ms)
+2026-01-01T17:09:04.108Z [info]: Redis lazy connection completed successfully
+2026-01-01T17:09:04.415Z [info]: PresenceService constructor called
+2026-01-01T17:09:04.416Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:09:18.411Z [info]: Starting Redis lazy connection...
+2026-01-01T17:09:18.431Z [info]: Redis connected successfully (ping: 2ms)
+2026-01-01T17:09:18.431Z [info]: Redis lazy connection completed successfully
+2026-01-01T17:09:18.867Z [info]: PresenceService constructor called
+2026-01-01T17:09:18.867Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:09:21.799Z [info]: Starting Redis lazy connection...
+2026-01-01T17:09:21.822Z [info]: Redis connected successfully (ping: 1ms)
+2026-01-01T17:09:21.823Z [info]: Redis lazy connection completed successfully
+2026-01-01T17:09:22.382Z [info]: PresenceService constructor called
+2026-01-01T17:09:22.383Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:34:02.896Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T17:34:02.899Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T17:34:02.914Z [info]: 🔌 Redis connect event fired
+2026-01-01T17:34:02.922Z [info]: ✅ Redis ready event fired
+2026-01-01T17:34:02.923Z [info]: ✅ Redis primary client connected
+2026-01-01T17:34:02.925Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T17:34:02.926Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T17:34:03.480Z [info]: PresenceService constructor called
+2026-01-01T17:34:03.481Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:34:03.508Z [info]: ✅ Redis publisher ready
+2026-01-01T17:34:03.509Z [info]: ✅ Redis subscriber ready
+2026-01-01T17:39:26.430Z [info]: Redis retry attempt 1, waiting 500ms
+2026-01-01T17:39:26.431Z [warn]: 🔌 Redis connection closed
+2026-01-01T17:39:26.432Z [info]: 🔄 Redis reconnecting in 500ms
+2026-01-01T17:39:26.432Z [info]: Redis retry attempt 1, waiting 500ms
+2026-01-01T17:39:26.433Z [info]: Redis retry attempt 1, waiting 500ms
+2026-01-01T17:39:26.941Z [info]: 🔌 Redis connect event fired
+2026-01-01T17:39:26.943Z [error]: ❌ Redis client error:
+2026-01-01T17:39:26.944Z [info]: Redis retry attempt 2, waiting 1000ms
+2026-01-01T17:39:26.945Z [warn]: 🔌 Redis connection closed
+2026-01-01T17:39:26.945Z [info]: 🔄 Redis reconnecting in 1000ms
+2026-01-01T17:39:26.946Z [error]: Redis subscriber error:
+2026-01-01T17:39:26.947Z [error]: Redis publisher error:
+2026-01-01T17:39:26.948Z [info]: Redis retry attempt 2, waiting 1000ms
+2026-01-01T17:39:26.948Z [info]: Redis retry attempt 2, waiting 1000ms
+2026-01-01T17:39:27.966Z [info]: 🔌 Redis connect event fired
+2026-01-01T17:39:27.982Z [info]: ✅ Redis subscriber ready
+2026-01-01T17:39:27.984Z [info]: ✅ Redis ready event fired
+2026-01-01T17:39:27.985Z [info]: ✅ Redis publisher ready
+2026-01-01T17:55:04.043Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T17:55:04.045Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T17:55:04.054Z [info]: 🔌 Redis connect event fired
+2026-01-01T17:55:04.061Z [info]: ✅ Redis ready event fired
+2026-01-01T17:55:04.061Z [info]: ✅ Redis primary client connected
+2026-01-01T17:55:04.066Z [info]: 🏓 Redis ping successful (4ms)
+2026-01-01T17:55:04.067Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T17:55:04.326Z [info]: PresenceService constructor called
+2026-01-01T17:55:04.326Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T17:55:04.342Z [info]: ✅ Redis publisher ready
+2026-01-01T17:55:04.343Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:17:00.792Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:17:00.795Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:17:00.810Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:17:00.818Z [info]: ✅ Redis ready event fired
+2026-01-01T18:17:00.819Z [info]: ✅ Redis primary client connected
+2026-01-01T18:17:00.822Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:17:00.822Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:17:01.275Z [info]: PresenceService constructor called
+2026-01-01T18:17:01.275Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:17:01.301Z [info]: ✅ Redis publisher ready
+2026-01-01T18:17:01.302Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:21:19.256Z [info]: PresenceService constructor called
+2026-01-01T18:21:19.260Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:27:30.374Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:27:30.379Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:27:30.395Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:27:30.406Z [info]: ✅ Redis ready event fired
+2026-01-01T18:27:30.408Z [info]: ✅ Redis primary client connected
+2026-01-01T18:27:30.422Z [info]: 🏓 Redis ping successful (4ms)
+2026-01-01T18:27:30.429Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:27:30.977Z [info]: PresenceService constructor called
+2026-01-01T18:27:30.978Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:27:31.005Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:27:31.007Z [info]: ✅ Redis publisher ready
+2026-01-01T18:30:05.055Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:30:05.058Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:30:05.070Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:30:05.078Z [info]: ✅ Redis ready event fired
+2026-01-01T18:30:05.079Z [info]: ✅ Redis primary client connected
+2026-01-01T18:30:05.081Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:30:05.081Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:30:05.505Z [info]: PresenceService constructor called
+2026-01-01T18:30:05.506Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:30:05.530Z [info]: ✅ Redis publisher ready
+2026-01-01T18:30:05.531Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:33:02.642Z [info]: PresenceService constructor called
+2026-01-01T18:33:02.644Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:33:04.471Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:33:04.473Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:33:04.497Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:33:04.513Z [info]: ✅ Redis ready event fired
+2026-01-01T18:33:04.514Z [info]: ✅ Redis primary client connected
+2026-01-01T18:33:04.517Z [info]: 🏓 Redis ping successful (2ms)
+2026-01-01T18:33:04.517Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:33:50.097Z [info]: PresenceService constructor called
+2026-01-01T18:33:50.102Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:36:45.948Z [info]: PresenceService constructor called
+2026-01-01T18:36:45.956Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:36:47.749Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:36:47.750Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:36:47.760Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:36:47.769Z [info]: ✅ Redis ready event fired
+2026-01-01T18:36:47.769Z [info]: ✅ Redis primary client connected
+2026-01-01T18:36:47.771Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:36:47.772Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:36:52.928Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:36:52.930Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:36:52.939Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:36:52.947Z [info]: ✅ Redis ready event fired
+2026-01-01T18:36:52.947Z [info]: ✅ Redis primary client connected
+2026-01-01T18:36:52.950Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:36:52.950Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:36:53.279Z [info]: PresenceService constructor called
+2026-01-01T18:36:53.280Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:36:53.307Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:36:53.308Z [info]: ✅ Redis publisher ready
+2026-01-01T18:39:12.864Z [info]: PresenceService constructor called
+2026-01-01T18:39:12.868Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:51:32.719Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:51:32.722Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:51:32.733Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:51:32.741Z [info]: ✅ Redis ready event fired
+2026-01-01T18:51:32.742Z [info]: ✅ Redis primary client connected
+2026-01-01T18:51:32.744Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:51:32.744Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:51:33.090Z [info]: PresenceService constructor called
+2026-01-01T18:51:33.090Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:51:33.112Z [info]: ✅ Redis publisher ready
+2026-01-01T18:51:33.113Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:55:12.257Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:55:12.260Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:55:12.272Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:55:12.281Z [info]: ✅ Redis ready event fired
+2026-01-01T18:55:12.281Z [info]: ✅ Redis primary client connected
+2026-01-01T18:55:12.284Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:55:12.285Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:55:12.933Z [info]: PresenceService constructor called
+2026-01-01T18:55:12.934Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:55:12.963Z [info]: ✅ Redis publisher ready
+2026-01-01T18:55:12.964Z [info]: ✅ Redis subscriber ready
+2026-01-01T18:56:44.577Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:56:44.580Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:56:44.593Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:56:44.602Z [info]: ✅ Redis ready event fired
+2026-01-01T18:56:44.603Z [info]: ✅ Redis primary client connected
+2026-01-01T18:56:44.605Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:56:44.606Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:56:44.965Z [info]: PresenceService constructor called
+2026-01-01T18:59:43.984Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T18:59:43.987Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T18:59:44.000Z [info]: 🔌 Redis connect event fired
+2026-01-01T18:59:44.007Z [info]: ✅ Redis ready event fired
+2026-01-01T18:59:44.008Z [info]: ✅ Redis primary client connected
+2026-01-01T18:59:44.010Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T18:59:44.011Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T18:59:44.408Z [info]: PresenceService constructor called
+2026-01-01T18:59:44.409Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T18:59:44.441Z [info]: ✅ Redis publisher ready
+2026-01-01T18:59:44.442Z [info]: ✅ Redis subscriber ready
+2026-01-01T19:15:13.580Z [info]: PresenceService constructor called
+2026-01-01T19:15:13.582Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:27:47.007Z [info]: PresenceService constructor called
+2026-01-01T19:27:47.012Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:33:35.036Z [info]: PresenceService constructor called
+2026-01-01T19:33:35.040Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:34:32.243Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T19:34:32.247Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T19:34:32.260Z [info]: 🔌 Redis connect event fired
+2026-01-01T19:34:32.274Z [info]: ✅ Redis ready event fired
+2026-01-01T19:34:32.275Z [info]: ✅ Redis primary client connected
+2026-01-01T19:34:32.279Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T19:34:32.279Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T19:34:32.794Z [info]: PresenceService constructor called
+2026-01-01T19:34:32.794Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:34:32.866Z [info]: ✅ Redis publisher ready
+2026-01-01T19:34:32.868Z [info]: ✅ Redis subscriber ready
+2026-01-01T19:34:40.549Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T19:34:40.552Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T19:34:40.566Z [info]: 🔌 Redis connect event fired
+2026-01-01T19:34:40.576Z [info]: ✅ Redis ready event fired
+2026-01-01T19:34:40.577Z [info]: ✅ Redis primary client connected
+2026-01-01T19:34:40.580Z [info]: 🏓 Redis ping successful (1ms)
+2026-01-01T19:34:40.581Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T19:34:41.074Z [info]: PresenceService constructor called
+2026-01-01T19:34:46.718Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T19:34:46.721Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T19:34:46.736Z [info]: 🔌 Redis connect event fired
+2026-01-01T19:34:46.746Z [info]: ✅ Redis ready event fired
+2026-01-01T19:34:46.747Z [info]: ✅ Redis primary client connected
+2026-01-01T19:34:46.751Z [info]: 🏓 Redis ping successful (2ms)
+2026-01-01T19:34:46.752Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T19:34:47.327Z [info]: PresenceService constructor called
+2026-01-01T19:34:47.329Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:34:47.387Z [info]: ✅ Redis publisher ready
+2026-01-01T19:34:47.390Z [info]: ✅ Redis subscriber ready
+2026-01-01T19:34:54.061Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-01T19:34:54.064Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-01T19:34:54.079Z [info]: 🔌 Redis connect event fired
+2026-01-01T19:34:54.089Z [info]: ✅ Redis ready event fired
+2026-01-01T19:34:54.091Z [info]: ✅ Redis primary client connected
+2026-01-01T19:34:54.094Z [info]: 🏓 Redis ping successful (2ms)
+2026-01-01T19:34:54.095Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-01T19:34:54.698Z [info]: PresenceService constructor called
+2026-01-01T19:34:54.699Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:34:54.743Z [info]: ✅ Redis publisher ready
+2026-01-01T19:34:54.745Z [info]: ✅ Redis subscriber ready
+2026-01-01T19:35:12.518Z [info]: PresenceService constructor called
+2026-01-01T19:35:12.522Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:35:33.481Z [info]: PresenceService constructor called
+2026-01-01T19:35:33.484Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-01T19:38:26.141Z [info]: PresenceService constructor called
+2026-01-01T19:38:26.146Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T06:34:39.275Z [info]: PresenceService constructor called
+2026-01-02T06:34:39.280Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T06:58:39.638Z [info]: PresenceService constructor called
+2026-01-02T06:58:39.646Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:01:35.188Z [info]: PresenceService constructor called
+2026-01-02T07:01:35.194Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:01:53.056Z [info]: PresenceService constructor called
+2026-01-02T07:01:53.066Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:02:22.261Z [info]: PresenceService constructor called
+2026-01-02T07:02:22.264Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:02:26.657Z [info]: PresenceService constructor called
+2026-01-02T07:02:26.663Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:10:39.878Z [info]: PresenceService constructor called
+2026-01-02T07:10:39.883Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:12:15.640Z [info]: PresenceService constructor called
+2026-01-02T07:12:15.652Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:13:16.301Z [info]: PresenceService constructor called
+2026-01-02T07:13:16.309Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:14:09.858Z [info]: PresenceService constructor called
+2026-01-02T07:14:09.868Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:15:05.175Z [info]: PresenceService constructor called
+2026-01-02T07:15:05.184Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:18:03.665Z [info]: PresenceService constructor called
+2026-01-02T07:18:03.676Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:27:41.752Z [info]: PresenceService constructor called
+2026-01-02T07:27:41.757Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:27:48.289Z [info]: PresenceService constructor called
+2026-01-02T07:27:48.295Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:28:17.470Z [info]: PresenceService constructor called
+2026-01-02T07:28:17.476Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T07:38:59.676Z [info]: PresenceService constructor called
+2026-01-02T07:38:59.681Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:18:37.728Z [info]: PresenceService constructor called
+2026-01-02T08:18:37.733Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:19:32.779Z [info]: PresenceService constructor called
+2026-01-02T08:19:32.783Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:30:09.248Z [info]: PresenceService constructor called
+2026-01-02T08:30:09.254Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:34:23.213Z [info]: PresenceService constructor called
+2026-01-02T08:34:23.217Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:34:27.594Z [info]: PresenceService constructor called
+2026-01-02T08:34:27.597Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:35:14.655Z [info]: PresenceService constructor called
+2026-01-02T08:35:14.661Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:35:45.063Z [info]: PresenceService constructor called
+2026-01-02T08:35:45.069Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:36:01.832Z [info]: PresenceService constructor called
+2026-01-02T08:36:01.836Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:36:12.710Z [info]: PresenceService constructor called
+2026-01-02T08:36:12.714Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:37:30.002Z [info]: PresenceService constructor called
+2026-01-02T08:37:30.005Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:37:34.924Z [info]: PresenceService constructor called
+2026-01-02T08:37:34.930Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:37:58.346Z [info]: PresenceService constructor called
+2026-01-02T08:37:58.351Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:38:28.784Z [info]: PresenceService constructor called
+2026-01-02T08:38:28.790Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:44:07.387Z [info]: PresenceService constructor called
+2026-01-02T08:44:07.391Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:44:24.099Z [info]: PresenceService constructor called
+2026-01-02T08:44:24.103Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:45:20.424Z [info]: PresenceService constructor called
+2026-01-02T08:45:20.429Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:46:20.081Z [info]: PresenceService constructor called
+2026-01-02T08:46:20.086Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:52:30.956Z [info]: PresenceService constructor called
+2026-01-02T08:52:30.960Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:52:37.808Z [info]: PresenceService constructor called
+2026-01-02T08:52:37.812Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T08:52:42.255Z [info]: PresenceService constructor called
+2026-01-02T08:52:42.264Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:05:49.404Z [info]: PresenceService constructor called
+2026-01-02T09:05:49.407Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:05:56.026Z [info]: PresenceService constructor called
+2026-01-02T09:05:56.032Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:06:13.254Z [info]: PresenceService constructor called
+2026-01-02T09:06:13.258Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:08:42.483Z [info]: PresenceService constructor called
+2026-01-02T09:08:42.492Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:08:50.127Z [info]: PresenceService constructor called
+2026-01-02T09:08:50.131Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:09:00.328Z [info]: PresenceService constructor called
+2026-01-02T09:09:04.154Z [info]: PresenceService constructor called
+2026-01-02T09:09:04.158Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:12:32.670Z [info]: PresenceService constructor called
+2026-01-02T09:12:32.674Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:12:35.910Z [info]: PresenceService constructor called
+2026-01-02T09:12:35.914Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:12:45.465Z [info]: PresenceService constructor called
+2026-01-02T09:12:45.469Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:16:54.604Z [info]: PresenceService constructor called
+2026-01-02T09:16:54.608Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:18:58.199Z [info]: PresenceService constructor called
+2026-01-02T09:18:58.204Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:19:56.476Z [info]: PresenceService constructor called
+2026-01-02T09:19:56.479Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:20:08.336Z [info]: PresenceService constructor called
+2026-01-02T09:20:08.340Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:20:11.699Z [info]: PresenceService constructor called
+2026-01-02T09:20:11.703Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:20:16.554Z [info]: PresenceService constructor called
+2026-01-02T09:20:16.559Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:28:58.309Z [info]: PresenceService constructor called
+2026-01-02T09:28:58.315Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:29:15.165Z [info]: PresenceService constructor called
+2026-01-02T09:29:15.169Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:32:35.935Z [info]: PresenceService constructor called
+2026-01-02T09:32:35.940Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:32:50.816Z [info]: PresenceService constructor called
+2026-01-02T09:32:50.820Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:32:55.081Z [info]: PresenceService constructor called
+2026-01-02T09:32:55.084Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:33:08.431Z [info]: PresenceService constructor called
+2026-01-02T09:33:08.436Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:40:24.657Z [info]: PresenceService constructor called
+2026-01-02T09:40:24.660Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:46:52.913Z [info]: PresenceService constructor called
+2026-01-02T09:46:52.917Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:46:57.808Z [info]: PresenceService constructor called
+2026-01-02T09:46:57.812Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:47:43.491Z [info]: PresenceService constructor called
+2026-01-02T09:47:43.494Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:47:48.575Z [info]: PresenceService constructor called
+2026-01-02T09:47:48.577Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:50:16.310Z [info]: PresenceService constructor called
+2026-01-02T09:50:16.313Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:51:01.890Z [info]: PresenceService constructor called
+2026-01-02T09:51:01.892Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:51:12.033Z [info]: PresenceService constructor called
+2026-01-02T09:51:12.039Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:51:57.814Z [info]: PresenceService constructor called
+2026-01-02T09:51:57.817Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:52:01.911Z [info]: PresenceService constructor called
+2026-01-02T09:52:01.914Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:58:58.586Z [info]: PresenceService constructor called
+2026-01-02T09:58:58.589Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:59:08.702Z [info]: PresenceService constructor called
+2026-01-02T09:59:08.706Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:59:30.569Z [info]: PresenceService constructor called
+2026-01-02T09:59:30.572Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:59:39.254Z [info]: PresenceService constructor called
+2026-01-02T09:59:39.258Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T09:59:52.605Z [info]: PresenceService constructor called
+2026-01-02T09:59:52.608Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:02:16.145Z [info]: PresenceService constructor called
+2026-01-02T10:02:16.149Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:02:26.915Z [info]: PresenceService constructor called
+2026-01-02T10:02:26.920Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:03:15.748Z [info]: PresenceService constructor called
+2026-01-02T10:03:15.752Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:04:49.470Z [info]: PresenceService constructor called
+2026-01-02T10:04:49.474Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:06:33.016Z [info]: PresenceService constructor called
+2026-01-02T10:06:33.018Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:10:22.832Z [info]: PresenceService constructor called
+2026-01-02T10:10:22.836Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:10:48.449Z [info]: PresenceService constructor called
+2026-01-02T10:10:48.452Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:10:54.358Z [info]: PresenceService constructor called
+2026-01-02T10:10:54.361Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:16:12.470Z [info]: PresenceService constructor called
+2026-01-02T10:16:12.474Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:16:35.376Z [info]: PresenceService constructor called
+2026-01-02T10:16:35.380Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:48:45.345Z [info]: PresenceService constructor called
+2026-01-02T10:48:45.348Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:48:54.956Z [info]: PresenceService constructor called
+2026-01-02T10:48:54.960Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:54:57.516Z [info]: PresenceService constructor called
+2026-01-02T10:54:57.521Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:56:21.755Z [info]: PresenceService constructor called
+2026-01-02T10:56:21.762Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:56:48.312Z [info]: PresenceService constructor called
+2026-01-02T10:56:48.318Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T10:59:28.965Z [info]: PresenceService constructor called
+2026-01-02T10:59:28.968Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:10:30.134Z [info]: PresenceService constructor called
+2026-01-02T11:10:30.137Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:19:14.999Z [info]: PresenceService constructor called
+2026-01-02T11:19:15.005Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:21:02.396Z [info]: PresenceService constructor called
+2026-01-02T11:21:02.400Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:24:09.614Z [info]: PresenceService constructor called
+2026-01-02T11:24:09.617Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:24:23.784Z [info]: PresenceService constructor called
+2026-01-02T11:24:23.791Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:24:30.473Z [info]: PresenceService constructor called
+2026-01-02T11:24:30.475Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:26:11.137Z [info]: PresenceService constructor called
+2026-01-02T11:26:11.141Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:26:25.933Z [info]: PresenceService constructor called
+2026-01-02T11:26:25.937Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T11:26:33.016Z [info]: PresenceService constructor called
+2026-01-02T11:26:33.021Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:04:33.764Z [info]: PresenceService constructor called
+2026-01-02T12:04:33.767Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:06:05.185Z [info]: PresenceService constructor called
+2026-01-02T12:06:05.189Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:06:38.047Z [info]: PresenceService constructor called
+2026-01-02T12:06:38.053Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:07:51.614Z [info]: PresenceService constructor called
+2026-01-02T12:07:51.618Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:07:59.474Z [info]: PresenceService constructor called
+2026-01-02T12:07:59.478Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:08:27.981Z [info]: PresenceService constructor called
+2026-01-02T12:08:27.987Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:14:04.997Z [info]: PresenceService constructor called
+2026-01-02T12:14:05.001Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:14:14.320Z [info]: PresenceService constructor called
+2026-01-02T12:14:14.324Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:18:30.459Z [info]: PresenceService constructor called
+2026-01-02T12:18:30.464Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:49:16.762Z [error]: AuthController error: Cannot destructure property 'phoneNumber' of 'req.body' as it is undefined.
+TypeError: Cannot destructure property 'phoneNumber' of 'req.body' as it is undefined.
+    at AuthController.verifyPhone (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\auth\AuthController.js:508:15)
+    at Layer.handleRequest (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\router\lib\route.js:157:13)
+    at C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\express-rate-limit\dist\index.cjs:942:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\express-rate-limit\dist\index.cjs:825:5
+{
+  "path": "/verify-phone",
+  "method": "POST"
+}
+2026-01-02T12:50:56.967Z [info]: PresenceService constructor called
+2026-01-02T12:50:56.970Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:51:09.182Z [info]: PresenceService constructor called
+2026-01-02T12:51:09.185Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:53:00.091Z [info]: PresenceService constructor called
+2026-01-02T12:53:00.094Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:53:47.084Z [info]: PresenceService constructor called
+2026-01-02T12:53:47.087Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:54:03.833Z [info]: PresenceService constructor called
+2026-01-02T12:54:03.839Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:56:59.594Z [info]: PresenceService constructor called
+2026-01-02T12:56:59.597Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T12:59:05.170Z [info]: PresenceService constructor called
+2026-01-02T12:59:05.173Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:05:54.855Z [info]: PresenceService constructor called
+2026-01-02T13:05:54.861Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:13:43.223Z [info]: PresenceService constructor called
+2026-01-02T13:13:43.227Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:17:32.555Z [info]: PresenceService constructor called
+2026-01-02T13:17:32.559Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:24:44.004Z [info]: PresenceService constructor called
+2026-01-02T13:24:44.007Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:30:00.195Z [info]: PresenceService constructor called
+2026-01-02T13:30:00.197Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:35:00.068Z [info]: PresenceService constructor called
+2026-01-02T13:35:00.073Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:41:44.187Z [info]: PresenceService constructor called
+2026-01-02T13:41:44.191Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:43:22.223Z [info]: PresenceService constructor called
+2026-01-02T13:43:22.226Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:49:54.001Z [info]: PresenceService constructor called
+2026-01-02T13:49:54.005Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T13:50:18.751Z [info]: PresenceService constructor called
+2026-01-02T13:50:18.753Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:03:49.477Z [info]: PresenceService constructor called
+2026-01-02T14:03:49.481Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:06:03.356Z [info]: PresenceService constructor called
+2026-01-02T14:06:03.360Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:18:59.344Z [info]: PresenceService constructor called
+2026-01-02T14:18:59.352Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:22:50.838Z [info]: PresenceService constructor called
+2026-01-02T14:22:50.843Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:23:44.370Z [info]: PresenceService constructor called
+2026-01-02T14:23:44.385Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:28:03.445Z [info]: PresenceService constructor called
+2026-01-02T14:28:03.451Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:28:28.878Z [info]: PresenceService constructor called
+2026-01-02T14:28:28.885Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:39:57.497Z [info]: PresenceService constructor called
+2026-01-02T14:39:57.502Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:44:19.850Z [info]: PresenceService constructor called
+2026-01-02T14:44:19.866Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:44:34.930Z [info]: PresenceService constructor called
+2026-01-02T14:44:34.944Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:55:35.959Z [info]: PresenceService constructor called
+2026-01-02T14:55:35.964Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T14:56:26.307Z [info]: PresenceService constructor called
+2026-01-02T14:56:26.313Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T15:13:38.165Z [info]: PresenceService constructor called
+2026-01-02T15:13:38.169Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T15:33:18.996Z [info]: PresenceService constructor called
+2026-01-02T15:33:19.002Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T15:34:33.754Z [info]: Getting active users: limit=50, offset=0
+2026-01-02T15:34:34.018Z [info]: Found 10 active users
+2026-01-02T15:34:34.022Z [info]: Lazy-loading Redis client...
+2026-01-02T15:34:34.025Z [info]: 🔄 Starting Redis lazy connection...
+2026-01-02T15:34:34.029Z [info]: 🔗 Connecting to Redis at localhost:6379 (Docker: false)
+2026-01-02T15:34:34.047Z [warn]: Redis ping failed, client may not be ready:
+2026-01-02T15:34:34.048Z [warn]: Redis not available, returning default offline status
+2026-01-02T15:34:34.051Z [info]: Got online status for 10 users
+2026-01-02T15:34:34.115Z [info]: 🔌 Redis connect event fired
+2026-01-02T15:34:34.184Z [info]: ✅ Redis ready event fired
+2026-01-02T15:34:34.186Z [info]: ✅ Redis primary client connected
+2026-01-02T15:34:34.190Z [info]: 🏓 Redis ping successful (2ms)
+2026-01-02T15:34:34.191Z [info]: ✅ Redis lazy connection completed successfully
+2026-01-02T15:34:34.204Z [info]: ✅ Redis publisher ready
+2026-01-02T15:34:34.207Z [info]: ✅ Redis subscriber ready
+2026-01-02T15:43:23.797Z [info]: PresenceService constructor called
+2026-01-02T15:43:23.802Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T17:50:29.334Z [info]: PresenceService constructor called
+2026-01-02T17:50:29.336Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T17:54:00.146Z [info]: PresenceService constructor called
+2026-01-02T17:54:00.148Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T17:54:41.079Z [info]: PresenceService constructor called
+2026-01-02T17:54:41.082Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:10:00.959Z [info]: PresenceService constructor called
+2026-01-02T18:10:00.962Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:18:44.557Z [info]: PresenceService constructor called
+2026-01-02T18:18:44.563Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:22:03.384Z [info]: PresenceService constructor called
+2026-01-02T18:22:03.388Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:22:07.103Z [info]: PresenceService constructor called
+2026-01-02T18:22:07.108Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:24:00.208Z [info]: PresenceService constructor called
+2026-01-02T18:24:00.212Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:24:20.934Z [info]: PresenceService constructor called
+2026-01-02T18:24:20.938Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:24:22.432Z [info]: PresenceService constructor called
+2026-01-02T18:24:22.435Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:35:39.611Z [info]: PresenceService constructor called
+2026-01-02T18:35:39.615Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:37:01.801Z [info]: PresenceService constructor called
+2026-01-02T18:37:01.805Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:37:14.482Z [info]: PresenceService constructor called
+2026-01-02T18:37:14.489Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T18:40:36.408Z [info]: PresenceService constructor called
+2026-01-02T18:40:36.415Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T19:28:59.440Z [info]: PresenceService constructor called
+2026-01-02T19:28:59.443Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T19:29:32.009Z [info]: PresenceService constructor called
+2026-01-02T19:29:32.012Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T20:40:53.391Z [info]: PresenceService constructor called
+2026-01-02T20:40:53.394Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T21:22:03.126Z [info]: PresenceService constructor called
+2026-01-02T21:22:03.129Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-02T21:32:30.231Z [info]: PresenceService constructor called
+2026-01-02T21:32:30.235Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T00:05:56.091Z [info]: PresenceService constructor called
+2026-01-03T00:05:56.095Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T00:10:17.009Z [info]: PresenceService constructor called
+2026-01-03T00:10:17.012Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T00:10:19.784Z [info]: PresenceService constructor called
+2026-01-03T00:10:19.789Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T00:10:53.319Z [info]: PresenceService constructor called
+2026-01-03T00:10:53.323Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T01:19:07.630Z [info]: PresenceService constructor called
+2026-01-03T01:19:07.633Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T01:40:21.269Z [info]: PresenceService constructor called
+2026-01-03T01:40:21.272Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T02:14:47.369Z [info]: PresenceService constructor called
+2026-01-03T02:14:47.372Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T16:40:11.410Z [info]: PresenceService constructor called
+2026-01-03T16:40:11.417Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T16:42:12.981Z [info]: PresenceService constructor called
+2026-01-03T16:42:12.987Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T18:11:22.046Z [info]: PresenceService constructor called
+2026-01-03T18:11:22.054Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T18:21:22.173Z [info]: PresenceService constructor called
+2026-01-03T18:21:22.175Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T18:37:26.512Z [info]: PresenceService constructor called
+2026-01-03T18:37:26.519Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T18:37:31.579Z [info]: PresenceService constructor called
+2026-01-03T18:37:31.584Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T18:39:01.789Z [info]: PresenceService constructor called
+2026-01-03T18:39:01.793Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T18:43:45.762Z [info]: PresenceService constructor called
+2026-01-03T18:43:45.767Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T19:18:28.891Z [info]: PresenceService constructor called
+2026-01-03T19:18:28.895Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T19:19:05.679Z [info]: PresenceService constructor called
+2026-01-03T19:19:05.683Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T19:20:41.851Z [info]: PresenceService constructor called
+2026-01-03T19:20:41.855Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T19:29:03.655Z [info]: PresenceService constructor called
+2026-01-03T19:29:03.660Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T19:36:54.496Z [info]: PresenceService constructor called
+2026-01-03T19:36:54.499Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T20:44:13.349Z [info]: PresenceService constructor called
+2026-01-03T20:44:13.353Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T20:49:31.931Z [info]: PresenceService constructor called
+2026-01-03T20:49:31.934Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T20:54:40.615Z [info]: PresenceService constructor called
+2026-01-03T20:54:40.619Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T20:55:26.948Z [info]: PresenceService constructor called
+2026-01-03T20:55:26.951Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T21:00:26.474Z [info]: PresenceService constructor called
+2026-01-03T21:00:26.477Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:21:12.307Z [info]: PresenceService constructor called
+2026-01-03T22:21:12.312Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:27:06.090Z [info]: PresenceService constructor called
+2026-01-03T22:27:06.099Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:27:37.435Z [info]: PresenceService constructor called
+2026-01-03T22:27:37.439Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:28:57.212Z [info]: PresenceService constructor called
+2026-01-03T22:28:57.221Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:32:54.372Z [info]: PresenceService constructor called
+2026-01-03T22:32:54.377Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:33:00.899Z [info]: PresenceService constructor called
+2026-01-03T22:33:00.905Z [info]: PresenceService initialized (Redis will connect when needed)
+2026-01-03T22:40:33.234Z [info]: PresenceService constructor called
+2026-01-03T22:40:33.241Z [info]: PresenceService initialized (Redis will connect when needed)

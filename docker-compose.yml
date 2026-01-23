@@ -1,0 +1,73 @@
+version: '3.8' 
+
+services:
+  app:
+    build: .
+    container_name: jwlovers-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DOCKER=true
+    env_file:
+      - .env.docker
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - jwlovers-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mongodb:
+    image: mongo:6
+    container_name: jwlovers-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: jwlovers      
+      MONGO_INITDB_ROOT_PASSWORD: jwlovers123   
+      MONGO_INITDB_DATABASE: jwlovers
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - jwlovers-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: jwlovers-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - jwlovers-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  jwlovers-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-01-21T14:09:56.530Z",
+  "database": "jwlovers_match",
+  "userCount": 4,
+  "backupFile": "./backups/user-backup-2026-01-21T14-09-56-488Z.json.gz",
+  "sampleUsers": [
+    {
+      "_id": "696f4a01228a900bf99b7185",
+      "email": "jahdon5959@gmail.com",
+      "name": "Jeremiah Simeon",
+      "role": "user"
+    },
+    {
+      "_id": "6970a54438cd1f80d08a4d38",
+      "email": "superadmin@jwlovers.com",
+      "name": "System Administrator",
+      "role": "super_admin"
+    },
+    {
+      "_id": "6970b21b1faeee8cd5a922a9",
+      "email": "jwloversmoderator@gmail.com",
+      "name": "JwLoversModerator Moderator",
+      "role": "moderator"
+    }
+  ]
+}

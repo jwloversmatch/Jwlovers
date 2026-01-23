@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-01-21T14:34:40.060Z",
+  "totalProcessed": 4,
+  "migrated": 4,
+  "failed": 0,
+  "byType": {
+    "DatingUser": 4
+  },
+  "errors": [],
+  "errorsCount": 0
+}
