@@ -1,11 +1,11 @@
 // loaders/ServiceInitializer.js
 const EncryptionService = require("@services/encryption.service");
 const RedisService = require("@services/redis.service");
-const DatabaseService = require("../config/database");
+const DatabaseService = require("@config/database");
 const WebSocketService = require("@services/websocket.service");
 const ConversationServiceWrapper = require("@services/conversation-wrapper.service");
 const ControllerBridgeService = require("@services/controller-bridge.service");
-const CONFIG = require("../config/constant");
+const CONFIG = require("@config/constant");
 
 class ServiceInitializer {
   constructor(server, config, logger) {
@@ -16,29 +16,31 @@ class ServiceInitializer {
   }
 
   async initializeAll() {
+    // Order matters - dependencies first
     await this.initializeEncryption();
     await this.initializeRedis();
     await this.initializeDatabase();
     await this.initializeConversationWrapper();
-    await this.initializeWebSocket();
-    await this.initializePresenceService();
+    await this.initializeWebSocket();  // Creates WebSocketService
+    await this.initializePresenceService();  // Needs WebSocketService.io
     await this.initializeControllerBridge();
-
+    
+    // Final setup after all services are created
+    await this.finalizeWebSocketSetup();
+    
     return this.services;
   }
 
   async initializeEncryption() {
     this.logger.info("🔄 Initializing Encryption Service...");
 
-    const encryptionSalt =
-      this.config.encryption.salt || CONFIG.ENCRYPTION.SALT;
-    this.logger.info(
-      `🔐 Encryption salt: ${encryptionSalt.substring(0, 8)}...`,
-    );
+    const encryptionSalt = this.config.encryption.salt || CONFIG.ENCRYPTION.SALT;
+    this.logger.info(`🔐 Encryption salt: ${encryptionSalt.substring(0, 8)}...`);
 
-    this.services.encryptionService = new EncryptionService(
-      CONFIG.ENCRYPTION,
-    ).init(this.config.encryption.key, encryptionSalt);
+    this.services.encryptionService = new EncryptionService(CONFIG.ENCRYPTION).init(
+      this.config.encryption.key,
+      encryptionSalt
+    );
 
     this.logger.info("✅ Encryption Service initialized");
   }
@@ -62,19 +64,14 @@ class ServiceInitializer {
         this.logger.error(`❌ Redis connection test failed: ${error.message}`);
       }
     } else {
-      this.logger.warn(
-        "⚠️ Redis not available. Rate limiting will use memory fallback.",
-      );
+      this.logger.warn("⚠️ Redis not available. Rate limiting will use memory fallback.");
     }
   }
 
   async initializeDatabase() {
     this.logger.info("🔄 Connecting to MongoDB...");
 
-    this.services.databaseService = new DatabaseService(
-      CONFIG.DATABASE,
-      this.logger,
-    );
+    this.services.databaseService = new DatabaseService(CONFIG.DATABASE, this.logger);
     await this.services.databaseService.connect();
 
     this.logger.info("✅ MongoDB connected");
@@ -83,9 +80,7 @@ class ServiceInitializer {
   async initializeConversationWrapper() {
     this.logger.info("🔄 Initializing Conversation Service Wrapper...");
 
-    this.services.conversationServiceWrapper = new ConversationServiceWrapper(
-      this.logger,
-    );
+    this.services.conversationServiceWrapper = new ConversationServiceWrapper(this.logger);
 
     this.logger.info("✅ Conversation Service Wrapper initialized");
   }
@@ -96,39 +91,35 @@ class ServiceInitializer {
     // Load validation schemas
     let socketSchemas = {};
     try {
-      socketSchemas = require("../validators/socket.schemas");
+      socketSchemas = require("@validations/socket.schemas");
       this.logger.info("✅ Socket validation schemas loaded");
     } catch (error) {
-      this.logger.warn(
-        "⚠️ Socket validation schemas not found, using empty schema",
-      );
+      this.logger.warn("⚠️ Socket validation schemas not found, using empty schema");
     }
 
     this.services.socketSchemas = socketSchemas;
 
+    // Create WebSocketService with all currently available services
+    // Pass this.services object which will be updated as more services are added
     this.services.webSocketService = new WebSocketService(
-      CONFIG,
-      {
-        redisService: this.services.redisService,
-        encryptionService: this.services.encryptionService,
-        conversationServiceWrapper: this.services.conversationServiceWrapper,
-      },
+      this.config.ws || CONFIG.WEBSOCKET || {},  // Use config.ws if available
+      this.services,  // Pass all services (will be updated later)
       socketSchemas,
       this.logger,
-      false,
+      this.services.redisService  // Pass RedisService directly as last param if needed
     );
 
-    const io = await this.services.webSocketService.setup(
-      this.server,
-      this.config.cors.origins,
-    );
+    // Setup WebSocket server
+    const io = await this.services.webSocketService.setup(this.server, this.config.cors.origins);
+    this.services.io = io;
+
+    // Setup middleware
+    this.services.webSocketService.setupMiddleware();
 
     // Make globally available
     global.getWebSocketService = () => this.services.webSocketService;
     global.getSocketIO = () => io;
     global.io = io;
-
-    this.services.io = io;
 
     this.logger.info("✅ WebSocket initialized");
   }
@@ -136,18 +127,21 @@ class ServiceInitializer {
   async initializePresenceService() {
     this.logger.info("🔄 Initializing PresenceService...");
 
-    if (
-      !this.services.redisService ||
-      typeof this.services.redisService.isReady !== "function"
-    ) {
+    if (!this.services.redisService || typeof this.services.redisService.isReady !== "function") {
       throw new Error("RedisService not properly initialized");
     }
 
     const PresenceService = require("@services/presence.service");
     this.services.presenceService = new PresenceService(
       this.services.io,
-      this.services.redisService,
+      this.services.redisService
     );
+
+    // Update WebSocketService with PresenceService
+    if (this.services.webSocketService && this.services.webSocketService.setPresenceService) {
+      this.services.webSocketService.setPresenceService(this.services.presenceService);
+      this.logger.info("✅ PresenceService injected into WebSocketService");
+    }
 
     // Make globally available
     global.presenceService = this.services.presenceService;
@@ -164,10 +158,28 @@ class ServiceInitializer {
       this.services.encryptionService,
       this.services.redisService,
       this.services.socketSchemas,
-      this.logger,
+      this.logger
     );
 
     this.logger.info("✅ Controller Bridge initialized");
+  }
+
+  async finalizeWebSocketSetup() {
+    this.logger.info("🔄 Finalizing WebSocket setup...");
+
+    if (this.services.webSocketService) {
+      // Setup event handlers (requires all services to be initialized)
+      this.services.webSocketService.setupEventHandlers();
+      
+      // Log WebSocket status
+      const io = this.services.io;
+      if (io) {
+        const connections = io.engine?.clientsCount || 0;
+        this.logger.info(`✅ WebSocket ready (${connections} connections)`);
+      }
+    }
+
+    this.logger.info("✅ WebSocket setup finalized");
   }
 
   getServices() {
@@ -179,13 +191,13 @@ class ServiceInitializer {
     app.set("controllerBridge", this.services.controllerBridge);
     app.set("RedisService", this.services.redisService);
     app.set("EncryptionService", this.services.encryptionService);
-    app.set(
-      "ConversationServiceWrapper",
-      this.services.conversationServiceWrapper,
-    );
+    app.set("ConversationServiceWrapper", this.services.conversationServiceWrapper);
     app.set("DatabaseService", this.services.databaseService);
     app.set("WebSocketService", this.services.webSocketService);
     app.set("PresenceService", this.services.presenceService);
+
+    // Also export all services as a single object for convenience
+    app.set("services", this.services);
 
     this.logger.info("✅ Services exported to Express app");
   }

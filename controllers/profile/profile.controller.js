@@ -75,7 +75,12 @@ class ProfileController {
         throw createError("Profile features only available for dating users", "INVALID_USER_TYPE", 403);
       }
 
-      const profile = await Profile.findOne({ userId }).populate("user", "firstName lastName");
+      // FIXED: Populate 'userId' field instead of 'user'
+      const profile = await Profile.findOne({ userId }).populate({
+        path: 'userId',
+        model: 'DatingUser',
+        select: 'firstName lastName email avatar dateOfBirth'
+      });
 
       if (!profile) {
         throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
@@ -98,8 +103,8 @@ class ProfileController {
         data: {
           // Private info (only for owner)
           privateInfo: {
-            firstName: user.firstName,
-            lastName: user.lastName,
+            firstName: profile.userId?.firstName || user.firstName,
+            lastName: profile.userId?.lastName || user.lastName,
             email: {
               address: user.email,
               verified: user.emailVerified,
@@ -146,8 +151,13 @@ class ProfileController {
         throw createError("Public profiles only available for dating users", "INVALID_USER_TYPE", 403);
       }
 
+      // FIXED: Populate 'userId' field instead of 'user'
       const profile = await Profile.findOne({ userId })
-        .populate("user", "firstName lastName lastActive")
+        .populate({
+          path: 'userId',
+          model: 'DatingUser',
+          select: 'firstName lastName avatar lastActive'
+        })
         .select("-__v -createdAt -updatedAt -_id -userId");
 
       if (!profile) {
@@ -168,15 +178,16 @@ class ProfileController {
       // Construct response with public data
       const publicProfile = {
         basicInfo: {
-          userId: profile.userId,
+          userId: user._id,
           userName: profile.userName,
           profilePicture: profile.profilePicture,
           bio: profile.bio,
           age: profile.age,
           gender: profile.gender,
           genderLabel: labels.genderLabel,
-          firstName: profile.user?.firstName,
-          lastName: profile.user?.lastName,
+          firstName: profile.userId?.firstName,
+          lastName: profile.userId?.lastName,
+          avatar: profile.userId?.avatar,
         },
         location: {
           city: profile.currentLocation?.city,
@@ -201,6 +212,7 @@ class ProfileController {
           haveChildren: profile.haveChildren,
           haveChildrenLabel: labels.haveChildrenLabel,
           wantsChildren: profile.wantsChildren,
+          wantsChildrenLabel: labels.wantsChildrenLabel,
         },
         photos:
           profile.photos?.map((photo) => ({
@@ -218,7 +230,7 @@ class ProfileController {
         },
         stats: {
           profileCompletion: profile.profileCompletion || 0,
-          lastActive: profile.user?.lastActive,
+          lastActive: profile.userId?.lastActive || profile.updatedAt,
         },
       };
 
@@ -411,7 +423,11 @@ class ProfileController {
           new: true,
           runValidators: true,
         }
-      ).populate("user", "firstName lastName");
+      ).populate({
+        path: 'userId',
+        model: 'DatingUser',
+        select: 'firstName lastName email avatar'
+      });
 
       if (!updatedProfile) {
         throw createError("Failed to update profile", "UPDATE_FAILED", 500);

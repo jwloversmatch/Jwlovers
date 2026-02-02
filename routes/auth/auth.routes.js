@@ -1,4 +1,4 @@
-// routes/auth.routes.js - UPDATED
+// routes/auth.routes.js - COMPLETE WITH ALL ENDPOINTS
 const express = require("express");
 const router = express.Router();
 const {
@@ -156,26 +156,6 @@ const rateLimits = {
   }),
 };
 
-const boundAuthController = {
-  register: (req, res) => authController.register(req, res),
-  login: (req, res) => authController.login(req, res),
-  logout: (req, res) => authController.logout(req, res),
-  refreshToken: (req, res) => authController.refreshToken(req, res),
-  forgotPassword: (req, res) => authController.forgotPassword(req, res),
-  resetPassword: (req, res) => authController.resetPassword(req, res),
-  verifyEmail: (req, res) => authController.verifyEmail(req, res),
-  verifyPhone: (req, res) => authController.verifyPhone(req, res),
-  resendVerificationEmail: (req, res) =>
-    authController.resendVerificationEmail(req, res),
-  changePassword: (req, res) => authController.changePassword(req, res),
-  adminResetPassword: (req, res) => authController.adminResetPassword(req, res),
-  adminUnlockAccount: (req, res) => authController.adminUnlockAccount(req, res),
-  registerStaff: (req, res) =>
-    authController.registerStaff
-      ? authController.registerStaff(req, res)
-      : authController.register(req, res),
-};
-
 // ========== DEBUG & INFO ENDPOINTS ==========
 router.get("/debug-controller", (req, res) => {
   res.json({
@@ -186,11 +166,14 @@ router.get("/debug-controller", (req, res) => {
       methods: authController ? Object.keys(authController) : [],
       hasRegister: typeof authController?.register === "function",
       hasLogin: typeof authController?.login === "function",
+      hasVerifyEmail: typeof authController?.verifyEmail === "function",
+      hasGetCurrentUser: typeof authController?.getCurrentUser === "function",
       hasAdminResetPassword:
         typeof authController?.adminResetPassword === "function",
       hasAdminUnlockAccount:
         typeof authController?.adminUnlockAccount === "function",
       hasRegisterStaff: typeof authController?.registerStaff === "function",
+      hasRefreshToken: typeof authController?.refreshToken === "function",
     },
     userController: {
       exists: !!userController,
@@ -264,44 +247,60 @@ router.get("/rate-limit-info", (req, res) => {
   res.json(info);
 });
 
-router.get("/health", (req, res) => {
-  res.json({
-    success: true,
-    status: "healthy",
-    service: "auth",
-    timestamp: new Date().toISOString(),
-    version: process.env.APP_VERSION || "1.0.0",
-    rateLimiting: RATE_LIMIT_DISABLED ? "disabled" : "enabled",
-    userTypes: {
-      supported: ["DatingUser", "Moderator", "Admin", "SuperAdmin"],
-      default: "DatingUser",
-      staffTypes: ["Moderator", "Admin", "SuperAdmin"],
-    },
-    security: {
-      questionsEnabled: process.env.SECURITY_QUESTIONS_ENABLED === "true",
-      encryptionEnabled: process.env.ENABLE_END_TO_END_ENCRYPTION === "true",
-      ageVerification: process.env.AGE_VERIFICATION_REQUIRED === "true",
-      passwordResetEnabled: true,
-      adminResetEnabled: true,
-      accountUnlockEnabled: true,
-      staffInviteRequired: true,
-    },
-    registrationFlow: {
-      datingUsers: "Requires security question verification",
-      staffUsers: "Requires invite code",
-      steps: {
-        dating: [
-          "1. GET /api/auth/security-question",
-          "2. POST /api/auth/validate-answer",
-          "3. POST /api/auth/register with sessionId"
-        ],
-        staff: [
-          "1. Obtain invite code",
-          "2. POST /api/auth/register with inviteCode"
-        ]
-      }
+router.get("/health", async (req, res) => {
+  try {
+    // Use the authController's health check method if it exists
+    if (typeof authController.healthCheck === "function") {
+      return authController.healthCheck(req, res);
     }
-  });
+    
+    // Fallback health check
+    res.json({
+      success: true,
+      status: "healthy",
+      service: "auth",
+      timestamp: new Date().toISOString(),
+      version: process.env.APP_VERSION || "1.0.0",
+      rateLimiting: RATE_LIMIT_DISABLED ? "disabled" : "enabled",
+      userTypes: {
+        supported: ["DatingUser", "Moderator", "Admin", "SuperAdmin"],
+        default: "DatingUser",
+        staffTypes: ["Moderator", "Admin", "SuperAdmin"],
+      },
+      security: {
+        questionsEnabled: process.env.SECURITY_QUESTIONS_ENABLED === "true",
+        encryptionEnabled: process.env.ENABLE_END_TO_END_ENCRYPTION === "true",
+        ageVerification: process.env.AGE_VERIFICATION_REQUIRED === "true",
+        passwordResetEnabled: true,
+        adminResetEnabled: true,
+        accountUnlockEnabled: true,
+        staffInviteRequired: true,
+      },
+      registrationFlow: {
+        datingUsers: "Requires security question verification",
+        staffUsers: "Requires invite code",
+        steps: {
+          dating: [
+            "1. GET /api/auth/security-question",
+            "2. POST /api/auth/validate-answer",
+            "3. POST /api/auth/register with sessionId"
+          ],
+          staff: [
+            "1. Obtain invite code",
+            "2. POST /api/auth/register with inviteCode"
+          ]
+        }
+      }
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      status: "unhealthy",
+      error: error.message,
+      service: "auth",
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 router.get("/test", (req, res) => {
@@ -352,10 +351,10 @@ router.post(
 );
 
 // ========== SINGLE REGISTRATION ENDPOINT (UPDATED) ==========
-router.post("/register", registrationLimiter, (req, res) => {
+router.post("/register", rateLimits.registration, (req, res) => {
   console.log("📝 /register endpoint called with body:", req.body);
   
-  const { sessionId, inviteCode, role = 'user' } = req.body; // Default role to 'user'
+  const { sessionId, inviteCode, role = 'user' } = req.body;
   
   // Normalize role to lowercase for consistent checking
   const normalizedRole = role.toString().toLowerCase();
@@ -441,7 +440,7 @@ router.post("/register", registrationLimiter, (req, res) => {
   req.registrationType = registrationType;
   
   // Call the controller
-  return boundAuthController.register(req, res);
+  return authController.register(req, res);
 });
 
 // ========== LEGACY STAFF REGISTRATION (BACKWARD COMPATIBILITY) ==========
@@ -456,109 +455,54 @@ router.post("/register/staff", rateLimits.staffRegistration, (req, res) => {
     req.body.role = 'moderator'; // Default staff role
   }
   
-  return boundAuthController.register(req, res);
+  return authController.register(req, res);
 });
 
-// ========== REMOVED: /register-secure (merged into /register) ==========
-
 // ========== AUTHENTICATION ENDPOINTS ==========
-router.post("/login", authLimiter, (req, res) => {
-  if (!authController || typeof authController.login !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
+router.post("/login", rateLimits.login, (req, res) => {
   return authController.login(req, res);
 });
 
 router.post("/logout", optionalAuth, (req, res) => {
-  if (!authController || typeof authController.logout !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
   return authController.logout(req, res);
 });
 
 router.post("/refresh-token", apiLimiter, (req, res) => {
-  if (!authController || typeof authController.refreshToken !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
   return authController.refreshToken(req, res);
 });
 
+// ========== EMAIL VERIFICATION ENDPOINTS ==========
+router.get("/verify-email/:token", apiLimiter, (req, res) => {
+  return authController.verifyEmail(req, res);
+});
+
 // ========== PASSWORD MANAGEMENT ENDPOINTS ==========
-router.post("/forgot-password", passwordResetLimiter, (req, res) => {
-  if (!authController || typeof authController.forgotPassword !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
+router.post("/forgot-password", rateLimits.forgotPassword, (req, res) => {
   return authController.forgotPassword(req, res);
 });
 
 router.post("/reset-password", apiLimiter, (req, res) => {
-  if (!authController || typeof authController.resetPassword !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
   return authController.resetPassword(req, res);
 });
 
-router.post("/verify-email/:token", apiLimiter, (req, res) => {
-  if (!authController || typeof authController.verifyEmail !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
+router.post("/resend-verification-email", rateLimits.resendVerification, (req, res) => {
+  if (typeof authController.resendVerificationEmail === "function") {
+    return authController.resendVerificationEmail(req, res);
   }
-  return authController.verifyEmail(req, res);
+  return res.status(501).json({
+    success: false,
+    error: "Resend verification email not implemented",
+  });
 });
 
-router.post("/resend-verification-email", emailResendLimiter, (req, res) => {
-  if (
-    !authController ||
-    typeof authController.resendVerificationEmail !== "function"
-  ) {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
-  return authController.resendVerificationEmail(req, res);
-});
-
-router.post("/verify-phone", rateLimits.phoneVerification, (req, res) => {
-  if (!authController || typeof authController.verifyPhone !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
-  return authController.verifyPhone(req, res);
+// ========== GET CURRENT USER ENDPOINT ==========
+router.get("/me", apiLimiter, protect, (req, res) => {
+  return authController.getCurrentUser(req, res);
 });
 
 // ========== PROTECTED ENDPOINTS (REQUIRE AUTHENTICATION) ==========
 router.use(protect);
 router.use(rateLimitInfoMiddleware);
-
-router.get("/me", apiLimiter, (req, res) => {
-  if (!userController || typeof userController.getMe !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "User controller not properly loaded",
-    });
-  }
-  return userController.getMe(req, res);
-});
 
 // Get user by ID (with permission checks)
 router.get("/user/:id", apiLimiter, (req, res) => {
@@ -628,12 +572,6 @@ router.put("/settings", apiLimiter, (req, res) => {
 
 // ========== PASSWORD CHANGE (USER INITIATED) ==========
 router.put("/change-password", rateLimits.passwordChange, (req, res) => {
-  if (!authController || typeof authController.changePassword !== "function") {
-    return res.status(500).json({
-      success: false,
-      error: "Auth controller not properly loaded",
-    });
-  }
   return authController.changePassword(req, res);
 });
 
@@ -684,9 +622,9 @@ router.post(
       !authController ||
       typeof authController.adminResetPassword !== "function"
     ) {
-      return res.status(500).json({
+      return res.status(501).json({
         success: false,
-        error: "Auth controller not properly loaded",
+        error: "Admin password reset not implemented",
       });
     }
     return authController.adminResetPassword(req, res);
@@ -703,9 +641,9 @@ router.post(
       !authController ||
       typeof authController.adminUnlockAccount !== "function"
     ) {
-      return res.status(500).json({
+      return res.status(501).json({
         success: false,
-        error: "Auth controller not properly loaded",
+        error: "Admin account unlock not implemented",
       });
     }
     return authController.adminUnlockAccount(req, res);
@@ -863,7 +801,7 @@ if (process.env.NODE_ENV === "development") {
         }
       };
       
-      return boundAuthController.register(testReq, res);
+      return authController.register(testReq, res);
       
     } catch (error) {
       res.status(500).json({ success: false, error: error.message, testMode: true });
@@ -889,9 +827,9 @@ if (process.env.NODE_ENV === "development") {
         }
       };
       
-      req.registrationType = 'staff';
+      testReq.registrationType = 'staff';
       
-      return boundAuthController.register(testReq, res);
+      return authController.register(testReq, res);
       
     } catch (error) {
       res.status(500).json({ success: false, error: error.message, testMode: true });
@@ -918,12 +856,12 @@ router.use((req, res) => {
         "POST /api/auth/forgot-password",
         "POST /api/auth/reset-password",
         "POST /api/auth/refresh-token",
-        "POST /api/auth/verify-email/:token",
+        "GET /api/auth/verify-email/:token",
         "POST /api/auth/resend-verification-email",
-        "POST /api/auth/verify-phone",
         "GET /api/auth/health",
         "GET /api/auth/test",
         "GET /api/auth/rate-limit-info",
+        "GET /api/auth/debug-controller",
       ],
       protected: [
         "GET /api/auth/me",

@@ -190,13 +190,13 @@ const datingUserSchema = new mongoose.Schema({
 });
 
 // ========== DATING SPECIFIC INDEXES ==========
-// datingUserSchema.index({ 'location.coordinates': '2dsphere' });
-// datingUserSchema.index({ 'preferences.lookingFor': 1 });
-// datingUserSchema.index({ dateOfBirth: 1 });
-// datingUserSchema.index({ 'datingStats.lastActiveDate': -1 });
-// datingUserSchema.index({ 'preferences.ageRange.min': 1, 'preferences.ageRange.max': 1 });
-// datingUserSchema.index({ profileCompletion: -1 });
-// datingUserSchema.index({ isPremium: 1, 'datingStats.lastActiveDate': -1 });
+datingUserSchema.index({ 'location.coordinates': '2dsphere' });
+datingUserSchema.index({ 'preferences.lookingFor': 1 });
+datingUserSchema.index({ dateOfBirth: 1 });
+datingUserSchema.index({ 'datingStats.lastActiveDate': -1 });
+datingUserSchema.index({ 'preferences.ageRange.min': 1, 'preferences.ageRange.max': 1 });
+datingUserSchema.index({ profileCompletion: -1 });
+datingUserSchema.index({ isPremium: 1, 'datingStats.lastActiveDate': -1 });
 
 // ========== DATING SPECIFIC VIRTUAL PROPERTIES ==========
 datingUserSchema.virtual("age").get(function () {

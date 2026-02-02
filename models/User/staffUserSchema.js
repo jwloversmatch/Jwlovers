@@ -1,4 +1,4 @@
-// models/User/staffUserSchema.js - UPDATED
+// models/User/staffUserSchema.js - COMPLETE WORKING VERSION
 const mongoose = require("mongoose");
 
 const staffUserSchema = new mongoose.Schema({
@@ -94,12 +94,29 @@ const staffUserSchema = new mongoose.Schema({
     }
   }],
   
-  // ========== STAFF SETTINGS ==========
+  // ========== FIXED STAFF SETTINGS ==========
   staffNotificationSettings: {
     userReports: { 
-      type: String,
-      enum: ['all', 'high_priority', 'assigned', 'none'],
-      default: 'assigned'
+      type: mongoose.Schema.Types.Mixed,  // Changed from String to Mixed
+      validate: {
+        validator: function(value) {
+          // Accept boolean OR string enum values
+          if (value === true || value === false) return true;
+          if (typeof value === 'string') {
+            const validValues = ['all', 'high_priority', 'assigned', 'none'];
+            return validValues.includes(value.toLowerCase());
+          }
+          return false;
+        },
+        message: 'userReports must be true, false, or one of: all, high_priority, assigned, none'
+      },
+      default: 'assigned',
+      set: function(value) {
+        // Automatically convert boolean to string when setting
+        if (value === true) return 'all';
+        if (value === false) return 'none';
+        return value;
+      }
     },
     systemAlerts: { type: Boolean, default: true },
     adminAnnouncements: { type: Boolean, default: true },
@@ -109,7 +126,7 @@ const staffUserSchema = new mongoose.Schema({
   },
   
   workHours: {
-    startTime: { type: String, default: '09:00' }, // Format: HH:MM
+    startTime: { type: String, default: '09:00' },
     endTime: { type: String, default: '17:00' },
     timezone: { type: String, default: 'UTC' },
     workDays: {
@@ -123,8 +140,8 @@ const staffUserSchema = new mongoose.Schema({
   workStats: {
     casesResolved: { type: Number, default: 0 },
     casesEscalated: { type: Number, default: 0 },
-    averageResolutionTime: { type: Number, default: 0 }, // in minutes
-    responseTime: { type: Number, default: 0 }, // average response time in minutes
+    averageResolutionTime: { type: Number, default: 0 },
+    responseTime: { type: Number, default: 0 },
     lastActiveShift: Date,
     totalShiftHours: { type: Number, default: 0 },
     performanceScore: { type: Number, min: 0, max: 100, default: 0 }
@@ -156,14 +173,6 @@ const staffUserSchema = new mongoose.Schema({
   }]
 });
 
-// ========== STAFF SPECIFIC INDEXES ==========
-// staffUserSchema.index({ employeeId: 1 }, { unique: true });
-// staffUserSchema.index({ department: 1, role: 1 });
-// staffUserSchema.index({ 'workStats.lastActiveShift': -1 });
-// staffUserSchema.index({ 'assignedCases.status': 1, 'assignedCases.priority': -1 });
-// staffUserSchema.index({ reportsTo: 1 });
-// staffUserSchema.index({ 'managedUsers': 1 });
-
 // ========== STAFF SPECIFIC VIRTUAL PROPERTIES ==========
 staffUserSchema.virtual("isOnShift").get(function() {
   if (!this.workStats?.lastActiveShift) return false;
@@ -172,7 +181,6 @@ staffUserSchema.virtual("isOnShift").get(function() {
   const now = new Date();
   const hoursSinceLastShift = (now - lastShift) / (1000 * 60 * 60);
   
-  // Consider on shift if active in last 4 hours
   return hoursSinceLastShift < 4;
 });
 
@@ -215,7 +223,6 @@ staffUserSchema.methods.getStaffProfile = function (requestingUser = null) {
     }
   };
   
-  // Add sensitive info for self or senior staff
   if (isSelf || isSenior) {
     profile.hireDate = this.hireDate;
     profile.reportsTo = this.reportsTo;
@@ -242,7 +249,6 @@ staffUserSchema.methods.getStaffProfile = function (requestingUser = null) {
 staffUserSchema.methods.logStaffAction = async function(action, details = {}, options = {}) {
   const session = options.session;
   
-  // Update lastAdminAction in base schema
   this.lastAdminAction = {
     action,
     performedBy: this._id,
@@ -251,7 +257,6 @@ staffUserSchema.methods.logStaffAction = async function(action, details = {}, op
     notes: details.notes
   };
   
-  // Add to recent activity
   this.recentActivity = this.recentActivity || [];
   this.recentActivity.push({
     action,
@@ -261,7 +266,6 @@ staffUserSchema.methods.logStaffAction = async function(action, details = {}, op
     timestamp: new Date()
   });
   
-  // Keep only last 100 activities
   if (this.recentActivity.length > 100) {
     this.recentActivity = this.recentActivity.slice(-100);
   }
@@ -273,20 +277,16 @@ staffUserSchema.methods.logStaffAction = async function(action, details = {}, op
 };
 
 staffUserSchema.methods.canManageStaff = function(targetStaff) {
-  // Super admin can manage everyone
   if (this.role === 'super_admin') return true;
   
-  // Admin cannot manage other admins or super admins
   if (this.role === 'admin') {
     return !['admin', 'super_admin'].includes(targetStaff.role);
   }
   
-  // Moderator cannot manage any staff
   if (this.role === 'moderator') {
     return false;
   }
   
-  // Department heads can manage staff in their department
   if (this.department === 'management' && this.department === targetStaff.department) {
     return targetStaff.role === 'moderator' || targetStaff.role === 'user';
   }
@@ -297,7 +297,6 @@ staffUserSchema.methods.canManageStaff = function(targetStaff) {
 staffUserSchema.methods.assignCase = async function(caseId, caseModel, priority = 'medium') {
   this.assignedCases = this.assignedCases || [];
   
-  // Check if already assigned
   const existingCase = this.assignedCases.find(c => 
     c.caseId.equals(caseId) && c.caseModel === caseModel
   );
@@ -334,16 +333,13 @@ staffUserSchema.methods.updateCaseStatus = async function(caseId, caseModel, new
     const oldStatus = this.assignedCases[caseIndex].status;
     this.assignedCases[caseIndex].status = newStatus;
     
-    // Update work stats if resolved
     if (newStatus === 'resolved' && oldStatus !== 'resolved') {
       this.workStats.casesResolved = (this.workStats.casesResolved || 0) + 1;
       
-      // Calculate resolution time
       const assignedAt = this.assignedCases[caseIndex].assignedAt;
       const resolvedAt = new Date();
-      const resolutionTime = (resolvedAt - assignedAt) / (1000 * 60); // in minutes
+      const resolutionTime = (resolvedAt - assignedAt) / (1000 * 60);
       
-      // Update average resolution time
       const currentAvg = this.workStats.averageResolutionTime || 0;
       const totalCases = this.workStats.casesResolved;
       this.workStats.averageResolutionTime = 
@@ -372,39 +368,32 @@ staffUserSchema.methods.recordShiftActivity = async function() {
 };
 
 staffUserSchema.methods.hasPermission = function(resource, action) {
-  // Super admins have all permissions
   if (this.role === 'super_admin') return true;
   
-  // Check explicit permissions
   if (this.permissions) {
     const resourcePermissions = this.permissions.filter(p => p.resource === resource);
     
     for (const perm of resourcePermissions) {
-      // Check if permission is expired
       if (perm.expiresAt && new Date(perm.expiresAt) < new Date()) {
         continue;
       }
       
-      // Check if action is allowed
       if (perm.actions.includes(action) || perm.actions.includes('all')) {
         return true;
       }
     }
   }
   
-  // Check role-based permissions (from base schema)
   return this.baseHasPermission?.(`${resource}:${action}`) || false;
 };
 
 staffUserSchema.methods.grantPermission = async function(resource, actions, grantedBy, expiresAt = null, conditions = null) {
   this.permissions = this.permissions || [];
   
-  // Remove existing permission for same resource from same granter
   this.permissions = this.permissions.filter(p => 
     !(p.resource === resource && p.grantedBy?.equals(grantedBy._id))
   );
   
-  // Add new permission
   this.permissions.push({
     resource,
     actions: Array.isArray(actions) ? actions : [actions],
@@ -472,7 +461,6 @@ staffUserSchema.statics.findAvailableStaff = function(department = null, minPerf
     query.department = department;
   }
   
-  // Find staff with fewest active cases
   return this.aggregate([
     { $match: query },
     {
@@ -528,7 +516,7 @@ staffUserSchema.statics.getDepartmentStats = function() {
                   { 
                     $gte: [
                       { $subtract: [new Date(), "$workStats.lastActiveShift"] },
-                      4 * 60 * 60 * 1000 // 4 hours in milliseconds
+                      4 * 60 * 60 * 1000
                     ]
                   }
                 ]

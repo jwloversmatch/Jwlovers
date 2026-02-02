@@ -634,12 +634,12 @@
   });
 
   // ========== INDEXES ==========
-  // baseUserSchema.index({ email: 1 }, { unique: true });
-  // baseUserSchema.index({ userName: 1 }, { unique: true, sparse: true });
-  // baseUserSchema.index({ role: 1, accountStatus: 1 });
-  // baseUserSchema.index({ "presence.lastSeen": -1 });
-  // baseUserSchema.index({ lastPasswordChange: 1 });
-  // baseUserSchema.index({ accountStatus: 1, role: 1, emailVerified: 1 });
+  baseUserSchema.index({ email: 1 }, { unique: true });
+  baseUserSchema.index({ userName: 1 }, { unique: true, sparse: true });
+  baseUserSchema.index({ role: 1, accountStatus: 1 });
+  baseUserSchema.index({ "presence.lastSeen": -1 });
+  baseUserSchema.index({ lastPasswordChange: 1 });
+  baseUserSchema.index({ accountStatus: 1, role: 1, emailVerified: 1 });
 
   module.exports = {
     baseUserSchema,

@@ -1,4 +1,4 @@
-// controllers/AuthController.js - UPDATED WITH SECURITY SESSION
+// controllers/AuthController.js - SIMPLIFIED PRACTICAL VERSION
 const BaseController = require("../BaseController");
 const { BaseUser, ROLES } = require("@models/User");
 const authService = require("@services/AuthService");
@@ -6,16 +6,19 @@ const validationService = require("@services/ValidationService");
 const authHelpers = require("@utils/AuthHelpers");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const validator = require("validator");
 
 class AuthController extends BaseController {
   constructor() {
     super();
     this.logger = console;
     this.validateEnvVars();
+    // Simple in-memory rate limiting for refresh tokens
+    this.refreshAttempts = new Map();
   }
 
   validateEnvVars() {
-    const required = ["JWT_SECRET"];
+    const required = ["JWT_SECRET", "FRONTEND_URL"];
     const missing = required.filter((key) => !process.env[key]);
     if (missing.length > 0) {
       throw new Error(
@@ -24,7 +27,106 @@ class AuthController extends BaseController {
     }
   }
 
-  // ========== MAIN REGISTRATION METHOD (UPDATED) ==========
+  // ========== HELPER METHODS ==========
+  /**
+   * Standardize success responses for consistent frontend handling
+   */
+  standardizedSuccessResponse(res, statusCode, data, message = "") {
+    // Always ensure data field exists
+    const responseData = {
+      success: true,
+      data: data || {},
+      message,
+      timestamp: new Date().toISOString(),
+    };
+    
+    return res.status(statusCode).json(responseData);
+  }
+
+  /**
+   * Standardize error responses for consistent frontend handling
+   */
+  standardizedErrorResponse(res, statusCode, errorMessage, fieldErrors = null) {
+    const response = {
+      success: false,
+      message: errorMessage,
+      statusCode,
+      timestamp: new Date().toISOString(),
+    };
+    
+    if (fieldErrors) {
+      response.errors = fieldErrors;
+    }
+    
+    return res.status(statusCode).json(response);
+  }
+
+  /**
+   * Enhance user object with virtual fields for frontend
+   */
+  enhanceUserResponse(user) {
+    if (!user) return null;
+    
+    // Get base formatted user
+    const userData = authHelpers.formatUserResponse(user);
+    
+    // Ensure virtual fields are present
+    if (!userData.fullName && user.firstName && user.lastName) {
+      userData.fullName = `${user.firstName} ${user.lastName}`;
+    }
+    
+    if (userData.isActive === undefined) {
+      userData.isActive = user.accountStatus === 'active' || user.accountStatus === 'pending_verification';
+    }
+    
+    if (userData.isAdminUser === undefined) {
+      userData.isAdminUser = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
+    }
+    
+    if (userData.isSuperAdminUser === undefined) {
+      userData.isSuperAdminUser = user.role === ROLES.SUPER_ADMIN;
+    }
+    
+    // Add age for dating users
+    if (user.userType === 'DatingUser' && user.dateOfBirth) {
+      userData.age = this.calculateAge(new Date(user.dateOfBirth));
+    }
+    
+    return userData;
+  }
+
+  /**
+   * Generate consistent auth response data
+   */
+  generateAuthResponseData(user, includeTokens = true) {
+    const userData = this.enhanceUserResponse(user);
+    const permissions = authHelpers.getRolePermissions(user.role);
+    const features = authHelpers.getRoleFeatures(user.role);
+    
+    const baseResponse = {
+      user: userData,
+      requiresVerification: !user.emailVerified,
+      role: user.role,
+      userType: user.userType,
+      permissions,
+      features,
+    };
+    
+    if (includeTokens) {
+      const { accessToken, refreshToken } = authService.generateTokens(user);
+      return {
+        ...baseResponse,
+        accessToken,
+        refreshToken,
+        expiresIn: user.role !== ROLES.USER ? 1800 : 900,
+        tokenType: "Bearer",
+      };
+    }
+    
+    return baseResponse;
+  }
+
+  // ========== REGISTRATION ==========
   async register(req, res) {
     const session = await BaseUser.startSession();
     
@@ -40,7 +142,7 @@ class AuthController extends BaseController {
         dateOfBirth,
         role = ROLES.USER,
         inviteCode,
-        sessionId, // REQUIRED for dating users
+        sessionId,
         employeeId,
         department,
         jobTitle,
@@ -48,63 +150,60 @@ class AuthController extends BaseController {
         gender,
         phoneNumber,
         country,
-        registrationType = req.registrationType || 'dating', // From middleware
+        registrationType = req.registrationType || 'dating',
       } = req.body;
 
       // ===== 1. DETERMINE USER TYPE =====
       let userType;
       let userRole = role;
+      let inviteValidation = null;
       
       if (registrationType === 'staff') {
         userType = 'Staff';
         console.log(`👔 Staff registration detected for: ${email}`);
       } else {
         userType = 'DatingUser';
-        userRole = ROLES.USER; // Dating users are always USER role
+        userRole = ROLES.USER;
         console.log(`💑 Dating registration detected for: ${email}`);
       }
 
       // ===== 2. SECURITY VALIDATION =====
       if (registrationType === 'dating') {
-        // VALIDATE sessionId FOR ALL DATING USERS
         if (!sessionId) {
           await session.abortTransaction();
-          return this.errorResponse(
+          return this.standardizedErrorResponse(
             res, 
             403, 
             "Security verification required for dating user registration. Please answer the security question first."
           );
         }
         
-        // Validate the sessionId from security question
         const sessionValidation = await this.validateSecuritySession(sessionId);
         if (!sessionValidation.valid) {
           await session.abortTransaction();
-          return this.errorResponse(res, 403, sessionValidation.error);
+          return this.standardizedErrorResponse(res, 403, sessionValidation.error);
         }
       }
       
       if (registrationType === 'staff') {
-        // Validate invite code for staff
         if (!inviteCode) {
           await session.abortTransaction();
-          return this.errorResponse(
+          return this.standardizedErrorResponse(
             res, 
             403, 
             "Invite code is required for staff registration. Please contact an administrator."
           );
         }
         
-        const inviteValidation = await authService.validateAdminInvite(inviteCode, userRole);
+        inviteValidation = await authService.validateAdminInvite(inviteCode, userRole);
         if (!inviteValidation.valid) {
           await session.abortTransaction();
-          return this.errorResponse(res, 403, inviteValidation.error);
+          return this.standardizedErrorResponse(res, 403, inviteValidation.error);
         }
         
-        // Validate staff-specific fields
         if (!employeeId || !department || !jobTitle) {
           await session.abortTransaction();
-          return this.errorResponse(
+          return this.standardizedErrorResponse(
             res,
             400,
             "Staff registration requires employeeId, department, and jobTitle"
@@ -116,7 +215,7 @@ class AuthController extends BaseController {
       const validation = validationService.validateRegistrationInput(req.body);
       if (!validation.valid) {
         await session.abortTransaction();
-        return this.errorResponse(res, 400, validation.error);
+        return this.standardizedErrorResponse(res, 400, validation.error);
       }
 
       // ===== 4. AGE VALIDATION FOR DATING USERS =====
@@ -124,11 +223,11 @@ class AuthController extends BaseController {
         const age = this.calculateAge(new Date(dateOfBirth));
         if (age < 18) {
           await session.abortTransaction();
-          return this.errorResponse(res, 400, "You must be at least 18 years old");
+          return this.standardizedErrorResponse(res, 400, "You must be at least 18 years old");
         }
         if (age > 100) {
           await session.abortTransaction();
-          return this.errorResponse(res, 400, "Please enter a valid date of birth");
+          return this.standardizedErrorResponse(res, 400, "Please enter a valid date of birth");
         }
       }
 
@@ -139,7 +238,7 @@ class AuthController extends BaseController {
       
       if (existingUser) {
         await session.abortTransaction();
-        return this.errorResponse(res, 400, "Email already exists");
+        return this.standardizedErrorResponse(res, 400, "Email already exists");
       }
 
       if (userName) {
@@ -149,11 +248,10 @@ class AuthController extends BaseController {
         
         if (existingUserWithUsername) {
           await session.abortTransaction();
-          return this.errorResponse(res, 400, "Username already exists");
+          return this.standardizedErrorResponse(res, 400, "Username already exists");
         }
       }
 
-      // Additional check for staff employeeId
       if (userType === 'Staff' && employeeId) {
         const existingEmployee = await BaseUser.findOne({ 
           employeeId 
@@ -161,7 +259,7 @@ class AuthController extends BaseController {
         
         if (existingEmployee) {
           await session.abortTransaction();
-          return this.errorResponse(res, 400, "Employee ID already exists");
+          return this.standardizedErrorResponse(res, 400, "Employee ID already exists");
         }
       }
 
@@ -179,10 +277,11 @@ class AuthController extends BaseController {
         isEmailVerified: false,
         registrationType: registrationType,
         registrationDate: new Date(),
-        securitySessionId: sessionId, // Store the validated sessionId
+        securitySessionId: sessionId,
+        // Add tokenVersion field for logout everywhere feature
+        tokenVersion: 1,
       };
 
-      // Add staff-specific fields if applicable
       if (userType === 'Staff') {
         userData.employeeId = employeeId;
         userData.department = department;
@@ -190,7 +289,6 @@ class AuthController extends BaseController {
         userData.managedUsers = managedUsers;
       }
 
-      // Add optional fields
       if (gender) userData.gender = gender;
       if (phoneNumber) userData.phoneNumber = phoneNumber;
       if (country) userData.country = country;
@@ -209,7 +307,7 @@ class AuthController extends BaseController {
       await user.save({ session });
 
       // ===== 9. MARK INVITE AS USED (FOR STAFF) =====
-      if (userType === 'Staff' && inviteCode) {
+      if (userType === 'Staff' && inviteCode && inviteValidation) {
         await authService.markInviteAsUsed(inviteValidation.invite._id, user._id, session);
       }
 
@@ -249,7 +347,20 @@ class AuthController extends BaseController {
         message = `Staff account created successfully as ${userRole}. Please verify your email.`;
       }
 
-      return this.sendAuthResponse(user, res, 201, message);
+      // Generate enhanced auth response
+      const authResponseData = this.generateAuthResponseData(user, true);
+      
+      // Update user with refresh token (TOKEN ROTATION - store new token)
+      user.refreshToken = authResponseData.refreshToken;
+      user.lastLogin = new Date();
+      if (typeof user.updatePresence === "function") {
+        await user.updatePresence("online");
+      }
+      await user.save({ validateBeforeSave: false });
+      
+      authHelpers.setAuthCookies(res, authResponseData.accessToken, authResponseData.refreshToken);
+
+      return this.standardizedSuccessResponse(res, 201, authResponseData, message);
 
     } catch (error) {
       if (session.inTransaction()) await session.abortTransaction();
@@ -257,12 +368,12 @@ class AuthController extends BaseController {
 
       if (error.name === "ValidationError") {
         const messages = Object.values(error.errors).map((err) => err.message);
-        return this.errorResponse(res, 400, messages.join(", "));
+        return this.standardizedErrorResponse(res, 400, messages.join(", "));
       }
 
       if (error.code === 11000) {
         const field = Object.keys(error.keyPattern)[0];
-        return this.errorResponse(res, 400, `${field} already exists`);
+        return this.standardizedErrorResponse(res, 400, `${field} already exists`);
       }
 
       return this.handleError(error, req, res);
@@ -271,47 +382,10 @@ class AuthController extends BaseController {
     }
   }
 
-  // ===== LEGACY STAFF REGISTRATION (FOR BACKWARD COMPATIBILITY) =====
+  // ===== LEGACY STAFF REGISTRATION =====
   async registerStaff(req, res) {
-    // Set registration type and forward to main register method
     req.registrationType = 'staff';
     return this.register(req, res);
-  }
-
-  // ===== SECURITY SESSION VALIDATION METHODS =====
-  async validateSecuritySession(sessionId) {
-    try {
-      const securityController = require('@controllers/securityquestion.controller');
-      return await securityController.validateSessionForRegistration(sessionId);
-    } catch (error) {
-      console.error("Session validation error:", error);
-      return { valid: false, error: "Security session validation failed" };
-    }
-  }
-
-  async markSecuritySessionCompleted(sessionId, userId, dbSession) {
-    try {
-      const securityController = require('@controllers/securityquestion.controller');
-      await securityController.markSessionAsUsed(sessionId, userId);
-      
-      console.log(`✅ Security session ${sessionId} linked to user ${userId}`);
-    } catch (error) {
-      console.error("Error marking session completed:", error);
-      // Don't throw error here - registration should still succeed
-    }
-  }
-
-  // Helper method to calculate age
-  calculateAge(birthDate) {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
   }
 
   // ========== AUTHENTICATION ==========
@@ -320,7 +394,7 @@ class AuthController extends BaseController {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return this.errorResponse(
+        return this.standardizedErrorResponse(
           res,
           400,
           "Please provide email and password",
@@ -330,7 +404,7 @@ class AuthController extends BaseController {
       const result = await authService.authenticateUser(email, password);
 
       if (!result.success) {
-        return this.errorResponse(res, result.code, result.error);
+        return this.standardizedErrorResponse(res, result.code, result.error);
       }
 
       await authHelpers.logSecurityEvent(result.user._id, "login_success", {
@@ -339,15 +413,27 @@ class AuthController extends BaseController {
         ip: req.ip,
         userAgent: req.headers["user-agent"],
         timestamp: new Date().toISOString(),
-        securityLevel:
-          result.user.role !== ROLES.USER ? "elevated" : "standard",
+        securityLevel: result.user.role !== ROLES.USER ? "elevated" : "standard",
       });
 
-      return this.sendAuthResponse(
-        result.user,
+      // Generate enhanced auth response
+      const authResponseData = this.generateAuthResponseData(result.user, true);
+      
+      // Update user with refresh token
+      result.user.refreshToken = authResponseData.refreshToken;
+      result.user.lastLogin = new Date();
+      if (typeof result.user.updatePresence === "function") {
+        await result.user.updatePresence("online");
+      }
+      await result.user.save({ validateBeforeSave: false });
+      
+      authHelpers.setAuthCookies(res, authResponseData.accessToken, authResponseData.refreshToken);
+
+      return this.standardizedSuccessResponse(
         res,
         200,
-        authHelpers.getWelcomeMessage(result.user),
+        authResponseData,
+        authHelpers.getWelcomeMessage(result.user)
       );
     } catch (error) {
       this.logger.error("Login error:", error);
@@ -360,6 +446,7 @@ class AuthController extends BaseController {
       if (req.userId) {
         const user = await BaseUser.findById(req.userId);
         if (user) {
+          // Clear refresh token (simple logout)
           user.refreshToken = null;
 
           if (typeof user.updatePresence === "function") {
@@ -386,23 +473,63 @@ class AuthController extends BaseController {
       }
 
       authHelpers.clearAuthCookies(res);
-      return this.successResponse(res, 200, {}, "Logged out successfully");
+      
+      return this.standardizedSuccessResponse(
+        res,
+        200,
+        { 
+          message: "Logged out successfully",
+          timestamp: new Date().toISOString()
+        },
+        "Logged out successfully"
+      );
     } catch (error) {
       authHelpers.clearAuthCookies(res);
       this.logger.error("Logout error:", error);
-      return this.successResponse(res, 200, {}, "Logged out successfully");
+      
+      // Still return success response for logout
+      return this.standardizedSuccessResponse(
+        res,
+        200,
+        { 
+          message: "Logged out successfully",
+          timestamp: new Date().toISOString()
+        },
+        "Logged out successfully"
+      );
     }
   }
 
+  // ========== REFRESH TOKEN - SIMPLIFIED & SECURE ==========
   async refreshToken(req, res) {
     try {
+      // Simple rate limiting check
+      const ip = req.ip;
+      const now = Date.now();
+      const windowMs = 15 * 60 * 1000; // 15 minutes
+      const maxAttempts = 10;
+      
+      if (!this.refreshAttempts.has(ip)) {
+        this.refreshAttempts.set(ip, []);
+      }
+      
+      const attempts = this.refreshAttempts.get(ip);
+      const validAttempts = attempts.filter(time => now - time < windowMs);
+      
+      if (validAttempts.length >= maxAttempts) {
+        return this.standardizedErrorResponse(res, 429, 'Too many refresh attempts. Please try again later.');
+      }
+      
+      validAttempts.push(now);
+      this.refreshAttempts.set(ip, validAttempts);
+
       const refreshToken =
         req.cookies?.refreshToken ||
         req.body?.refreshToken ||
         req.headers["x-refresh-token"];
 
       if (!refreshToken) {
-        return this.errorResponse(res, 401, "Refresh token is required");
+        return this.standardizedErrorResponse(res, 401, "Refresh token is required");
       }
 
       const decoded = jwt.verify(
@@ -413,23 +540,36 @@ class AuthController extends BaseController {
       const user = await BaseUser.findOne({
         _id: decoded.userId,
         accountStatus: { $nin: ["suspended", "banned", "deactivated"] },
-      }).select("+refreshToken");
+      }).select("+refreshToken +tokenVersion");
 
       if (!user) {
         authHelpers.clearAuthCookies(res);
-        return this.errorResponse(res, 401, "Invalid refresh token");
+        return this.standardizedErrorResponse(res, 401, "Invalid refresh token");
       }
 
-      if (user.refreshToken && user.refreshToken !== refreshToken) {
+      // Check token version (for logout everywhere feature)
+      if (user.tokenVersion !== decoded.tokenVersion) {
         authHelpers.clearAuthCookies(res);
         user.refreshToken = null;
         await user.save({ validateBeforeSave: false });
-        return this.errorResponse(res, 401, "Refresh token invalidated");
+        return this.standardizedErrorResponse(res, 401, "Session expired. Please login again.");
       }
 
+      // Check if stored token matches (simple security)
+      if (user.refreshToken && user.refreshToken !== refreshToken) {
+        // Token mismatch - clear all tokens
+        authHelpers.clearAuthCookies(res);
+        user.refreshToken = null;
+        await user.save({ validateBeforeSave: false });
+        return this.standardizedErrorResponse(res, 401, "Session invalidated. Please login again.");
+      }
+
+      // Generate new tokens (TOKEN ROTATION - critical!)
       const { accessToken, newRefreshToken } = authService.generateTokens(user);
 
+      // Store new refresh token (ROTATION)
       user.refreshToken = newRefreshToken;
+      user.lastLogin = new Date();
 
       if (typeof user.updatePresence === "function") {
         await user.updatePresence("online");
@@ -439,30 +579,174 @@ class AuthController extends BaseController {
 
       authHelpers.setAuthCookies(res, accessToken, newRefreshToken);
 
-      return this.successResponse(
+      // Generate enhanced response
+      const responseData = {
+        accessToken,
+        refreshToken: newRefreshToken,
+        expiresIn: 900,
+        tokenType: "Bearer",
+        requiresVerification: !user.emailVerified,
+        role: user.role,
+        userType: user.userType,
+        features: authHelpers.getRoleFeatures(user.role),
+        permissions: authHelpers.getRolePermissions(user.role),
+      };
+
+      return this.standardizedSuccessResponse(
         res,
         200,
-        {
-          accessToken,
-          refreshToken: newRefreshToken,
-          expiresIn: 900,
-          tokenType: "Bearer",
-          requiresVerification: !user.emailVerified,
-          role: user.role,
-          userType: user.userType,
-          features: authHelpers.getRoleFeatures(user.role),
-        },
-        "Token refreshed successfully",
+        responseData,
+        "Token refreshed successfully"
       );
     } catch (error) {
       authHelpers.clearAuthCookies(res);
-      if (
-        error.name === "JsonWebTokenError" ||
-        error.name === "TokenExpiredError"
-      ) {
-        return this.errorResponse(res, 401, "Invalid or expired refresh token");
+      
+      if (error.name === "TokenExpiredError") {
+        return this.standardizedErrorResponse(res, 401, "Session expired. Please login again.");
       }
+      
+      if (error.name === "JsonWebTokenError") {
+        return this.standardizedErrorResponse(res, 401, "Invalid token");
+      }
+      
       this.logger.error("Refresh token error:", error);
+      return this.standardizedErrorResponse(res, 500, "Internal server error");
+    }
+  }
+
+  // ========== LOGOUT EVERYWHERE (Optional but nice feature) ==========
+  async logoutEverywhere(req, res) {
+    try {
+      if (!req.userId) {
+        return this.standardizedErrorResponse(res, 401, "Not authenticated");
+      }
+
+      const user = await BaseUser.findById(req.userId);
+      if (!user) {
+        return this.standardizedErrorResponse(res, 404, "User not found");
+      }
+
+      // Increment token version to invalidate all tokens
+      user.tokenVersion = (user.tokenVersion || 1) + 1;
+      user.refreshToken = null;
+      await user.save({ validateBeforeSave: false });
+
+      authHelpers.clearAuthCookies(res);
+
+      await authHelpers.logSecurityEvent(user._id, "logout_everywhere", {
+        ip: req.ip,
+        timestamp: new Date().toISOString(),
+      });
+
+      return this.standardizedSuccessResponse(
+        res,
+        200,
+        {
+          message: "Logged out from all devices",
+          timestamp: new Date().toISOString(),
+        },
+        "Logged out from all devices successfully"
+      );
+    } catch (error) {
+      this.logger.error("Logout everywhere error:", error);
+      return this.handleError(error, req, res);
+    }
+  }
+
+  // ========== EMAIL VERIFICATION ==========
+  async verifyEmail(req, res) {
+    try {
+      const { token } = req.params;
+
+      if (!token) {
+        return this.standardizedErrorResponse(res, 400, "Verification token is required");
+      }
+
+      const hashedToken = authService.hashToken(token);
+      
+      const user = await BaseUser.findOne({
+        emailVerificationToken: hashedToken,
+        emailVerificationExpires: { $gt: Date.now() },
+        isEmailVerified: false,
+      });
+
+      if (!user) {
+        return this.standardizedErrorResponse(res, 400, "Invalid or expired verification token");
+      }
+
+      user.isEmailVerified = true;
+      user.emailVerificationToken = null;
+      user.emailVerificationExpires = null;
+      user.emailVerifiedAt = new Date();
+      await user.save();
+
+      await authHelpers.logSecurityEvent(user._id, "email_verified", {
+        email: user.email,
+        userType: user.userType,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (user.userType === 'DatingUser') {
+        await this.sendWelcomeEmail(user.email, user.firstName);
+      }
+
+      return this.standardizedSuccessResponse(
+        res,
+        200,
+        {
+          email: user.email,
+          userType: user.userType,
+          requiresCompleteProfile: user.userType === 'DatingUser',
+          // Include user info for immediate frontend update
+          user: this.enhanceUserResponse(user),
+        },
+        "Email verified successfully"
+      );
+    } catch (error) {
+      this.logger.error("Verify email error:", error);
+      return this.handleError(error, req, res);
+    }
+  }
+
+  // ========== GET CURRENT USER ==========
+  async getCurrentUser(req, res) {
+    try {
+      if (!req.userId) {
+        return this.standardizedErrorResponse(res, 401, "Not authenticated");
+      }
+
+      const user = await BaseUser.findById(req.userId)
+        .select('-password -refreshToken -passwordHistory -__v -securitySessionId -emailVerificationToken -emailVerificationExpires');
+
+      if (!user) {
+        return this.standardizedErrorResponse(res, 404, "User not found");
+      }
+
+      if (!user.isActive || user.accountStatus && ['suspended', 'banned', 'deactivated'].includes(user.accountStatus)) {
+        return this.standardizedErrorResponse(res, 403, "Account is not active");
+      }
+
+      const accessToken = req.headers.authorization?.replace('Bearer ', '');
+
+      // Generate enhanced response
+      const responseData = {
+        user: this.enhanceUserResponse(user),
+        accessToken: accessToken || undefined,
+        requiresVerification: !user.isEmailVerified,
+        role: user.role,
+        userType: user.userType,
+        permissions: authHelpers.getRolePermissions(user.role),
+        features: authHelpers.getRoleFeatures(user.role),
+      };
+
+      return this.standardizedSuccessResponse(
+        res,
+        200,
+        responseData,
+        "User retrieved successfully"
+      );
+    } catch (error) {
+      this.logger.error("Get current user error:", error);
       return this.handleError(error, req, res);
     }
   }
@@ -473,18 +757,18 @@ class AuthController extends BaseController {
       const { currentPassword, newPassword, confirmPassword } = req.body;
 
       if (!currentPassword || !newPassword || !confirmPassword) {
-        return this.errorResponse(res, 400, "All password fields are required");
+        return this.standardizedErrorResponse(res, 400, "All password fields are required");
       }
 
       if (newPassword !== confirmPassword) {
-        return this.errorResponse(res, 400, "New passwords do not match");
+        return this.standardizedErrorResponse(res, 400, "New passwords do not match");
       }
 
       const user = await BaseUser.findById(req.userId).select(
         "+password +passwordHistory +accountLockedUntil +role +userType",
       );
       if (!user) {
-        return this.errorResponse(res, 404, "User not found");
+        return this.standardizedErrorResponse(res, 404, "User not found");
       }
 
       if (user.accountLockedUntil) {
@@ -492,7 +776,7 @@ class AuthController extends BaseController {
           user.role !== ROLES.USER
             ? "Staff account locked. Contact security team."
             : "Cannot change password while account is locked.";
-        return this.errorResponse(res, 403, {
+        return this.standardizedErrorResponse(res, 403, {
           error: "Account locked",
           message,
         });
@@ -505,7 +789,7 @@ class AuthController extends BaseController {
       );
 
       if (!result.success) {
-        return this.errorResponse(res, 400, result.error);
+        return this.standardizedErrorResponse(res, 400, result.error);
       }
 
       await authHelpers.logSecurityEvent(user._id, "password_changed", {
@@ -516,12 +800,22 @@ class AuthController extends BaseController {
         securityLevel: user.role !== ROLES.USER ? "high" : "standard",
       });
 
+      // Invalidate all tokens when password changes (security best practice)
+      user.refreshToken = null;
+      user.tokenVersion = (user.tokenVersion || 1) + 1;
+      await user.save({ validateBeforeSave: false });
+      
       authHelpers.clearAuthCookies(res);
-      return this.successResponse(
+      
+      return this.standardizedSuccessResponse(
         res,
         200,
-        null,
-        "Password changed successfully. Please login again.",
+        {
+          message: "Password changed successfully. Please login again.",
+          requiresReauthentication: true,
+          timestamp: new Date().toISOString(),
+        },
+        "Password changed successfully"
       );
     } catch (error) {
       return this.handleError(error, req, res);
@@ -532,8 +826,8 @@ class AuthController extends BaseController {
     try {
       const { email } = req.body;
 
-      if (!email || !require("validator").isEmail(email)) {
-        return this.errorResponse(
+      if (!email || !validator.isEmail(email)) {
+        return this.standardizedErrorResponse(
           res,
           400,
           "Please provide a valid email address",
@@ -543,7 +837,7 @@ class AuthController extends BaseController {
       const result = await authService.initiatePasswordReset(email);
 
       if (!result.success && result.error) {
-        return this.errorResponse(res, 429, result.error);
+        return this.standardizedErrorResponse(res, 429, result.error);
       }
 
       if (result.userFound) {
@@ -554,7 +848,7 @@ class AuthController extends BaseController {
           result.user.role,
         );
 
-        return this.successResponse(res, 200, {
+        return this.standardizedSuccessResponse(res, 200, {
           message: "Password reset instructions sent to your email",
           expiresIn: 15,
           accountWasLocked: result.wasLocked,
@@ -563,11 +857,14 @@ class AuthController extends BaseController {
         });
       }
 
-      return this.successResponse(
+      // Always return success for security reasons (don't reveal if email exists)
+      return this.standardizedSuccessResponse(
         res,
         200,
-        {},
-        "If your email is registered, you will receive password reset instructions within 5 minutes.",
+        {
+          message: "If your email is registered, you will receive password reset instructions within 5 minutes.",
+          note: "Check your spam folder",
+        }
       );
     } catch (error) {
       return this.handleError(error, req, res);
@@ -579,7 +876,7 @@ class AuthController extends BaseController {
       const { token, password, confirmPassword } = req.body;
 
       if (!token || !password || !confirmPassword) {
-        return this.errorResponse(
+        return this.standardizedErrorResponse(
           res,
           400,
           "Token, new password, and confirmation are required",
@@ -587,13 +884,13 @@ class AuthController extends BaseController {
       }
 
       if (password !== confirmPassword) {
-        return this.errorResponse(res, 400, "Passwords do not match");
+        return this.standardizedErrorResponse(res, 400, "Passwords do not match");
       }
 
       const result = await authService.resetPassword(token, password);
 
       if (!result.success) {
-        return this.errorResponse(res, 400, result.error);
+        return this.standardizedErrorResponse(res, 400, result.error);
       }
 
       await authHelpers.logSecurityEvent(
@@ -608,13 +905,18 @@ class AuthController extends BaseController {
         },
       );
 
+      // Invalidate all existing tokens after password reset
+      result.user.refreshToken = null;
+      result.user.tokenVersion = (result.user.tokenVersion || 1) + 1;
+      await result.user.save({ validateBeforeSave: false });
+
       await this.sendPasswordResetConfirmation(
         result.user.email,
         result.wasLocked,
         result.user.role,
       );
 
-      return this.successResponse(
+      return this.standardizedSuccessResponse(
         res,
         200,
         {
@@ -631,46 +933,36 @@ class AuthController extends BaseController {
     }
   }
 
-  // ========== HELPER METHODS ==========
-  async sendAuthResponse(user, res, statusCode, message) {
-    const { accessToken, refreshToken } = authService.generateTokens(user);
-
-    user.refreshToken = refreshToken;
-
-    if (typeof user.updatePresence === "function") {
-      await user.updatePresence("online");
+  // ========== SECURITY SESSION METHODS ==========
+  async validateSecuritySession(sessionId) {
+    try {
+      const securityController = require('@controllers/securityquestion.controller');
+      return await securityController.validateSessionForRegistration(sessionId);
+    } catch (error) {
+      console.error("Session validation error:", error);
+      return { valid: false, error: "Security session validation failed" };
     }
-
-    await user.save({ validateBeforeSave: false });
-
-    authHelpers.setAuthCookies(res, accessToken, refreshToken);
-
-    const userData = authHelpers.formatUserResponse(user);
-
-    return this.successResponse(
-      res,
-      statusCode,
-      {
-        user: userData,
-        accessToken,
-        refreshToken,
-        expiresIn: user.role !== ROLES.USER ? 1800 : 900,
-        tokenType: "Bearer",
-        requiresVerification: !user.emailVerified,
-        role: user.role,
-        userType: user.userType,
-        permissions: authHelpers.getRolePermissions(user.role),
-        features: authHelpers.getRoleFeatures(user.role),
-      },
-      message,
-    );
   }
 
+  async markSecuritySessionCompleted(sessionId, userId, dbSession) {
+    try {
+      const securityController = require('@controllers/securityquestion.controller');
+      await securityController.markSessionAsUsed(sessionId, userId);
+      
+      console.log(`✅ Security session ${sessionId} linked to user ${userId}`);
+    } catch (error) {
+      console.error("Error marking session completed:", error);
+      // Don't throw error here - registration should still succeed
+    }
+  }
+
+  // ========== EMAIL METHODS ==========
   async sendVerificationEmail(email, token, userType) {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
     this.logger.info(
       `📧 Verification email for ${email} (${userType}): ${verificationUrl}`,
     );
+    // TODO: Implement actual email sending
   }
 
   async sendStaffVerificationEmail(email, token, role, firstName, employeeId) {
@@ -680,6 +972,7 @@ class AuthController extends BaseController {
       role,
       employeeId,
     });
+    // TODO: Implement actual email sending
   }
 
   async sendPasswordResetEmail(email, token, wasLocked, role) {
@@ -689,6 +982,7 @@ class AuthController extends BaseController {
       wasLocked,
       role,
     });
+    // TODO: Implement actual email sending
   }
 
   async sendPasswordResetConfirmation(email, wasLocked, role) {
@@ -696,6 +990,52 @@ class AuthController extends BaseController {
       wasLocked,
       role,
     });
+    // TODO: Implement actual email sending
+  }
+
+  async sendWelcomeEmail(email, firstName) {
+    this.logger.info(`🎉 Welcome email prepared for ${email}`, {
+      firstName,
+    });
+    // TODO: Implement actual email sending
+  }
+
+  // ========== UTILITY METHODS ==========
+  calculateAge(birthDate) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  }
+
+  // ========== HEALTH CHECK ==========
+  async healthCheck(req, res) {
+    try {
+      const dbStatus = await BaseUser.db.readyState === 1 ? 'connected' : 'disconnected';
+      const tokensConfigured = !!(process.env.JWT_SECRET && process.env.JWT_REFRESH_SECRET);
+      const frontendUrlConfigured = !!process.env.FRONTEND_URL;
+      
+      return this.standardizedSuccessResponse(
+        res,
+        200,
+        {
+          status: 'healthy',
+          database: dbStatus,
+          tokensConfigured,
+          frontendUrlConfigured,
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        },
+        'Auth service is healthy'
+      );
+    } catch (error) {
+      return this.standardizedErrorResponse(res, 503, 'Service unavailable');
+    }
   }
 }
 

@@ -1,0 +1,40 @@
+# # Create the file
+# cat > azure-pipelines.yml << 'EOF'
+# trigger:
+# - main
+
+# pool:
+#   vmImage: 'ubuntu-latest'
+
+# steps:
+# # 1. Install Node.js
+# - task: NodeTool@0
+#   inputs:
+#     versionSpec: '18.x'
+#   displayName: 'Install Node.js'
+
+# # 2. Install dependencies
+# - script: |
+#     npm ci
+#   displayName: 'Install dependencies'
+
+# # 3. Run tests (optional)
+# - script: |
+#     npm test || echo "No tests yet, continuing..."
+#   displayName: 'Run tests'
+#   continueOnError: true
+
+# # 4. Create deployment package
+# - task: ArchiveFiles@2
+#   inputs:
+#     rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+#     includeRootFolder: false
+#     archiveType: 'zip'
+#     archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+
+# # 5. Publish artifact
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+#     ArtifactName: 'app'
+# EOF

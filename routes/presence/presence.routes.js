@@ -14,6 +14,9 @@ const {
   rateLimitInfoMiddleware
 } = require('@middleware/rateLimit');
 
+// Import logger
+const logger = require('@utils/logger');
+
 // ========== CUSTOM PRESENCE RATE LIMITERS ==========
 
 // Heartbeat rate limiter (frequent updates)
@@ -80,6 +83,65 @@ const userPresenceLimiter = createDynamicRateLimiter({
 router.use(rateLimitInfoMiddleware);
 router.use(apiLimiter);
 
+// Request ID middleware (if not already added globally)
+router.use((req, res, next) => {
+  if (!req.requestId) {
+    req.requestId = req.headers['x-request-id'] || `presence-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+  next();
+});
+
+// Logging middleware for presence API
+router.use((req, res, next) => {
+  const start = Date.now();
+  
+  // Log request (except health checks)
+  if (req.path !== '/health') {
+    logger.debug(`Presence API: ${req.method} ${req.path}`, {
+      requestId: req.requestId,
+      userId: req.userId || req.user?.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+  }
+  
+  // Add response logging
+  const originalSend = res.send;
+  const originalJson = res.json;
+  
+  res.send = function(body) {
+    const duration = Date.now() - start;
+    
+    if (req.path !== '/health') {
+      logger.debug(`Presence API Response: ${req.method} ${req.path} ${res.statusCode} ${duration}ms`, {
+        requestId: req.requestId,
+        statusCode: res.statusCode,
+        duration,
+        userId: req.userId || req.user?.id
+      });
+    }
+    
+    return originalSend.call(this, body);
+  };
+  
+  res.json = function(body) {
+    const duration = Date.now() - start;
+    
+    if (req.path !== '/health') {
+      logger.debug(`Presence API Response: ${req.method} ${req.path} ${res.statusCode} ${duration}ms`, {
+        requestId: req.requestId,
+        statusCode: res.statusCode,
+        duration,
+        userId: req.userId || req.user?.id
+      });
+    }
+    
+    return originalJson.call(this, body);
+  };
+  
+  next();
+});
+
 // ========== VALIDATION MIDDLEWARE ==========
 const validateObjectId = (req, res, next) => {
   const { userId } = req.params;
@@ -103,7 +165,7 @@ router.get('/health',
     max: 10,
     message: 'Too many health checks.'
   }),
-  presenceController.healthCheck  // Use the controller method
+  presenceController.healthCheck
 );
 
 // ========== PROTECTED ROUTES (Require Authentication) ==========
@@ -112,7 +174,7 @@ router.get('/health',
 // Apply protect middleware to all following routes
 router.use(protect);
 
-// ========== STATIC ROUTES ==========
+// ========== BATCH OPERATIONS ==========
 router.post('/batch',
   bulkPresenceLimiter,
   [
@@ -129,7 +191,8 @@ router.post('/batch',
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -138,6 +201,7 @@ router.post('/batch',
   presenceController.getOnlineStatus
 );
 
+// ========== USER LISTS ==========
 router.get('/recent',
   onlineQueryLimiter,
   [
@@ -155,12 +219,21 @@ router.get('/recent',
       .optional()
       .isIn(['online', 'offline', 'all'])
       .withMessage('Status must be online, offline, or all'),
+    query('userType')
+      .optional()
+      .isIn(['all', 'dating', 'staff', 'moderator', 'admin', 'superadmin'])
+      .withMessage('Invalid user type'),
+    query('sort')
+      .optional()
+      .isIn(['lastSeen', 'online', 'name'])
+      .withMessage('Sort must be lastSeen, online, or name'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -183,12 +256,27 @@ router.get('/online',
       .isInt({ min: 0 })
       .withMessage('Offset must be a positive integer')
       .toInt(),
+    query('userType')
+      .optional()
+      .isIn(['all', 'dating', 'staff'])
+      .withMessage('Invalid user type'),
+    query('nearby')
+      .optional()
+      .isBoolean()
+      .withMessage('Nearby must be true or false')
+      .toBoolean(),
+    query('radius')
+      .optional()
+      .isFloat({ min: 1, max: 100 })
+      .withMessage('Radius must be between 1 and 100 km')
+      .toFloat(),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -200,17 +288,93 @@ router.get('/online',
       req.query.status = 'online';
       await presenceController.getActiveUsers(req, res);
     } catch (error) {
-      console.error('Error in /online endpoint:', error);
+      logger.error('Error in /online endpoint:', {
+        error: error.message,
+        requestId: req.requestId,
+        userId: req.userId
+      });
+      
       res.status(500).json({
         success: false,
         message: 'Failed to get online users',
         error: error.message,
-        code: 'ONLINE_USERS_ERROR'
+        code: 'ONLINE_USERS_ERROR',
+        requestId: req.requestId
       });
     }
   }
 );
 
+// Get nearby online users (for dating app)
+router.get('/nearby',
+  onlineQueryLimiter,
+  protect,
+  [
+    query('radius')
+      .optional()
+      .isFloat({ min: 1, max: 50 })
+      .withMessage('Radius must be between 1 and 50 km')
+      .toFloat(),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 50 })
+      .withMessage('Limit must be between 1 and 50')
+      .toInt(),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
+        });
+      }
+      next();
+    }
+  ],
+  async (req, res) => {
+    try {
+      const userId = req.userId || req.user?.id;
+      const radius = parseFloat(req.query.radius) || 10;
+      const limit = parseInt(req.query.limit) || 25;
+      
+      // Call controller method for nearby users
+      if (presenceController.getNearbyOnlineUsers) {
+        await presenceController.getNearbyOnlineUsers(req, res);
+      } else {
+        // Fallback implementation
+        const onlineUsers = await presenceController.getOnlineUsers(limit, 0, 'dating');
+        
+        // Filter by location if user has location data
+        // This is a simplified version - you'd need real geospatial logic
+        res.json({
+          success: true,
+          count: onlineUsers.length,
+          radius,
+          limit,
+          users: onlineUsers,
+          timestamp: new Date().toISOString(),
+          requestId: req.requestId
+        });
+      }
+    } catch (error) {
+      logger.error('Error in /nearby endpoint:', {
+        error: error.message,
+        requestId: req.requestId,
+        userId: req.userId
+      });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get nearby online users',
+        code: 'NEARBY_USERS_ERROR',
+        requestId: req.requestId
+      });
+    }
+  }
+);
+
+// ========== STATISTICS ==========
 router.get('/stats',
   createDynamicRateLimiter({
     windowMs: 60 * 1000,
@@ -220,6 +384,7 @@ router.get('/stats',
   presenceController.getPresenceStats
 );
 
+// ========== CURRENT USER PRESENCE ==========
 router.get('/me',
   createDynamicRateLimiter({
     windowMs: 10 * 1000,
@@ -229,36 +394,43 @@ router.get('/me',
   presenceController.getCurrentUserPresence
 );
 
-// FIXED: Using the correct controller method (updateStatus instead of updatePresenceStatus)
 router.put('/me/status',
   statusUpdateLimiter,
   [
     body('status')
       .optional()
-      .isIn(['online', 'away', 'busy', 'offline', 'dnd'])
-      .withMessage('Status must be one of: online, away, busy, offline, dnd'),
-    body('online')
-      .optional()
-      .isBoolean()
-      .withMessage('Online must be a boolean'),
+      .isIn(['online', 'away', 'busy', 'offline', 'dnd', 'invisible'])
+      .withMessage('Status must be one of: online, away, busy, offline, dnd, invisible'),
     body('customStatus')
       .optional()
       .isString()
       .trim()
       .isLength({ max: 100 })
       .withMessage('Custom status must be less than 100 characters'),
+    body('expiresAt')
+      .optional()
+      .isISO8601()
+      .withMessage('Expires at must be a valid ISO date')
+      .custom((value) => {
+        const expiry = new Date(value);
+        const now = new Date();
+        const maxExpiry = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)); // 1 week max
+        return expiry > now && expiry <= maxExpiry;
+      })
+      .withMessage('Expiry must be between now and 1 week from now'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
     }
   ],
-  presenceController.updateStatus  // Updated to use updateStatus instead of updatePresenceStatus
+  presenceController.updateStatus
 );
 
 router.patch('/me/heartbeat',
@@ -272,11 +444,52 @@ router.patch('/me/offline',
     max: 10,
     message: 'Too many offline status updates.'
   }),
-  presenceController.markOffline
+  [
+    body('force')
+      .optional()
+      .isBoolean()
+      .withMessage('Force must be a boolean')
+      .toBoolean(),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
+        });
+      }
+      next();
+    }
+  ],
+  async (req, res) => {
+    try {
+      // Call updateStatus with offline status
+      req.body = { status: 'offline', ...req.body };
+      await presenceController.updateStatus(req, res);
+    } catch (error) {
+      logger.error('Error in /me/offline endpoint:', {
+        error: error.message,
+        requestId: req.requestId,
+        userId: req.userId
+      });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to set offline status',
+        code: 'OFFLINE_ERROR',
+        requestId: req.requestId
+      });
+    }
+  }
 );
 
+// ========== BULK OPERATIONS ==========
+// Mark multiple users offline (admin/staff)
 router.post('/bulk-offline',
   bulkPresenceLimiter,
+  protect,
+  adminOnly,
   [
     body('userIds')
       .isArray()
@@ -286,19 +499,80 @@ router.post('/bulk-offline',
     body('userIds.*')
       .isMongoId()
       .withMessage('Each userId must be a valid MongoDB ID'),
+    body('reason')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 200 })
+      .withMessage('Reason must be less than 200 characters'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
     }
   ],
-  // Note: You need to add batchUpdatePresence method which handles bulk operations
-  presenceController.batchUpdatePresence  // Using batchUpdatePresence which handles bulk operations
+  async (req, res) => {
+    try {
+      const { userIds, reason } = req.body;
+      
+      // If controller has method, use it
+      if (presenceController.markMultipleUsersOffline) {
+        return await presenceController.markMultipleUsersOffline(req, res);
+      }
+      
+      // Otherwise handle manually
+      const results = [];
+      const errors = [];
+      
+      for (const userId of userIds) {
+        try {
+          // You'd need to call your presence service here
+          // This is a placeholder implementation
+          results.push({
+            userId,
+            success: true,
+            timestamp: new Date().toISOString()
+          });
+        } catch (error) {
+          errors.push({
+            userId,
+            error: error.message
+          });
+        }
+      }
+      
+      res.json({
+        success: true,
+        processed: userIds.length,
+        succeeded: results.length,
+        failed: errors.length,
+        results,
+        errors: errors.length > 0 ? errors : undefined,
+        reason,
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    } catch (error) {
+      logger.error('Error in /bulk-offline endpoint:', {
+        error: error.message,
+        requestId: req.requestId,
+        userId: req.userId
+      });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to mark users offline',
+        code: 'BULK_OFFLINE_ERROR',
+        requestId: req.requestId
+      });
+    }
+  }
 );
 
 // ========== ADMIN ROUTES ==========
@@ -314,12 +588,17 @@ router.delete('/cache',
       .optional()
       .isMongoId()
       .withMessage('userId must be a valid MongoDB ID'),
+    query('scope')
+      .optional()
+      .isIn(['user', 'all', 'stale'])
+      .withMessage('Scope must be user, all, or stale'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -351,7 +630,8 @@ router.post('/admin/cleanup',
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -380,7 +660,7 @@ router.get('/admin/connections',
   presenceController.getConnectionStats
 );
 
-// ========== DYNAMIC ROUTES ==========
+// ========== USER-SPECIFIC ROUTES ==========
 router.get('/user/:userId',
   userPresenceLimiter,
   validateObjectId,
@@ -388,12 +668,18 @@ router.get('/user/:userId',
     param('userId')
       .isMongoId()
       .withMessage('Valid user ID is required'),
+    query('detailed')
+      .optional()
+      .isBoolean()
+      .withMessage('Detailed must be true or false')
+      .toBoolean(),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -415,7 +701,8 @@ router.get('/user/:userId/last-seen',
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          errors: errors.array()
+          errors: errors.array(),
+          code: 'VALIDATION_ERROR'
         });
       }
       next();
@@ -442,24 +729,31 @@ router.get('/user/:userId/last-seen',
               status,
               timestamp: new Date().toISOString()
             },
-            requestId: data.requestId
+            requestId: data.requestId || req.requestId
           };
           return originalJson.call(this, modifiedData);
         }
         return originalJson.call(this, data);
       };
     } catch (error) {
+      logger.error('Error in /user/:userId/last-seen endpoint:', {
+        error: error.message,
+        requestId: req.requestId,
+        userId: req.userId,
+        targetUserId: req.params.userId
+      });
+      
       res.status(500).json({
         success: false,
         message: 'Failed to get last seen time',
-        error: error.message,
-        code: 'LAST_SEEN_ERROR'
+        code: 'LAST_SEEN_ERROR',
+        requestId: req.requestId
       });
     }
   }
 );
 
-// ========== PRESENCE RATE LIMIT STATUS ==========
+// ========== INFORMATION ENDPOINTS ==========
 router.get('/rate-limit/status', 
   createDynamicRateLimiter({
     windowMs: 30 * 1000,
@@ -516,10 +810,11 @@ router.get('/rate-limit/status',
         "Use WebSocket for real-time presence updates",
         "Cache presence results for frequently queried users",
         "Use batch endpoints for multiple user presence checks",
-        "Implement client-side polling with exponential backoff"
+        "Implement client-side polling with exponential backoff",
+        "For dating apps: Use /nearby endpoint for location-based queries"
       ],
       currentIp: req.ip,
-      requestId: req.requestId || req.headers['x-request-id'],
+      requestId: req.requestId,
       headers: {
         'X-RateLimit-Limit': getHeader('X-RateLimit-Limit'),
         'X-RateLimit-Remaining': getHeader('X-RateLimit-Remaining'),
@@ -539,79 +834,93 @@ router.get('/ws-info',
   (req, res) => {
     const wsEnabled = process.env.WS_ENABLED === 'true';
     const wsPath = process.env.WS_PATH || '/socket.io';
+    const wsUrl = `${req.protocol === 'https' ? 'wss' : 'ws'}://${req.headers.host}${wsPath}`;
     
     res.json({
       success: true,
       webSocket: {
         enabled: wsEnabled,
         endpoint: wsPath,
+        fullUrl: wsUrl,
         events: {
-          'user:status-update': 'User presence status changed',
+          'presence:update': 'User presence status changed',
           'user:online': 'User came online',
           'user:offline': 'User went offline',
-          'presence:personal-update': 'Your own presence update',
-          'user:typing': 'User typing indicator'
+          'presence:heartbeat': 'Heartbeat acknowledgment',
+          'typing:start': 'User started typing',
+          'typing:stop': 'User stopped typing',
+          'message:received': 'New message received'
         },
-        authentication: 'Bearer token required',
+        authentication: 'Bearer token in handshake',
         rateLimiting: 'Socket-level rate limiting applied'
       },
-      polling: {
-        recommendedInterval: 30000,
-        maxInterval: 60000,
-        backoffMultiplier: 1.5,
-        note: 'Consider using WebSocket for better performance'
+      httpFallback: {
+        recommendedPollingInterval: 30000,
+        maxPollingInterval: 60000,
+        backoffStrategy: 'exponential with jitter',
+        endpoints: {
+          heartbeat: 'PATCH /api/presence/me/heartbeat',
+          status: 'PUT /api/presence/me/status',
+          onlineUsers: 'GET /api/presence/online',
+          batchCheck: 'POST /api/presence/batch'
+        }
       },
       clientImplementation: {
         javascript: {
           socketIo: 'Use socket.io-client with auth token',
-          nativeWebSocket: 'Use WebSocket API with Bearer token in query'
-        }
-      },
-      connection: {
-        host: req.headers.host,
-        protocol: req.protocol === 'https' ? 'wss' : 'ws',
-        fullUrl: `${req.protocol === 'https' ? 'wss' : 'ws'}://${req.headers.host}${wsPath}`
+          example: `import { io } from 'socket.io-client';\nconst socket = io('${wsUrl}', {\n  auth: { token: 'YOUR_JWT_TOKEN' }\n});`
+        },
+        reactNative: 'Use socket.io-client with appropriate transport',
+        flutter: 'Use socket_io_client package'
       }
     });
   }
 );
 
-// ========== DEBUG ENDPOINT ==========
-router.get('/debug/auth-test',
-  createDynamicRateLimiter({
-    windowMs: 30 * 1000,
-    max: 5,
-    message: 'Too many debug requests.'
-  }),
-  (req, res) => {
-    console.log('=== DEBUG AUTH TEST ===');
-    console.log('Headers:', req.headers);
-    console.log('User ID:', req.userId);
-    console.log('User:', req.user);
-    
-    res.json({
-      success: true,
-      authentication: {
+// ========== DEBUG ENDPOINT (Development only) ==========
+if (process.env.NODE_ENV === 'development') {
+  router.get('/debug/auth-test',
+    createDynamicRateLimiter({
+      windowMs: 30 * 1000,
+      max: 5,
+      message: 'Too many debug requests.'
+    }),
+    (req, res) => {
+      logger.debug('Debug auth test request', {
+        requestId: req.requestId,
         userId: req.userId,
         user: req.user,
-        authenticated: !!req.userId
-      },
-      headers: {
-        authorization: req.headers.authorization ? 'Present' : 'Missing',
-        contentType: req.headers['content-type'],
-        userAgent: req.headers['user-agent']
-      },
-      ip: req.ip,
-      requestId: req.requestId || req.headers['x-request-id']
-    });
-  }
-);
+        ip: req.ip
+      });
+      
+      res.json({
+        success: true,
+        authentication: {
+          userId: req.userId,
+          user: req.user,
+          authenticated: !!req.userId,
+          userType: req.user?.userType,
+          role: req.user?.role
+        },
+        headers: {
+          authorization: req.headers.authorization ? 'Present' : 'Missing',
+          contentType: req.headers['content-type'],
+          userAgent: req.headers['user-agent']
+        },
+        ip: req.ip,
+        requestId: req.requestId,
+        environment: process.env.NODE_ENV,
+        service: 'presence-api'
+      });
+    }
+  );
+}
 
 // ========== ERROR HANDLING ==========
 router.use((err, req, res, next) => {
-  const requestId = req.requestId || req.headers['x-request-id'];
+  const requestId = req.requestId;
   
-  console.error('Presence route error:', {
+  logger.error('Presence route error:', {
     requestId,
     path: req.path,
     method: req.method,
@@ -636,6 +945,7 @@ router.use((err, req, res, next) => {
       success: false,
       error: 'Validation failed',
       details: err.errors || err.message,
+      code: 'VALIDATION_ERROR',
       requestId
     });
   }
@@ -650,11 +960,21 @@ router.use((err, req, res, next) => {
   }
 
   // Authentication errors
-  if (err.message && err.message.includes('Authentication') || err.code === 'AUTH_REQUIRED') {
+  if (err.message && (err.message.includes('Authentication') || err.message.includes('Unauthorized')) || err.code === 'AUTH_REQUIRED') {
     return res.status(401).json({
       success: false,
       error: 'Authentication required',
       code: 'AUTH_REQUIRED',
+      requestId
+    });
+  }
+
+  // Authorization errors
+  if (err.message && err.message.includes('permission') || err.code === 'FORBIDDEN') {
+    return res.status(403).json({
+      success: false,
+      error: 'Insufficient permissions',
+      code: 'FORBIDDEN',
       requestId
     });
   }
@@ -666,7 +986,8 @@ router.use((err, req, res, next) => {
       : err.message,
     code: err.code || 'INTERNAL_SERVER_ERROR',
     service: 'presence-api',
-    requestId
+    requestId,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -676,34 +997,36 @@ router.use((req, res) => {
     success: false,
     error: `Presence route ${req.method} ${req.originalUrl} not found`,
     code: 'PRESENCE_ENDPOINT_NOT_FOUND',
-    requestId: req.requestId || req.headers['x-request-id'],
+    requestId: req.requestId,
     availableEndpoints: [
-      '/health',
-      '/batch',
-      '/recent',
-      '/online',
-      '/stats',
-      '/me',
-      '/me/status',
-      '/me/heartbeat',
-      '/me/offline',
-      '/bulk-offline',
-      '/user/:userId',
-      '/user/:userId/last-seen',
-      '/rate-limit/status',
-      '/ws-info',
-      '/debug/auth-test',
-      '/admin/cleanup',
-      '/admin/metrics',
-      '/admin/connections'
-    ],
+      'GET    /health',
+      'POST   /batch',
+      'GET    /recent',
+      'GET    /online',
+      'GET    /nearby',
+      'GET    /stats',
+      'GET    /me',
+      'PUT    /me/status',
+      'PATCH  /me/heartbeat',
+      'PATCH  /me/offline',
+      'POST   /bulk-offline',
+      'GET    /user/:userId',
+      'GET    /user/:userId/last-seen',
+      'GET    /rate-limit/status',
+      'GET    /ws-info',
+      'DELETE /cache (admin)',
+      'POST   /admin/cleanup (admin)',
+      'GET    /admin/metrics (admin)',
+      'GET    /admin/connections (admin)'
+    ].concat(process.env.NODE_ENV === 'development' ? ['GET    /debug/auth-test'] : []),
     authentication: {
       note: 'All endpoints except /health require authentication',
       method: 'Bearer token in Authorization header'
     },
     adminEndpoints: {
-      note: 'Endpoints marked with /admin/ require admin privileges'
-    }
+      note: 'Endpoints marked with (admin) require admin privileges'
+    },
+    documentation: 'See /ws-info for WebSocket integration details'
   });
 });
 

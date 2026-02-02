@@ -12,8 +12,8 @@ const {
   profileUpdateLimiter
 } = require("@middleware/rateLimit");
 
-// Import UserController
-const UserController = require("@controllers/user/UserController");
+// Import UserController from refactored structure
+const { UserController } = require("@controllers/user");
 const userController = new UserController();
 
 const { protect } = require("@middleware/authmiddleware");
@@ -103,7 +103,7 @@ const securityHeaders = (req, res, next) => {
 
 // Audit logging for sensitive operations
 const auditLogger = (req, res, next) => {
-  const sensitivePaths = ['/update', '/delete', '/export'];
+  const sensitivePaths = ['/update', '/delete', '/export', '/role/change', '/email/update'];
   if (sensitivePaths.some(path => req.path.includes(path))) {
     const logData = {
       timestamp: new Date().toISOString(),
@@ -142,7 +142,7 @@ router.use(rateLimitInfoMiddleware);
 router.use(apiLimiter);
 
 // Apply audit logging to sensitive routes
-router.use(['/update', '/delete', '/export'], auditLogger);
+router.use(['/update', '/delete', '/export', '/role/change', '/email/update'], auditLogger);
 
 // ============ USER API HEALTH CHECK ============
 router.get("/health", (req, res) => {
@@ -164,23 +164,34 @@ router.get("/health", (req, res) => {
         profile: '20 updates/15 minutes',
         deletion: '1 request/24 hours',
         settings: '20 updates/15 minutes',
-        retrieval: '30 requests/10 seconds'
+        retrieval: '30 requests/10 seconds',
+        emailUpdate: '3 updates/hour',
+        roleChange: '10 updates/hour (admin only)',
+        userList: '20 requests/15 seconds'
       }
     },
     endpoints: {
       current: {
         me: 'GET    /me - Get current user data',
+        settings: 'GET    /settings - Get user settings',
+        userById: 'GET    /:id - Get user by ID',
         update: 'PUT    /update - Update private information',
         profile: 'PUT    /profile - Update public profile',
+        emailUpdate: 'PUT    /email/update - Update email address',
         delete: 'DELETE /delete - Delete account',
-        settings: 'GET    /settings - Get user settings',
         settingsUpdate: 'PUT    /settings - Update settings',
+        userList: 'GET    / - Get users list (admin)',
+        roleChange: 'PUT    /role/change - Change user role (admin)',
         health: 'GET    /health - Health check',
-        rateLimit: 'GET    /rate-limit/status - Rate limit status'
+        rateLimit: 'GET    /rate-limit/status - Rate limit status',
+        export: 'GET    /export - Export user data (GDPR)',
+        auditLogs: 'GET    /audit-logs - Get audit logs',
+        metrics: 'GET    /metrics - Get service metrics'
       },
       security: {
         note: 'All endpoints require authentication',
-        sensitive: ['/update', '/delete'],
+        sensitive: ['/update', '/delete', '/export', '/role/change'],
+        adminOnly: ['/', '/role/change'],
         encrypted: 'Private information is encrypted at rest'
       }
     },
@@ -200,6 +211,12 @@ router.get("/health", (req, res) => {
 router.get("/me", 
   profileRetrievalLimiter,
   userController.getMe.bind(userController)
+);
+
+// Get user settings - MUST be before dynamic routes like /:id
+router.get("/settings", 
+  profileRetrievalLimiter,
+  userController.getSettings.bind(userController)
 );
 
 // Update private information (firstName, lastName, phoneNumber)
@@ -246,17 +263,49 @@ router.put("/update",
   userController.updatePrivateInfo.bind(userController)
 );
 
+// Update email address
+router.put("/email/update",
+  createDynamicRateLimiter({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3,
+    message: 'Too many email update attempts. Please wait 1 hour.',
+    keyGenerator: (req) => `user:email:user:${req.userId || req.user?.id}`
+  }),
+  [
+    body('newEmail')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Valid email address is required'),
+    body('password')
+      .isString()
+      .trim()
+      .notEmpty()
+      .withMessage('Password is required to change email'),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+      next();
+    }
+  ],
+  userController.updateEmail.bind(userController)
+);
+
 // Update public profile information
 router.put("/profile", 
   profileUpdateLimiter,
   [
-    body('username')
+    body('userName')
       .optional()
       .isString()
       .trim()
-      .isLength({ min: 3, max: 30 })
-      .matches(/^[a-zA-Z0-9_.-]+$/)
-      .withMessage('Username must be 3-30 characters and can only contain letters, numbers, dots, dashes, and underscores'),
+      .isLength({ min: 3, max: 20 })
+      .matches(/^[a-zA-Z0-9_-]+$/)
+      .withMessage('Username must be 3-20 characters and can only contain letters, numbers, underscores and hyphens'),
     body('bio')
       .optional()
       .isString()
@@ -266,7 +315,16 @@ router.put("/profile",
     body('avatar')
       .optional()
       .isString()
-      .withMessage('Avatar must be a string (URL)'),
+      .isURL()
+      .withMessage('Avatar must be a valid URL'),
+    body('dateOfBirth')
+      .optional()
+      .isISO8601()
+      .withMessage('Date of birth must be a valid date'),
+    body('messagingPreferences')
+      .optional()
+      .isIn(['everyone', 'matches_only', 'friends_only', 'disabled'])
+      .withMessage('Messaging preferences must be one of: everyone, matches_only, friends_only, disabled'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -277,11 +335,11 @@ router.put("/profile",
       }
       
       // Validate that at least one field is provided
-      const { username, bio, avatar } = req.body;
-      if (!username && !bio && !avatar) {
+      const { userName, bio, avatar, dateOfBirth, messagingPreferences } = req.body;
+      if (!userName && !bio && !avatar && !dateOfBirth && !messagingPreferences) {
         return res.status(400).json({
           success: false,
-          error: 'At least one field (username, bio, or avatar) is required'
+          error: 'At least one field is required for update'
         });
       }
       
@@ -317,12 +375,6 @@ router.delete("/delete",
   userController.deleteAccount.bind(userController)
 );
 
-// Get user settings
-router.get("/settings", 
-  profileRetrievalLimiter,
-  userController.getSettings.bind(userController)
-);
-
 // Update user settings
 router.put("/settings", 
   settingsUpdateLimiter,
@@ -335,6 +387,22 @@ router.put("/settings",
       .optional()
       .isObject()
       .withMessage('Privacy settings must be an object'),
+    body('datingNotificationSettings')
+      .optional()
+      .isObject()
+      .withMessage('Dating notification settings must be an object'),
+    body('datingPrivacySettings')
+      .optional()
+      .isObject()
+      .withMessage('Dating privacy settings must be an object'),
+    body('messagingPreferences')
+      .optional()
+      .isIn(['everyone', 'matches_only', 'friends_only', 'disabled'])
+      .withMessage('Messaging preferences must be one of: everyone, matches_only, friends_only, disabled'),
+    body('staffNotificationSettings')
+      .optional()
+      .isObject()
+      .withMessage('Staff notification settings must be an object'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -345,11 +413,20 @@ router.put("/settings",
       }
       
       // Validate that at least one field is provided
-      const { notificationSettings, privacySettings } = req.body;
-      if (!notificationSettings && !privacySettings) {
+      const { 
+        notificationSettings, 
+        privacySettings,
+        datingNotificationSettings,
+        datingPrivacySettings,
+        messagingPreferences,
+        staffNotificationSettings
+      } = req.body;
+      
+      if (!notificationSettings && !privacySettings && !datingNotificationSettings && 
+          !datingPrivacySettings && !messagingPreferences && !staffNotificationSettings) {
         return res.status(400).json({
           success: false,
-          error: 'At least one field (notificationSettings or privacySettings) is required'
+          error: 'At least one settings field is required'
         });
       }
       
@@ -359,6 +436,97 @@ router.put("/settings",
   userController.updateSettings.bind(userController)
 );
 
+// Get users (admin only) - MUST be before /:id route
+router.get("/",
+  createDynamicRateLimiter({
+    windowMs: 15 * 1000, // 15 seconds
+    max: 20,
+    keyGenerator: (req) => `user:list:user:${req.userId || req.user?.id}`,
+    message: 'Too many user list requests. Please slow down.'
+  }),
+  [
+    query('role')
+      .optional()
+      .isIn(['USER', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN'])
+      .withMessage('Role must be USER, MODERATOR, ADMIN, or SUPER_ADMIN'),
+    query('page')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Page must be a positive integer'),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 100 })
+      .withMessage('Limit must be between 1 and 100'),
+    query('search')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Search query must be less than 100 characters'),
+    query('accountStatus')
+      .optional()
+      .isIn(['active', 'inactive', 'suspended', 'deactivated'])
+      .withMessage('Account status must be active, inactive, suspended, or deactivated'),
+    query('department')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 50 })
+      .withMessage('Department must be less than 50 characters'),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+      next();
+    }
+  ],
+  userController.getUsers.bind(userController)
+);
+
+// Change user role (admin only)
+router.put("/role/change",
+  createDynamicRateLimiter({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10,
+    message: 'Too many role change attempts. Please wait.',
+    keyGenerator: (req) => `user:role:admin:${req.userId || req.user?.id}`
+  }),
+  [
+    body('userId')
+      .isMongoId()
+      .withMessage('Valid user ID is required'),
+    body('newRole')
+      .isIn(['USER', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN'])
+      .withMessage('Role must be USER, MODERATOR, ADMIN, or SUPER_ADMIN'),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+      next();
+    }
+  ],
+  userController.changeUserRole.bind(userController)
+);
+
+// Get user by ID (admin/management) - MUST be LAST after all specific routes
+router.get("/:id",
+  createDynamicRateLimiter({
+    windowMs: 10 * 1000, // 10 seconds
+    max: 30,
+    keyGenerator: (req) => `user:getById:user:${req.userId || req.user?.id}`,
+    message: 'Too many user detail requests. Please wait.'
+  }),
+  userController.getUserById.bind(userController)
+);
+
 // ============ RATE LIMIT STATUS ============
 router.get("/rate-limit/status", (req, res) => {
   const response = {
@@ -366,7 +534,8 @@ router.get("/rate-limit/status", (req, res) => {
     service: 'user-api',
     user: {
       id: req.userId || req.user?.id,
-      email: req.user?.email
+      email: req.user?.email,
+      role: req.user?.role
     },
     rateLimiting: {
       general: {
@@ -384,6 +553,11 @@ router.get("/rate-limit/status", (req, res) => {
         window: "15 minutes",
         description: "Public profile updates"
       },
+      emailUpdate: {
+        limit: 3,
+        window: "1 hour",
+        description: "Email address updates"
+      },
       deletion: {
         limit: 1,
         window: "24 hours",
@@ -399,13 +573,29 @@ router.get("/rate-limit/status", (req, res) => {
         limit: 30,
         window: "10 seconds",
         description: "Profile data retrieval"
+      },
+      userById: {
+        limit: 30,
+        window: "10 seconds",
+        description: "User detail requests"
+      },
+      userList: {
+        limit: 20,
+        window: "15 seconds",
+        description: "User list requests"
+      },
+      roleChange: {
+        limit: 10,
+        window: "1 hour",
+        description: "Role change requests (admin only)"
       }
     },
     security: {
       authentication: "Bearer token required",
       encryption: "Private data encrypted at rest",
       confirmation: "Sensitive operations require additional confirmation",
-      audit: "All sensitive operations are logged"
+      audit: "All sensitive operations are logged",
+      adminOnly: "Some endpoints require admin privileges"
     },
     recommendations: [
       "Cache user data on the client side",
@@ -487,8 +677,8 @@ router.get("/audit-logs",
       .withMessage('Limit must be between 1 and 100'),
     query('type')
       .optional()
-      .isIn(['all', 'login', 'profile', 'settings', 'security'])
-      .withMessage('Type must be all, login, profile, settings, or security'),
+      .isIn(['all', 'login', 'profile', 'settings', 'security', 'role_change', 'email_change'])
+      .withMessage('Type must be all, login, profile, settings, security, role_change, or email_change'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -587,6 +777,16 @@ router.use((err, req, res, next) => {
     });
   }
 
+  // Permission denied errors
+  if (err.message && (err.message.includes('permission') || err.message.includes('admin') || err.message.includes('Unauthorized'))) {
+    return res.status(403).json({
+      success: false,
+      error: 'Insufficient permissions',
+      code: 'PERMISSION_DENIED',
+      requestId: req.requestId
+    });
+  }
+
   res.status(err.status || 500).json({
     success: false,
     error: process.env.NODE_ENV === 'production' 
@@ -607,11 +807,15 @@ router.use((req, res) => {
     requestId: req.requestId,
     availableEndpoints: [
       'GET    /me',
+      'GET    /settings',
+      'GET    /:id',
       'PUT    /update',
       'PUT    /profile',
+      'PUT    /email/update',
       'DELETE /delete',
-      'GET    /settings',
       'PUT    /settings',
+      'GET    /',
+      'PUT    /role/change',
       'GET    /health',
       'GET    /rate-limit/status',
       'GET    /export',
@@ -622,9 +826,13 @@ router.use((req, res) => {
       required: true,
       method: 'Bearer token'
     },
+    authorization: {
+      adminOnly: ['/', '/role/change'],
+      note: 'Some endpoints require admin privileges'
+    },
     security: {
       note: 'All endpoints are protected and rate limited',
-      sensitive: ['/update', '/delete', '/export']
+      sensitive: ['/update', '/delete', '/export', '/role/change', '/email/update']
     }
   });
 });

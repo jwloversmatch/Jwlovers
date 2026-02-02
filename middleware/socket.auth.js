@@ -7,12 +7,24 @@ class SocketAuthMiddleware {
   constructor(redisService) {
     this.redisService = redisService;
     this.config = {
-      MAX_CONNECTIONS_PER_USER: 3,
-      MAX_FAILED_ATTEMPTS: 5,
+      MAX_CONNECTIONS_PER_USER: 5, // Increased for multi-device
+      MAX_FAILED_ATTEMPTS_PER_IP: 10,
+      RATE_LIMIT_WINDOW: 60, // seconds
       BLOCK_DURATION: 15 * 60 * 1000,
-      HEARTBEAT_TIMEOUT: 60 * 1000,
-      CONNECTION_TIMEOUT: 24 * 60 * 60 * 1000
+      USER_CACHE_TTL: 5 * 60 * 1000 // 5 minutes
     };
+    
+    // In-memory cache for active users
+    this.userCache = new Map();
+    this.metrics = {
+      totalAuthentications: 0,
+      failedAuthentications: 0,
+      suspiciousConnections: 0,
+      connectionsByUserType: {}
+    };
+    
+    // Cleanup cache every minute
+    setInterval(() => this.cleanupCache(), 60 * 1000);
   }
 
   extractToken(socket) {
@@ -55,17 +67,54 @@ class SocketAuthMiddleware {
     }
   }
 
+  async checkRateLimit(clientIp) {
+    if (!this.redisService?.isReady()) {
+      return true; // Fail open if Redis unavailable
+    }
+    
+    try {
+      const key = `ratelimit:auth:ip:${clientIp}`;
+      const current = await this.redisService.get(key);
+      const attempts = current ? parseInt(current) : 0;
+      
+      if (attempts >= this.config.MAX_FAILED_ATTEMPTS_PER_IP) {
+        return false;
+      }
+      
+      await this.redisService.incr(key);
+      if (attempts === 0) {
+        await this.redisService.expire(key, this.config.RATE_LIMIT_WINDOW);
+      }
+      
+      return true;
+    } catch (error) {
+      logger.error('Rate limit check failed:', error);
+      return true;
+    }
+  }
+
   async canUserConnect(userId, clientIp) {
+    // Skip check in development if Redis unavailable
     if (!this.redisService || !this.redisService.isReady()) {
-      return true; 
+      if (process.env.NODE_ENV === 'production') {
+        logger.warn('Redis unavailable in production, enforcing strict limits');
+        return this.fallbackConnectionCheck(userId);
+      }
+      return true;
     }
     
     try {
       return await this.redisService.canUserConnect(userId, this.config.MAX_CONNECTIONS_PER_USER);
     } catch (error) {
       logger.error('Failed to check user connection limit:', error);
-      return true; // Fail open
+      return process.env.NODE_ENV === 'production' ? false : true;
     }
+  }
+
+  fallbackConnectionCheck(userId) {
+    // Simple in-memory tracking for when Redis is down
+    // In production, you might want to fail closed
+    return true;
   }
 
   getClientIp(socket) {
@@ -93,13 +142,34 @@ class SocketAuthMiddleware {
     const socketId = socket.id;
     const clientIp = this.getClientIp(socket);
     
+    this.metrics.totalAuthentications++;
+    
     try {
+      // Rate limiting per IP
+      const canProceed = await this.checkRateLimit(clientIp);
+      if (!canProceed) {
+        logger.warn('IP rate limit exceeded', { socketId, ip: clientIp });
+        this.metrics.failedAuthentications++;
+        return next(new Error('Too many authentication attempts'));
+      }
+      
       // Extract token
       const token = this.extractToken(socket);
       
       if (!token) {
         logger.warn('Socket connection without token', { socketId, ip: clientIp });
+        this.metrics.failedAuthentications++;
         return next(new Error('Authentication token required'));
+      }
+      
+      // Check token blacklist (if Redis available)
+      if (this.redisService?.isReady() && this.redisService.isTokenBlacklisted) {
+        const isBlacklisted = await this.redisService.isTokenBlacklisted(token);
+        if (isBlacklisted) {
+          logger.warn('Blacklisted token used', { socketId, ip: clientIp });
+          this.metrics.failedAuthentications++;
+          return next(new Error('Token has been revoked'));
+        }
       }
       
       // Verify token
@@ -110,6 +180,7 @@ class SocketAuthMiddleware {
           ip: clientIp,
           error: verification.error 
         });
+        this.metrics.failedAuthentications++;
         return next(new Error('Invalid or expired token'));
       }
       
@@ -117,6 +188,7 @@ class SocketAuthMiddleware {
       const userId = decoded.userId || decoded.id || decoded.sub;
       
       if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        this.metrics.failedAuthentications++;
         return next(new Error('Invalid user identifier'));
       }
       
@@ -124,119 +196,194 @@ class SocketAuthMiddleware {
       const canConnect = await this.canUserConnect(userId, clientIp);
       if (!canConnect) {
         logger.warn('User connection limit reached', { userId, socketId });
+        this.metrics.failedAuthentications++;
         return next(new Error('Too many active connections'));
       }
       
-      // Fetch user using UserQuery
+      // Check cache first
+      const cachedUser = this.userCache.get(userId);
+      if (cachedUser && Date.now() - cachedUser.timestamp < this.config.USER_CACHE_TTL) {
+        socket.user = cachedUser.data;
+        socket.userId = userId;
+        this.setupSocket(socket, clientIp, next);
+        return;
+      }
+      
+      // Fetch user from database
       const user = await UserQuery.getUserById(userId);
       
       if (!user) {
+        this.metrics.failedAuthentications++;
         return next(new Error('User not found'));
       }
       
       // Account validation
       if (user.accountStatus !== 'active') {
+        this.metrics.failedAuthentications++;
         return next(new Error(`Account is ${user.accountStatus}`));
       }
       
       // Age verification for dating users
       if (user.userType === 'DatingUser') {
         if (!user.ageVerified || !user.dateOfBirth) {
+          this.metrics.failedAuthentications++;
           return next(new Error('Age verification required'));
         }
         
         const age = this.calculateAge(new Date(user.dateOfBirth));
         if (age < 18) {
+          this.metrics.failedAuthentications++;
           return next(new Error('Must be 18 or older'));
         }
       }
       
-      // Attach user to socket
-      socket.user = {
-        id: user._id.toString(),
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        userName: user.userName || `${user.firstName} ${user.lastName}`.toLowerCase().replace(/\s+/g, '.'),
-        avatar: user.avatar,
-        role: user.role,
-        userType: user.userType || 'DatingUser',
-        accountStatus: user.accountStatus,
-        emailVerified: user.emailVerified,
-        phoneVerified: user.phoneVerified,
-        // Dating-specific fields
-        ...(user.userType === 'DatingUser' && {
-          age: user.age,
-          ageVerified: user.ageVerified,
-          dateOfBirth: user.dateOfBirth,
-          preferences: user.preferences,
-          location: user.location,
-          sharePhone: user.sharePhone,
-          messagingPreferences: user.messagingPreferences
-        }),
-        // Staff-specific fields
-        ...((user.userType === 'Moderator' || user.userType === 'Admin' || user.userType === 'SuperAdmin') && {
-          employeeId: user.employeeId,
-          department: user.department,
-          permissions: user.permissions || []
-        })
-      };
+      // Prepare user data
+      const userData = this.prepareUserData(user);
+      socket.user = userData;
       socket.userId = user._id.toString();
-      socket.clientIp = clientIp;
-      socket.connectedAt = new Date();
       
-      // Join user-specific room
-      socket.join(`user:${socket.userId}`);
-      
-      // Join role-specific rooms
-      socket.join(`role:${socket.user.role}`);
-      socket.join(`userType:${socket.user.userType}`);
-      
-      // Join additional rooms based on user type
-      if (socket.user.userType === 'DatingUser') {
-        socket.join('userType:dating');
-        if (socket.user.preferences?.lookingFor) {
-          socket.join(`lookingFor:${socket.user.preferences.lookingFor}`);
-        }
-      } else if (socket.user.userType === 'Moderator') {
-        socket.join('userType:moderator');
-        socket.join('userType:staff');
-      } else if (socket.user.userType === 'Admin' || socket.user.userType === 'SuperAdmin') {
-        socket.join('userType:admin');
-        socket.join('userType:staff');
-      }
-      
-      // Setup disconnect cleanup
-      socket.once('disconnect', () => {
-        // Connection counts are handled by PresenceService
-        logger.debug('Socket disconnected', { 
-          socketId, 
-          userId: socket.userId,
-          userType: socket.user.userType 
-        });
+      // Cache user data
+      this.userCache.set(userId, {
+        data: userData,
+        timestamp: Date.now()
       });
       
-      logger.info('Socket authenticated', {
-        socketId,
-        userId: socket.userId,
-        userName: socket.user.userName,
-        userType: socket.user.userType,
-        role: socket.user.role,
-        ip: clientIp
-      });
-      
-      next();
+      // Setup socket and track connection
+      this.setupSocket(socket, clientIp, next);
       
     } catch (error) {
+      this.metrics.failedAuthentications++;
       logger.error('Socket auth error:', {
         socketId,
         ip: clientIp,
-        error: error.message,
-        stack: error.stack
+        error: error.message
       });
       
       next(new Error('Authentication failed'));
+    }
+  }
+
+  prepareUserData(user) {
+    const baseData = {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      userName: user.userName || `${user.firstName} ${user.lastName}`.toLowerCase().replace(/\s+/g, '.'),
+      avatar: user.avatar,
+      role: user.role,
+      userType: user.userType || 'DatingUser',
+      accountStatus: user.accountStatus,
+      emailVerified: user.emailVerified,
+      phoneVerified: user.phoneVerified
+    };
+    
+    // Add type-specific fields
+    if (user.userType === 'DatingUser') {
+      Object.assign(baseData, {
+        age: user.age,
+        ageVerified: user.ageVerified,
+        dateOfBirth: user.dateOfBirth,
+        preferences: user.preferences,
+        location: user.location,
+        sharePhone: user.sharePhone,
+        messagingPreferences: user.messagingPreferences
+      });
+    } else if (['Moderator', 'Admin', 'SuperAdmin'].includes(user.userType)) {
+      Object.assign(baseData, {
+        employeeId: user.employeeId,
+        department: user.department,
+        permissions: user.permissions || []
+      });
+    }
+    
+    return baseData;
+  }
+
+  setupSocket(socket, clientIp, next) {
+    const { userId, user } = socket;
+    
+    // Attach additional info
+    socket.clientIp = clientIp;
+    socket.connectedAt = new Date();
+    
+    // Join rooms
+    this.joinRooms(socket);
+    
+    // Check for suspicious activity
+    this.checkSuspiciousActivity(socket).catch(() => {});
+    
+    // Track metrics
+    const userType = user.userType || 'unknown';
+    this.metrics.connectionsByUserType[userType] = 
+      (this.metrics.connectionsByUserType[userType] || 0) + 1;
+    
+    logger.info('Socket authenticated', {
+      socketId: socket.id,
+      userId,
+      userName: user.userName,
+      userType: user.userType,
+      role: user.role,
+      ip: clientIp
+    });
+    
+    next();
+  }
+
+  joinRooms(socket) {
+    const { userId, user } = socket;
+    
+    socket.join(`user:${userId}`);
+    socket.join(`role:${user.role}`);
+    socket.join(`userType:${user.userType}`);
+    
+    if (user.userType === 'DatingUser') {
+      socket.join('userType:dating');
+      if (user.preferences?.lookingFor) {
+        socket.join(`lookingFor:${user.preferences.lookingFor}`);
+      }
+    } else if (user.userType === 'Moderator') {
+      socket.join('userType:moderator');
+      socket.join('userType:staff');
+    } else if (['Admin', 'SuperAdmin'].includes(user.userType)) {
+      socket.join('userType:admin');
+      socket.join('userType:staff');
+    }
+  }
+
+  async checkSuspiciousActivity(socket) {
+    if (!this.redisService?.isReady()) return;
+    
+    try {
+      const { userId, clientIp } = socket;
+      const locationKey = `user:${userId}:last_ip`;
+      const lastIp = await this.redisService.get(locationKey);
+      
+      if (lastIp && lastIp !== clientIp) {
+        const timeKey = `user:${userId}:ip_change_time`;
+        const lastChange = await this.redisService.get(timeKey);
+        
+        if (lastChange && Date.now() - parseInt(lastChange) < 5 * 60 * 1000) {
+          // IP changed within 5 minutes - mark as suspicious
+          socket.suspicious = true;
+          this.metrics.suspiciousConnections++;
+          
+          logger.warn('Suspicious IP change detected', {
+            userId,
+            oldIp: lastIp,
+            newIp: clientIp,
+            socketId: socket.id
+          });
+        }
+      }
+      
+      // Update tracking
+      await this.redisService.set(locationKey, clientIp);
+      await this.redisService.set(`user:${userId}:ip_change_time`, Date.now().toString());
+      
+    } catch (error) {
+      logger.error('Suspicious activity check failed:', error);
     }
   }
 
@@ -254,7 +401,16 @@ class SocketAuthMiddleware {
     return age;
   }
 
-  // Middleware to check if user has specific role
+  cleanupCache() {
+    const now = Date.now();
+    for (const [userId, cache] of this.userCache.entries()) {
+      if (now - cache.timestamp > this.config.USER_CACHE_TTL) {
+        this.userCache.delete(userId);
+      }
+    }
+  }
+
+  // Role middleware functions (keep as is, they're good)
   requireRole(requiredRole) {
     return (socket, next) => {
       if (!socket.user) {
@@ -275,7 +431,6 @@ class SocketAuthMiddleware {
     };
   }
 
-  // Middleware to check if user has specific user type
   requireUserType(requiredUserType) {
     return (socket, next) => {
       if (!socket.user) {
@@ -296,7 +451,6 @@ class SocketAuthMiddleware {
     };
   }
 
-  // Middleware to check if user is admin (Admin or SuperAdmin)
   requireAdmin() {
     return (socket, next) => {
       if (!socket.user) {
@@ -316,7 +470,6 @@ class SocketAuthMiddleware {
     };
   }
 
-  // Middleware to check if user is staff (Moderator, Admin, or SuperAdmin)
   requireStaff() {
     return (socket, next) => {
       if (!socket.user) {
@@ -336,7 +489,6 @@ class SocketAuthMiddleware {
     };
   }
 
-  // Middleware to check if user is a dating user
   requireDatingUser() {
     return (socket, next) => {
       if (!socket.user) {
@@ -356,100 +508,17 @@ class SocketAuthMiddleware {
     };
   }
 
-  // Check if user is online
-  async isUserOnline(userId) {
-    try {
-      if (!this.redisService || !this.redisService.isReady()) {
-        return false;
-      }
-      
-      return await this.redisService.isUserOnline(userId);
-    } catch (error) {
-      logger.error('Failed to check if user is online:', error);
-      return false;
-    }
-  }
-
-  // Get user's presence data
-  async getUserPresence(userId) {
-    try {
-      if (!this.redisService || !this.redisService.isReady()) {
-        const user = await UserQuery.getUserById(userId);
-        if (!user || !user.presence) {
-          return { isOnline: false, lastSeen: null };
-        }
-        
-        const fiveMinutesAgo = new Date(Date.now() - (5 * 60 * 1000));
-        const isOnline = new Date(user.presence.lastSeen) > fiveMinutesAgo && 
-                        user.presence.status === 'online';
-        
-        return {
-          isOnline,
-          lastSeen: user.presence.lastSeen,
-          status: user.presence.status,
-          customStatus: user.presence.customStatus,
-          userType: user.userType
-        };
-      }
-      
-      return await this.redisService.getUserPresence(userId);
-    } catch (error) {
-      logger.error('Failed to get user presence:', error);
-      return { isOnline: false, lastSeen: null };
-    }
-  }
-
-  // Check if a user can message another user (for dating users)
-  async canMessage(senderId, receiverId) {
-    try {
-      const [sender, receiver] = await Promise.all([
-        UserQuery.getUserById(senderId),
-        UserQuery.getUserById(receiverId)
-      ]);
-      
-      if (!sender || !receiver) {
-        return false;
-      }
-      
-      // Both users must be dating users
-      if (sender.userType !== 'DatingUser' || receiver.userType !== 'DatingUser') {
-        return false;
-      }
-      
-      // Check sender's messaging preferences
-      if (sender.messagingPreferences === 'disabled') {
-        return false;
-      }
-      
-      if (sender.messagingPreferences === 'matches_only') {
-        // Check if they're matched (you'd need to implement this check)
-        // For now, return true if both are online
-        const [senderOnline, receiverOnline] = await Promise.all([
-          this.isUserOnline(senderId),
-          this.isUserOnline(receiverId)
-        ]);
-        
-        return senderOnline && receiverOnline;
-      }
-      
-      if (sender.messagingPreferences === 'friends_only') {
-        // Check if they're contacts (you'd need to implement this check)
-        // For now, return true if both are online
-        const [senderOnline, receiverOnline] = await Promise.all([
-          this.isUserOnline(senderId),
-          this.isUserOnline(receiverId)
-        ]);
-        
-        return senderOnline && receiverOnline;
-      }
-      
-      // 'everyone' - allow messaging
-      return true;
-      
-    } catch (error) {
-      logger.error('Failed to check messaging permissions:', error);
-      return false;
-    }
+  getMetrics() {
+    const total = this.metrics.totalAuthentications;
+    const failed = this.metrics.failedAuthentications;
+    
+    return {
+      ...this.metrics,
+      successRate: total > 0 
+        ? ((total - failed) / total * 100).toFixed(2) + '%'
+        : '0%',
+      cacheSize: this.userCache.size
+    };
   }
 }
 

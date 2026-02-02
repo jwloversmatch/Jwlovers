@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@controllers/*": ["controllers/*"],
+      "@middleware/*": ["middleware/*"],
+      "@models/*": ["models/*"],
+      "@utils/*": ["utils/*"],
+      "@routes/*": ["routes/*"],
+      "@services/*": ["services/*"],
+      "@queues/*": ["queues/*"],
+      "@scripts/*": ["scripts/*"],
+      "@loaders/*": ["loaders/*"],
+      "@logs/*": ["logs/*"],
+      "@config/*": ["config/*"],
+      "validators/*": ["validators/*"],
+      "formatters/*": ["formatters/*"],
+      "handlers/*": ["handlers/*"],
+      "emitters/*": ["emitters/*"],
+      "@root/*": ["*"]
+    }
+  },
+  "include": ["**/*.ts", "types/**/*.d.ts", "routes/admin/inviteCodes.routes.js", "services/controller-bridge.service.js", "services/conversation-wrapper.service.js", "services/encryption.service.js", "services/redis.service.js", "services/websocket.service.js", "middleware/rateLimit/utilities.js", "middleware/rateLimit/types.js", "handlers/APIEndpoints.js", "handlers/WebSocketHandler.js", "loaders/RouteLoader.js", "loaders/ServiceInitializer.js"],
+  "exclude": ["dist", "node_modules"]
+}
