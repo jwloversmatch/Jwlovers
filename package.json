@@ -38,7 +38,7 @@
     "multer": "^2.0.2",
     "natural": "^8.1.0",
     "node-cache": "^5.1.2",
-    "nodemailer": "^7.0.12",
+    "nodemailer": "^7.0.13",
     "opossum": "^9.0.0",
     "prettier": "^3.7.4",
     "prom-client": "^15.1.3",

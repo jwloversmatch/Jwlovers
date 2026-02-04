@@ -293,4 +293,4 @@ module.exports = {
   UserFactory,
   UserQuery,
   UserService
-};
+}; 

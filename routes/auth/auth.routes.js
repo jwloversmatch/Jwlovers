@@ -500,6 +500,49 @@ router.get("/me", apiLimiter, protect, (req, res) => {
   return authController.getCurrentUser(req, res);
 });
 
+router.get("/debug/token-test", async (req, res) => {
+  try {
+    const authService = require("@services/AuthService");
+    
+    // Test 1: Generate token
+    const token = authService.generateVerificationToken();
+    
+    // Test 2: Hash it
+    const hash1 = token.hashed;
+    const hash2 = authService.hashToken(token.plain);
+    
+    // Test 3: Check consistency
+    const testString = "test123";
+    const hash3 = authService.hashToken(testString);
+    const hash4 = authService.hashToken(testString); // Should be same
+    
+    res.json({
+      test1_tokenGeneration: {
+        plainLength: token.plain.length,
+        hashedLength: token.hashed.length,
+        isHex: /^[0-9a-fA-F]+$/.test(token.plain) ? "YES" : "NO"
+      },
+      test2_hashConsistency: {
+        hash1: hash1.substring(0, 20) + "...",
+        hash2: hash2.substring(0, 20) + "...",
+        match: hash1 === hash2 ? "YES" : "NO"
+      },
+      test3_deterministicHash: {
+        hash3: hash3.substring(0, 20) + "...",
+        hash4: hash4.substring(0, 20) + "...",
+        match: hash3 === hash4 ? "YES" : "NO"
+      },
+      algorithmInfo: {
+        expectedLength: 64, // SHA256 produces 64-character hex string
+        actualLength: hash1.length
+      }
+    });
+    
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ========== PROTECTED ENDPOINTS (REQUIRE AUTHENTICATION) ==========
 router.use(protect);
 router.use(rateLimitInfoMiddleware);

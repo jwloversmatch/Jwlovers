@@ -8,8 +8,8 @@ const bcrypt = require("bcryptjs");
 class SecurityQuestionService {
   constructor() {
     this.cache = new Map();
-    this.cacheDuration = 5 * 60 * 1000; // 5 minutes
-    this.useSmartValidation = true; // Toggle for smart validation
+    this.cacheDuration = 5 * 60 * 1000; 
+    this.useSmartValidation = true;
   }
   
   // Generate client fingerprint

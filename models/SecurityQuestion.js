@@ -1,4 +1,4 @@
-// models/SecurityQuestion.js - UPDATED WITH MULTIPLE ANSWERS
+// models/SecurityQuestion.js - PERFORMANCE OPTIMIZED VERSION
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -8,6 +8,7 @@ const securityQuestionSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true, // ✅ ADD INDEX for faster lookups
     },
     questionText: {
       type: String,
@@ -15,13 +16,11 @@ const securityQuestionSchema = new mongoose.Schema(
       trim: true,
       maxlength: 500,
     },
-    // Store multiple hashed answers for variations
     hashedAnswers: [{
       type: String,
       required: true,
       select: false,
     }],
-    // Store acceptable answer variations (not hashed, for reference/admin)
     acceptableAnswers: [{
       type: String,
       select: false,
@@ -40,6 +39,7 @@ const securityQuestionSchema = new mongoose.Schema(
         "jw_general"
       ],
       default: "jw_general",
+      index: true, // ✅ ADD INDEX for category filtering
     },
     difficulty: {
       type: String,
@@ -49,6 +49,7 @@ const securityQuestionSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+      index: true, // ✅ ADD INDEX - we query by this often
     },
     usageCount: {
       type: Number,
@@ -68,6 +69,9 @@ const securityQuestionSchema = new mongoose.Schema(
   }
 );
 
+// ✅ ADD COMPOUND INDEX for common query pattern
+securityQuestionSchema.index({ isActive: 1, category: 1 });
+
 // Method to get question without sensitive data
 securityQuestionSchema.methods.toSafeObject = function() {
   return {
@@ -84,14 +88,9 @@ securityQuestionSchema.methods.toSafeObject = function() {
 // Normalize answer for comparison
 securityQuestionSchema.methods.normalizeAnswer = function(answer) {
   let normalized = String(answer).toLowerCase().trim();
-  
-  // Remove extra whitespace
   normalized = normalized.replace(/\s+/g, ' ');
-  
-  // Remove common punctuation
   normalized = normalized.replace(/[.,!?;:'"()\[\]]/g, '');
   
-  // JW-specific normalizations
   const jwReplacements = {
     "jehovahs": "jehovah's",
     "jw": "jehovah's witness",
@@ -114,11 +113,13 @@ securityQuestionSchema.methods.normalizeAnswer = function(answer) {
   return normalized;
 };
 
-// Static method to validate answer against multiple possible answers
+// ✅ OPTIMIZED: Static method to validate answer
 securityQuestionSchema.statics.validateAnswerById = async function (questionId, userAnswer) {
   try {
-    // Get question WITH hashedAnswers included
-    const question = await this.findById(questionId).select('+hashedAnswers');
+    // Use lean() for faster query (returns plain object, not Mongoose doc)
+    const question = await this.findOne({ questionId })
+      .select('+hashedAnswers')
+      .lean();
     
     if (!question) {
       console.error(`Question ${questionId} not found`);
@@ -126,20 +127,26 @@ securityQuestionSchema.statics.validateAnswerById = async function (questionId, 
     }
     
     if (!question.hashedAnswers || question.hashedAnswers.length === 0) {
-      console.error(`Question ${questionId} has no hashed answers stored`);
+      console.error(`Question ${questionId} has no hashed answers`);
       return false;
     }
     
-    const normalizedUserAnswer = question.normalizeAnswer(userAnswer);
+    // Create temp object for normalizeAnswer (since we're using lean())
+    const normalizedUserAnswer = this.prototype.normalizeAnswer.call({}, userAnswer);
     
     // Check against all hashed answers
     for (const hashedAnswer of question.hashedAnswers) {
       const isValid = await bcrypt.compare(normalizedUserAnswer, hashedAnswer);
       if (isValid) {
-        // Update usage stats
-        question.usageCount += 1;
-        question.lastUsed = new Date();
-        await question.save();
+        // ✅ OPTIMIZED: Update usage in background (don't await)
+        this.findOneAndUpdate(
+          { questionId },
+          {
+            $inc: { usageCount: 1 },
+            $set: { lastUsed: new Date() }
+          }
+        ).exec().catch(err => console.error("Failed to update usage:", err));
+        
         return true;
       }
     }
@@ -180,41 +187,73 @@ securityQuestionSchema.statics.createQuestionWithAnswers = async function (data)
     return await question.save();
     
   } catch (error) {
-    console.error("Error creating question with multiple answers:", error);
+    console.error("Error creating question:", error);
     throw error;
   }
 };
 
-// Static method to get random question
+// ✅ HIGHLY OPTIMIZED: Get random question
 securityQuestionSchema.statics.getRandomQuestion = async function () {
-  const questions = await this.aggregate([
-    { $match: { isActive: true } },
-    { $sample: { size: 1 } },
-    {
-      $project: {
-        questionId: 1,
-        questionText: 1,
-        category: 1,
-        difficulty: 1,
-        _id: 1,
-        answerType: 1,
-      },
-    },
-  ]);
-  
-  return questions[0] || null;
+  try {
+    // COUNT active questions (faster than loading all)
+    const count = await this.countDocuments({ isActive: true });
+    
+    if (count === 0) {
+      return null;
+    }
+    
+    // ✅ OPTIMIZED: Get random using skip instead of $sample
+    // $sample loads ALL documents into memory - very slow!
+    const random = Math.floor(Math.random() * count);
+    
+    const question = await this.findOne({ isActive: true })
+      .skip(random)
+      .select('questionId questionText category difficulty answerType _id')
+      .lean(); // ✅ Use lean() for faster query
+    
+    // ✅ Update usage in background (don't block response)
+    if (question) {
+      this.findOneAndUpdate(
+        { questionId: question.questionId },
+        {
+          $inc: { usageCount: 1 },
+          $set: { lastUsed: new Date() }
+        }
+      ).exec().catch(err => console.error("Failed to update usage:", err));
+    }
+    
+    return question;
+    
+  } catch (error) {
+    console.error("Error getting random question:", error);
+    return null;
+  }
 };
 
-// Method to add additional acceptable answers to existing question
+// ✅ NEW: Get ALL active questions (for caching)
+securityQuestionSchema.statics.getAllActiveQuestions = async function () {
+  try {
+    const questions = await this.find({ isActive: true })
+      .select('+hashedAnswers +acceptableAnswers')
+      .lean();
+    
+    return questions;
+  } catch (error) {
+    console.error("Error getting all questions:", error);
+    return [];
+  }
+};
+
+// ✅ OPTIMIZED: Add acceptable answer
 securityQuestionSchema.methods.addAcceptableAnswer = async function (newAnswer) {
   try {
     const normalizedAnswer = this.normalizeAnswer(newAnswer);
     
-    // Check if already exists in acceptableAnswers
+    // Check if already exists
     if (this.acceptableAnswers && this.acceptableAnswers.some(
       ans => this.normalizeAnswer(ans) === normalizedAnswer
     )) {
-      console.log("Answer already exists in acceptable answers");
+      console.log("Answer already exists");
       return this;
     }
     
@@ -230,7 +269,7 @@ securityQuestionSchema.methods.addAcceptableAnswer = async function (newAnswer) 
     return this;
     
   } catch (error) {
-    console.error("Error adding acceptable answer:", error);
+    console.error("Error adding answer:", error);
     throw error;
   }
 };
