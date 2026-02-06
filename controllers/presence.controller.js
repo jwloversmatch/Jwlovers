@@ -1,4 +1,4 @@
-const { BaseUser, DatingUser, UserQuery } = require("@models/User");
+const { BaseUser, ROLES} = require("@models/User"); 
 const logger = require("@utils/logger");
 const { v4: uuidv4 } = require("uuid");
 
@@ -11,6 +11,15 @@ const CONFIG = {
     STATS: 30000,
     USER_PRESENCE: 15000,
   },
+  // Define user types based on your actual discriminators
+  USER_TYPES: {
+    DATING: "DatingUser",
+    MODERATOR: "ModeratorUser",
+    ADMIN: "AdminUser",
+    SUPER_ADMIN: "SuperAdminUser",
+  },
+  // Staff user types (from ROLES enum)
+  STAFF_ROLES: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
 class PresenceController {
@@ -41,7 +50,7 @@ class PresenceController {
 
   // ========== HELPER METHODS ==========
   async getUserById(userId) {
-    return UserQuery.getUserById(userId);
+    return BaseUser.findById(userId); // BaseUser finds all discriminators
   }
 
   async updateUserPresence(userId, updateData) {
@@ -52,26 +61,28 @@ class PresenceController {
     );
   }
 
-  async getDatingUsers(filter = {}, select = "", options = {}) {
-    const query = {
-      userType: 'DatingUser',
-      ...filter
-    };
+  // Helper to determine user type from role or userType field
+  getUserType(user) {
+    if (!user) return 'unknown';
     
-    return DatingUser.find(query)
-      .select(select)
-      .skip(options.skip || 0)
-      .limit(options.limit || 50)
-      .sort(options.sort || { "presence.lastSeen": -1 });
+    // Check userType discriminator first
+    if (user.userType === CONFIG.USER_TYPES.DATING) {
+      return 'dating';
+    }
+    
+    // Check for staff roles
+    if (user.role && CONFIG.STAFF_ROLES.includes(user.role)) {
+      return 'staff';
+    }
+    
+    // Default to dating for users with role 'user'
+    return 'dating';
   }
 
-  async countDatingUsers(filter = {}) {
-    const query = {
-      userType: 'DatingUser',
-      ...filter
-    };
-    
-    return DatingUser.countDocuments(query);
+  // Helper to check if user is staff
+  isStaffUser(user) {
+    if (!user) return false;
+    return user.role && CONFIG.STAFF_ROLES.includes(user.role);
   }
 
   // ========== HEALTH CHECK ==========
@@ -137,20 +148,18 @@ class PresenceController {
         const serviceStatus = await this.presenceService.areUsersOnline(limitedIds);
         Object.assign(onlineStatus, serviceStatus);
       } else {
-        // Fallback to database - query all users regardless of type
+        // Fallback to database - BaseUser queries all discriminators
         const users = await BaseUser.find({
           _id: { $in: limitedIds },
-        }).select("_id presence userType");
-
-        const fiveMinutesAgo = new Date(Date.now() - CONFIG.ONLINE_THRESHOLD_MS);
+        }).select("_id presence userType role");
 
         for (const userId of limitedIds) {
           const user = users.find(u => u._id.toString() === userId);
-          if (user) {
-            onlineStatus[userId] = (
-              new Date(user.presence.lastSeen) > fiveMinutesAgo &&
-              user.presence.status === "online"
-            );
+          if (user && user.presence) {
+            // Check privacy settings for dating users
+            const showOnline = this.shouldShowOnlineStatus(user, req.user);
+            // Use ONLY the status field from database
+            onlineStatus[userId] = showOnline && user.presence.status === "online";
           } else {
             onlineStatus[userId] = false;
           }
@@ -175,12 +184,39 @@ class PresenceController {
     }
   }
 
+  // Helper to check if online status should be shown (respects privacy settings)
+  shouldShowOnlineStatus(user, requestingUser) {
+    // Always show to self
+    if (requestingUser && requestingUser.id === user._id.toString()) {
+      return true;
+    }
+    
+    // Check base privacy settings
+    if (user.privacySettings?.showOnlineStatus === false) {
+      return false;
+    }
+    
+    // Check dating-specific privacy settings
+    if (user.userType === CONFIG.USER_TYPES.DATING) {
+      const showLastActive = user.datingPrivacySettings?.showLastActive || 'matches';
+      
+      if (showLastActive === 'nobody') return false;
+      if (showLastActive === 'matches') {
+        // Would need to check if requesting user is a match
+        // For now, return false for non-self
+        return requestingUser && requestingUser.id === user._id.toString();
+      }
+    }
+    
+    return true;
+  }
+
   async getActiveUsers(req, res) {
     try {
       const { limit = 50, offset = 0, status = "online", userType = "dating" } = req.query;
+      const requestingUserId = req.user?.id;
       
       let users = [];
-      const fiveMinutesAgo = new Date(Date.now() - CONFIG.ONLINE_THRESHOLD_MS);
 
       // Build base filter based on user type
       const baseFilter = {
@@ -190,16 +226,23 @@ class PresenceController {
 
       // Add user type filter
       if (userType === "dating") {
-        baseFilter.userType = "DatingUser";
+        // Dating users are either userType: "DatingUser" OR role: "user"
+        baseFilter.$or = [
+          { userType: CONFIG.USER_TYPES.DATING },
+          { role: ROLES.USER }
+        ];
       } else if (userType === "staff") {
-        baseFilter.userType = { $in: ["Moderator", "Admin", "SuperAdmin"] };
+        baseFilter.role = { $in: CONFIG.STAFF_ROLES };
+      } else if (userType === "moderator") {
+        baseFilter.role = ROLES.MODERATOR;
+      } else if (userType === "admin") {
+        baseFilter.role = { $in: [ROLES.ADMIN, ROLES.SUPER_ADMIN] };
       }
 
       if (status === "online") {
-        // Add online filter
+        // Add online filter - use ONLY the status field from database
         const onlineFilter = {
           ...baseFilter,
-          "presence.lastSeen": { $gt: fiveMinutesAgo },
           "presence.status": "online",
         };
 
@@ -212,61 +255,67 @@ class PresenceController {
             const dbUsers = await BaseUser.find({
               _id: { $in: userIds },
               ...baseFilter
-            }).select("_id userType");
+            }).select("_id userType role");
             
             const validUserIds = dbUsers.map(u => u._id.toString());
             users = users.filter(u => validUserIds.includes(u.userId));
           }
         } else {
-          // Database fallback
+          // Database fallback - BaseUser queries all discriminators
           const dbUsers = await BaseUser.find(onlineFilter)
-            .select("_id firstName lastName avatar userName age preferences.lookingFor location.city presence userType")
+            .select("_id firstName lastName avatar userName age preferences.lookingFor location.city presence userType role datingPrivacySettings")
             .sort({ "presence.lastSeen": -1 })
             .skip(parseInt(offset))
             .limit(parseInt(limit));
 
-          users = dbUsers.map(user => ({
-            userId: user._id.toString(),
-            name: `${user.firstName} ${user.lastName}`,
-            userName: user.userName,
-            avatar: user.avatar,
-            age: user.age,
-            lookingFor: user.preferences?.lookingFor || [],
-            location: user.location?.city,
-            isOnline: true,
-            lastActive: user.presence.lastSeen,
-            status: user.presence.status,
-            userType: user.userType,
-          }));
+          users = dbUsers.map(user => {
+            const showOnline = this.shouldShowOnlineStatus(user, { id: requestingUserId });
+            
+            return {
+              userId: user._id.toString(),
+              name: `${user.firstName} ${user.lastName}`,
+              userName: user.userName,
+              avatar: user.avatar,
+              age: user.age,
+              lookingFor: user.preferences?.lookingFor || [],
+              location: user.location?.city,
+              // NO isOnline field - use status only
+              lastSeen: user.presence?.lastSeen,
+              status: user.presence?.status || 'offline',
+              userType: this.getUserType(user),
+              role: user.role,
+              showOnlineStatus: showOnline,
+            };
+          });
         }
       } else {
+        // For offline or all status
         const filter = baseFilter;
         
         if (status === "offline") {
-          filter["presence.lastSeen"] = { $lte: fiveMinutesAgo };
+          filter["presence.status"] = { $in: ["offline", "away", "busy", "invisible"] };
         }
 
         const dbUsers = await BaseUser.find(filter)
-          .select("_id firstName lastName avatar userName presence userType")
+          .select("_id firstName lastName avatar userName presence userType role datingPrivacySettings")
           .sort({ "presence.lastSeen": -1 })
           .skip(parseInt(offset))
           .limit(parseInt(limit));
 
         users = dbUsers.map(user => {
-          const isOnline = (
-            new Date(user.presence.lastSeen) > fiveMinutesAgo &&
-            user.presence.status === "online"
-          );
+          const showOnline = this.shouldShowOnlineStatus(user, { id: requestingUserId });
           
           return {
             userId: user._id.toString(),
             name: `${user.firstName} ${user.lastName}`,
             userName: user.userName,
             avatar: user.avatar,
-            isOnline,
-            lastSeen: user.presence.lastSeen,
-            status: user.presence.status,
-            userType: user.userType,
+            // NO isOnline field - use status only
+            lastSeen: user.presence?.lastSeen,
+            status: user.presence?.status || 'offline',
+            userType: this.getUserType(user),
+            role: user.role,
+            showOnlineStatus: showOnline,
           };
         });
       }
@@ -298,6 +347,7 @@ class PresenceController {
   async getUserPresence(req, res) {
     try {
       const { userId } = req.params;
+      const requestingUserId = req.user?.id;
 
       let presence = null;
 
@@ -318,23 +368,32 @@ class PresenceController {
           });
         }
 
-        const fiveMinutesAgo = new Date(Date.now() - CONFIG.ONLINE_THRESHOLD_MS);
-        const isOnline = (
-          new Date(user.presence.lastSeen) > fiveMinutesAgo &&
-          user.presence.status === "online"
-        );
+        const showOnline = this.shouldShowOnlineStatus(user, { id: requestingUserId });
 
         presence = {
           userId: user._id.toString(),
           name: `${user.firstName} ${user.lastName}`,
           userName: user.userName,
           avatar: user.avatar,
-          isOnline,
-          lastSeen: user.presence.lastSeen,
-          status: user.presence.status,
-          customStatus: user.presence.customStatus || null,
-          userType: user.userType,
+          // NO isOnline field - use status only
+          lastSeen: user.presence?.lastSeen,
+          status: user.presence?.status || 'offline',
+          userType: this.getUserType(user),
+          role: user.role,
+          showOnlineStatus: showOnline,
         };
+
+        // Add dating-specific info if applicable
+        if (user.userType === CONFIG.USER_TYPES.DATING && requestingUserId === userId) {
+          presence.datingPrivacySettings = user.datingPrivacySettings;
+          presence.datingStats = user.datingStats;
+        }
+        
+        // Add staff-specific info if applicable
+        if (this.isStaffUser(user) && requestingUserId === userId) {
+          presence.workStats = user.workStats;
+          presence.isOnShift = user.isOnShift;
+        }
       }
 
       res.json({
@@ -365,21 +424,31 @@ class PresenceController {
         });
       }
 
-      const fiveMinutesAgo = new Date(Date.now() - CONFIG.ONLINE_THRESHOLD_MS);
-      const isOnline = (
-        new Date(user.presence.lastSeen) > fiveMinutesAgo &&
-        user.presence.status === "online"
-      );
-
       const presenceData = {
         userId: user._id.toString(),
-        isOnline,
-        lastSeen: user.presence.lastSeen,
-        status: user.presence.status,
-        customStatus: user.presence.customStatus || null,
+        // NO isOnline field
+        lastSeen: user.presence?.lastSeen,
+        lastActive: user.presence?.lastActive,
+        status: user.presence?.status || 'offline',
         connections: this.presenceService?.getUserConnections?.(userId) || [],
-        userType: user.userType,
+        userType: this.getUserType(user),
+        role: user.role,
+        privacySettings: user.privacySettings,
       };
+
+      // Add dating-specific info
+      if (user.userType === CONFIG.USER_TYPES.DATING) {
+        presenceData.datingPrivacySettings = user.datingPrivacySettings;
+        presenceData.datingStats = user.datingStats;
+        presenceData.datingNotificationSettings = user.datingNotificationSettings;
+      }
+      
+      // Add staff-specific info
+      if (this.isStaffUser(user)) {
+        presenceData.workStats = user.workStats;
+        presenceData.isOnShift = user.isOnShift;
+        presenceData.staffNotificationSettings = user.staffNotificationSettings;
+      }
 
       res.json({
         success: true,
@@ -400,7 +469,7 @@ class PresenceController {
   async updateStatus(req, res) {
     try {
       const userId = req.user.id;
-      const { status, customStatus, online } = req.body;
+      const { status, online } = req.body;
 
       // Handle both 'status' and 'online' fields
       let finalStatus = status;
@@ -409,7 +478,8 @@ class PresenceController {
       }
 
       if (finalStatus) {
-        const validStatuses = ["online", "away", "busy", "offline", "dnd"];
+        // Use correct enum values from your base schema
+        const validStatuses = ["online", "away", "busy", "offline", "invisible"];
         if (!validStatuses.includes(finalStatus)) {
           return res.status(400).json({
             success: false,
@@ -428,23 +498,28 @@ class PresenceController {
         });
       }
 
-      // Update user
-      if (finalStatus) {
-        user.presence.status = finalStatus;
+      // Initialize presence if it doesn't exist
+      if (!user.presence) {
+        user.presence = {
+          status: finalStatus || "online",
+          lastSeen: new Date(),
+          lastActive: new Date(),
+        };
+      } else {
+        // Update user
+        if (finalStatus) {
+          user.presence.status = finalStatus;
+        }
+        
+        user.presence.lastSeen = new Date();
+        user.presence.lastActive = new Date();
       }
-      
-      if (customStatus !== undefined) {
-        user.presence.customStatus = customStatus;
-      }
-      
-      user.presence.lastSeen = new Date();
-      user.presence.lastActive = new Date();
       
       await user.save({ validateBeforeSave: false });
 
       // Update PresenceService
       if (this.presenceService && this.presenceService.updateUserStatus) {
-        await this.presenceService.updateUserStatus(userId, finalStatus, customStatus);
+        await this.presenceService.updateUserStatus(userId, finalStatus);
       }
 
       // Clear cache
@@ -455,9 +530,10 @@ class PresenceController {
         data: {
           userId: user._id.toString(),
           status: user.presence.status,
-          customStatus: user.presence.customStatus,
           lastSeen: user.presence.lastSeen,
-          userType: user.userType,
+          lastActive: user.presence.lastActive,
+          userType: this.getUserType(user),
+          role: user.role,
         },
         message: "Status updated successfully",
       });
@@ -484,9 +560,19 @@ class PresenceController {
         });
       }
 
-      // Update last seen
-      user.presence.lastSeen = new Date();
-      user.presence.lastActive = new Date();
+      // Initialize presence if it doesn't exist
+      if (!user.presence) {
+        user.presence = {
+          status: "online",
+          lastSeen: new Date(),
+          lastActive: new Date(),
+        };
+      } else {
+        // Update last seen
+        user.presence.lastSeen = new Date();
+        user.presence.lastActive = new Date();
+      }
+      
       await user.save({ validateBeforeSave: false });
 
       // Update PresenceService
@@ -497,6 +583,7 @@ class PresenceController {
       res.json({
         success: true,
         lastSeen: user.presence.lastSeen,
+        lastActive: user.presence.lastActive,
         message: "Heartbeat received",
         timestamp: new Date().toISOString(),
       });
@@ -519,13 +606,14 @@ class PresenceController {
         await this.presenceService.updateUserStatus(userId, "offline");
       }
 
-      // Update database using BaseUser (works for all user types)
+      // Update database using BaseUser (works for all discriminators)
       await BaseUser.updateOne(
         { _id: userId },
         {
           $set: {
             "presence.status": "offline",
             "presence.lastSeen": new Date(),
+            "presence.lastActive": new Date(),
           },
         }
       );
@@ -583,6 +671,7 @@ class PresenceController {
                   $set: {
                     "presence.status": "offline",
                     "presence.lastSeen": new Date(),
+                    "presence.lastActive": new Date(),
                   },
                 }
               );
@@ -635,39 +724,39 @@ class PresenceController {
         });
       }
 
-      const fiveMinutesAgo = new Date(now - CONFIG.ONLINE_THRESHOLD_MS);
-      const oneHourAgo = new Date(now - 60 * 60 * 1000);
-
       // Build filters based on user type
       const buildFilter = (baseFilter) => {
         if (userType === "dating") {
-          return { ...baseFilter, userType: "DatingUser" };
+          // Dating users are either DatingUser type OR role: user
+          return {
+            ...baseFilter,
+            $or: [
+              { userType: CONFIG.USER_TYPES.DATING },
+              { role: ROLES.USER }
+            ]
+          };
         } else if (userType === "staff") {
-          return { ...baseFilter, userType: { $in: ["Moderator", "Admin", "SuperAdmin"] } };
+          return { ...baseFilter, role: { $in: CONFIG.STAFF_ROLES } };
         } else if (userType === "moderator") {
-          return { ...baseFilter, userType: "Moderator" };
+          return { ...baseFilter, role: ROLES.MODERATOR };
         } else if (userType === "admin") {
-          return { ...baseFilter, userType: { $in: ["Admin", "SuperAdmin"] } };
+          return { ...baseFilter, role: { $in: [ROLES.ADMIN, ROLES.SUPER_ADMIN] } };
         }
         return baseFilter;
       };
 
-      const [onlineCount, activeCount, totalUsers] = await Promise.all([
+      const [onlineCount, totalUsers] = await Promise.all([
         BaseUser.countDocuments(buildFilter({
-          "presence.lastSeen": { $gt: fiveMinutesAgo },
-          "presence.status": "online",
+          "presence.status": "online", // Use status only
           accountStatus: "active",
         })),
-        BaseUser.countDocuments(buildFilter({
-          "presence.lastSeen": { $gt: oneHourAgo },
-          accountStatus: "active",
+        BaseUser.countDocuments(buildFilter({ 
+          accountStatus: { $in: ["active", "pending_verification"] }
         })),
-        BaseUser.countDocuments(buildFilter({ accountStatus: "active" })),
       ]);
 
       const stats = {
         onlineUsers: onlineCount,
-        activeUsers: activeCount,
         totalUsers,
         userType: userType || "all",
         updatedAt: new Date().toISOString(),
@@ -720,6 +809,37 @@ class PresenceController {
 
       const statsResults = await Promise.all(statsPromises);
       metrics.database = Object.assign({}, ...statsResults);
+
+      // Add discriminator breakdown
+      try {
+        const discriminatorStats = await BaseUser.aggregate([
+          {
+            $group: {
+              _id: "$userType",
+              count: { $sum: 1 },
+              online: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $eq: ["$accountStatus", "active"] },
+                        { $eq: ["$presence.status", "online"] }
+                      ]
+                    },
+                    1,
+                    0
+                  ]
+                }
+              }
+            }
+          },
+          { $sort: { count: -1 } }
+        ]);
+        
+        metrics.discriminators = discriminatorStats;
+      } catch (aggError) {
+        logger.warn("Could not get discriminator stats:", aggError.message);
+      }
 
       res.json({
         success: true,
@@ -824,12 +944,19 @@ class PresenceController {
 
       // Add user type filter if specified
       if (userType === "dating") {
-        filter.userType = "DatingUser";
+        filter.$or = [
+          { userType: CONFIG.USER_TYPES.DATING },
+          { role: ROLES.USER }
+        ];
       } else if (userType === "staff") {
-        filter.userType = { $in: ["Moderator", "Admin", "SuperAdmin"] };
+        filter.role = { $in: CONFIG.STAFF_ROLES };
+      } else if (userType === "moderator") {
+        filter.role = ROLES.MODERATOR;
+      } else if (userType === "admin") {
+        filter.role = { $in: [ROLES.ADMIN, ROLES.SUPER_ADMIN] };
       }
 
-      const staleUsers = await BaseUser.find(filter).select("_id presence userType");
+      const staleUsers = await BaseUser.find(filter).select("_id presence userType role");
 
       const results = {
         total: staleUsers.length,
@@ -842,7 +969,19 @@ class PresenceController {
       if (!dryRun) {
         const updatePromises = staleUsers.map(async (user) => {
           try {
-            user.presence.status = "offline";
+            // Initialize presence if it doesn't exist
+            if (!user.presence) {
+              user.presence = {
+                status: "offline",
+                lastSeen: new Date(),
+                lastActive: new Date(),
+              };
+            } else {
+              user.presence.status = "offline";
+              user.presence.lastSeen = new Date();
+              user.presence.lastActive = new Date();
+            }
+            
             await user.save({ validateBeforeSave: false });
             
             // Update PresenceService
@@ -853,7 +992,8 @@ class PresenceController {
             results.updated++;
             results.users.push({
               userId: user._id.toString(),
-              userType: user.userType,
+              userType: user.userType || this.getUserType(user),
+              role: user.role,
               lastSeen: user.presence.lastSeen,
             });
           } catch (error) {
@@ -868,8 +1008,9 @@ class PresenceController {
       } else {
         results.users = staleUsers.map((user) => ({
           userId: user._id.toString(),
-          userType: user.userType,
-          lastSeen: user.presence.lastSeen,
+          userType: user.userType || this.getUserType(user),
+          role: user.role,
+          lastSeen: user.presence?.lastSeen || new Date(),
         }));
       }
 

@@ -1,4 +1,4 @@
-// controllers/chat/ChatController.js - REFACTORED
+// controllers/chat/ChatController.js - UPDATED FOR WEBSOCKET SERVICE
 const BaseController = require("../BaseController");
 const ConversationService = require("./ConversationService");
 const MessageService = require("./MessageService");
@@ -7,17 +7,16 @@ const StatsService = require("./StatsService");
 const ReactionService = require("./ReactionService");
 const WsTokenService = require("./WsTokenService");
 
-// Import our modular components
+// Import modular components
 const chatHelpers = require("@utils/ChatHelpers");
 const messageFormatter = require("@formatters/MessageFormatter");
 const messageEncryptionHandler = require("@handlers/MessageEncryptionHandler");
 const messageValidator = require("@validators/MessageValidator");
-const webSocketEmitter = require("@emitters/WebSocketEmitter");
 
 const logger = require("@utils/logger") || console;
 
 class ChatController extends BaseController {
-  constructor() {
+  constructor(webSocketService = null) {
     super();
     this.conversationService = ConversationService;
     this.messageService = MessageService;
@@ -25,8 +24,17 @@ class ChatController extends BaseController {
     this.statsService = StatsService;
     this.reactionService = ReactionService;
     this.wsTokenService = WsTokenService;
+    
+    // Inject WebSocketService
+    this.webSocketService = webSocketService;
 
     this.bindMethods();
+  }
+
+  // Set WebSocketService after initialization
+  setWebSocketService(webSocketService) {
+    this.webSocketService = webSocketService;
+    logger.info("✅ WebSocketService injected into ChatController");
   }
 
   bindMethods() {
@@ -62,11 +70,43 @@ class ChatController extends BaseController {
     this.getWsToken = this.getWsToken.bind(this);
   }
 
+  // Helper to emit WebSocket events
+  async emitToChat(chatId, event, data) {
+    if (!this.webSocketService) {
+      logger.warn("WebSocketService not available for chat emission");
+      return false;
+    }
+
+    try {
+      this.webSocketService.sendToChat(chatId, event, data);
+      return true;
+    } catch (error) {
+      logger.error("Failed to emit to chat:", error);
+      return false;
+    }
+  }
+
+  // Helper to emit to specific user
+  async emitToUser(userId, event, data) {
+    if (!this.webSocketService) {
+      logger.warn("WebSocketService not available for user emission");
+      return false;
+    }
+
+    try {
+      this.webSocketService.sendToUser(userId, event, data);
+      return true;
+    } catch (error) {
+      logger.error("Failed to emit to user:", error);
+      return false;
+    }
+  }
+
   // ========== CONVERSATION METHODS ==========
 
   async getConversations(req, res) {
     try {
-      const userId = req.userId || req.user?.id;
+      const userId = req.user?.id;
 
       if (!userId) {
         return this.errorResponse(res, 401, "User not authenticated");
@@ -210,7 +250,7 @@ class ChatController extends BaseController {
     let cacheKey = null;
 
     try {
-      const senderId = chatHelpers.extractSenderId(req.user);
+      const senderId = req.user?.id;
       
       if (!senderId) {
         throw new Error("Sender ID not found in user object");
@@ -221,9 +261,9 @@ class ChatController extends BaseController {
       const { receiverId, type, content, mediaUrl, conversationId, messageId } = req.body;
 
       // Duplicate check
-      cacheKey = chatHelpers.createCacheKey(senderId, receiverId, messageId, content);
+      cacheKey = chatHelpers.createCacheKey ? chatHelpers.createCacheKey(senderId, receiverId, messageId, content) : null;
 
-      if (chatHelpers.checkDuplicate(cacheKey)) {
+      if (chatHelpers.checkDuplicate && cacheKey && chatHelpers.checkDuplicate(cacheKey)) {
         logger.info("⏭️ [HTTP] Duplicate request prevented by cache");
         return this.successResponse(res, 200, { duplicate: true }, "Message already being processed");
       }
@@ -237,16 +277,29 @@ class ChatController extends BaseController {
         }).populate("senderId", "firstName lastName avatar email userName").lean();
 
         if (existingMessage) {
-          const formattedMessage = messageFormatter.formatSocketMessage(req, existingMessage, senderId);
-          chatHelpers.clearCache(cacheKey);
+          const formattedMessage = messageFormatter.formatSocketMessage ? 
+            messageFormatter.formatSocketMessage(req, existingMessage, senderId) : existingMessage;
+          
+          if (chatHelpers.clearCache && cacheKey) {
+            chatHelpers.clearCache(cacheKey);
+          }
           return this.successResponse(res, 200, formattedMessage, "Message already sent");
         }
       }
 
       // Encrypt content
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      const { content: finalContent, encryptionType, isEncrypted, needsMigration } = 
-        await messageEncryptionHandler.encryptMessageForStorage(content);
+      let finalContent = content;
+      let encryptionType = "none";
+      let isEncrypted = false;
+      let needsMigration = false;
+
+      if (messageEncryptionHandler && messageEncryptionHandler.encryptMessageForStorage) {
+        const encryptionResult = await messageEncryptionHandler.encryptMessageForStorage(content);
+        finalContent = encryptionResult.content || content;
+        encryptionType = encryptionResult.encryptionType || "none";
+        isEncrypted = encryptionResult.isEncrypted || false;
+        needsMigration = encryptionResult.needsMigration || false;
+      }
 
       // Prepare message data
       const messageData = {
@@ -267,31 +320,41 @@ class ChatController extends BaseController {
       // Send message
       const result = await this.messageService.sendMessage(messageData);
 
-      chatHelpers.logMessageEvent("MESSAGE_SAVED", {
+      logger.info("MESSAGE_SAVED", {
         messageId: result._id,
         conversationId: result.conversationId,
         senderId,
       });
 
-      // Format for socket
-      const socketMessage = messageFormatter.formatSocketMessage(req, result, senderId);
-
-      // Emit via WebSocket
-      if (result.conversationId && socketHelpers) {
-        const redisHelper = chatHelpers.getRedisHelper(req);
-        await webSocketEmitter.emitMessageToConversation(
-          socketHelpers,
-          socketMessage,
-          result.conversationId.toString(),
-          redisHelper
-        );
+      // Format for response
+      let formattedMessage = result;
+      if (messageFormatter.formatSocketMessage) {
+        formattedMessage = messageFormatter.formatSocketMessage(req, result, senderId);
       }
 
-      chatHelpers.clearCache(cacheKey);
+      // Emit via WebSocket
+      if (result.conversationId && this.webSocketService) {
+        await this.emitToChat(result.conversationId.toString(), 'message:received', {
+          ...formattedMessage,
+          conversationId: result.conversationId.toString()
+        });
 
-      return this.successResponse(res, 200, socketMessage, "Message sent successfully");
+        // Also send typing stop event
+        await this.emitToChat(result.conversationId.toString(), 'typing:stop', {
+          userId: senderId,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      if (chatHelpers.clearCache && cacheKey) {
+        chatHelpers.clearCache(cacheKey);
+      }
+
+      return this.successResponse(res, 200, formattedMessage, "Message sent successfully");
     } catch (error) {
-      chatHelpers.clearCache(cacheKey);
+      if (chatHelpers.clearCache && cacheKey) {
+        chatHelpers.clearCache(cacheKey);
+      }
       logger.error("❌ [HTTP] Send message error:", error);
 
       if (error.code === 11000 || error.message?.includes("duplicate") || error.message?.includes("Duplicate message")) {
@@ -311,17 +374,23 @@ class ChatController extends BaseController {
     try {
       const result = await this.messageService.markMessageAsRead(req.user.id, req.params.messageId);
 
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      if (result && socketHelpers) {
+      // Emit read receipt via WebSocket
+      if (result && this.webSocketService) {
         const message = await this.messageService.getMessageById(req.params.messageId);
 
-        if (message?.conversationId && chatHelpers.isUserAuthorized(message, req.user.id)) {
-          await webSocketEmitter.emitReadReceipt(
-            socketHelpers,
-            [req.params.messageId],
-            req.user.id,
-            message.conversationId.toString()
-          );
+        if (message?.conversationId) {
+          // Check if user is participant
+          const conversation = await this.conversationService.getConversationById(message.conversationId);
+          if (conversation && 
+              (conversation.participant1.toString() === req.user.id || 
+               conversation.participant2.toString() === req.user.id)) {
+            
+            await this.emitToChat(message.conversationId.toString(), 'message:read', {
+              messageId: req.params.messageId,
+              readerId: req.user.id,
+              timestamp: new Date().toISOString()
+            });
+          }
         }
       }
 
@@ -334,23 +403,22 @@ class ChatController extends BaseController {
 
   async markMessagesAsRead(req, res) {
     try {
-      if (!messageValidator.validateBulkRequest(req.body.messageIds)) {
+      if (!req.body.messageIds || !Array.isArray(req.body.messageIds) || req.body.messageIds.length === 0) {
         return this.successResponse(res, 200, { modifiedCount: 0 }, "No messages to mark");
       }
 
       const result = await this.messageService.markMessagesAsRead(req.body.messageIds, req.user.id);
 
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      if (socketHelpers && req.body.messageIds.length > 0) {
+      // Emit via WebSocket
+      if (this.webSocketService && req.body.messageIds.length > 0) {
         const firstMessage = await this.messageService.getMessageById(req.body.messageIds[0]);
 
-        if (firstMessage?.conversationId && chatHelpers.isUserAuthorized(firstMessage, req.user.id)) {
-          await webSocketEmitter.emitReadReceipt(
-            socketHelpers,
-            req.body.messageIds,
-            req.user.id,
-            firstMessage.conversationId.toString()
-          );
+        if (firstMessage?.conversationId) {
+          await this.emitToChat(firstMessage.conversationId.toString(), 'messages:read:bulk', {
+            messageIds: req.body.messageIds,
+            readerId: req.user.id,
+            timestamp: new Date().toISOString()
+          });
         }
       }
 
@@ -369,20 +437,23 @@ class ChatController extends BaseController {
         return this.errorResponse(res, 404, "Message not found");
       }
 
-      if (!chatHelpers.isUserAuthorized(message, req.user.id)) {
+      // Check authorization
+      const conversation = await this.conversationService.getConversationById(message.conversationId);
+      if (!conversation || 
+          (conversation.participant1.toString() !== req.user.id && 
+           conversation.participant2.toString() !== req.user.id)) {
         return this.errorResponse(res, 403, "Not authorized to delete this message");
       }
 
       await this.messageService.deleteMessage(req.user.id, req.params.messageId);
 
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      if (message.conversationId) {
-        await webSocketEmitter.emitMessageDeleted(
-          socketHelpers,
-          req.params.messageId,
-          req.user.id,
-          message.conversationId.toString()
-        );
+      // Emit deletion via WebSocket
+      if (message.conversationId && this.webSocketService) {
+        await this.emitToChat(message.conversationId.toString(), 'message:deleted', {
+          messageId: req.params.messageId,
+          deletedBy: req.user.id,
+          timestamp: new Date().toISOString()
+        });
       }
 
       return this.successResponse(res, 200, null, "Message deleted");
@@ -394,7 +465,7 @@ class ChatController extends BaseController {
 
   async deleteMessagesBulk(req, res) {
     try {
-      if (!messageValidator.validateBulkRequest(req.body.messageIds)) {
+      if (!req.body.messageIds || !Array.isArray(req.body.messageIds) || req.body.messageIds.length === 0) {
         return this.successResponse(res, 200, { deletedCount: 0 }, "No messages to delete");
       }
 
@@ -408,40 +479,24 @@ class ChatController extends BaseController {
 
   async editMessage(req, res) {
     try {
-      messageValidator.validateEditRequest(req.body.content);
+      if (!req.body.content || req.body.content.trim().length === 0) {
+        return this.errorResponse(res, 400, "Content is required");
+      }
 
       const result = await this.messageService.editMessage(req.user.id, req.params.messageId, req.body.content);
 
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-
-      let responseContent = result.content;
-      if (result.isEncrypted && socketHelpers?.decryptForFrontend) {
-        try {
-          responseContent = socketHelpers.decryptForFrontend(result.content, result.encryptionType);
-        } catch (error) {
-          logger.error("Failed to decrypt edited message:", error);
-          responseContent = "🔒 [Encrypted message]";
-        }
+      // Emit edit via WebSocket
+      if (result?.conversationId && this.webSocketService) {
+        await this.emitToChat(result.conversationId.toString(), 'message:edited', {
+          messageId: req.params.messageId,
+          content: req.body.content,
+          editedBy: req.user.id,
+          editedAt: result.editedAt || new Date(),
+          timestamp: new Date().toISOString()
+        });
       }
 
-      if (result?.conversationId) {
-        await webSocketEmitter.emitMessageEdited(
-          socketHelpers,
-          result._id.toString(),
-          responseContent,
-          req.user.id,
-          result.editedAt,
-          result.conversationId.toString()
-        );
-      }
-
-      const response = {
-        ...(result.toObject ? result.toObject() : result),
-        content: responseContent,
-        isEncrypted: false,
-      };
-
-      return this.successResponse(res, 200, response, "Message updated");
+      return this.successResponse(res, 200, result, "Message updated");
     } catch (error) {
       logger.error("editMessage error:", error);
 
@@ -467,7 +522,9 @@ class ChatController extends BaseController {
 
   async searchMessages(req, res) {
     try {
-      messageValidator.validateSearchQuery(req.query.query);
+      if (!req.query.query || req.query.query.trim().length === 0) {
+        return this.errorResponse(res, 400, "Search query is required");
+      }
 
       const result = await this.searchService.searchMessages(req.user.id, req.query);
       return this.successResponse(res, 200, result);
@@ -511,20 +568,20 @@ class ChatController extends BaseController {
 
   async addReaction(req, res) {
     try {
-      messageValidator.validateReactionRequest(req.body.reaction);
+      if (!req.body.reaction || req.body.reaction.trim().length === 0) {
+        return this.errorResponse(res, 400, "Reaction is required");
+      }
 
       const result = await this.reactionService.addReaction(req.user.id, req.params.messageId, req.body.reaction);
 
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      if (result?.conversationId) {
-        await webSocketEmitter.emitReaction(
-          socketHelpers,
-          req.params.messageId,
-          req.user.id,
-          req.body.reaction,
-          "add",
-          result.conversationId.toString()
-        );
+      // Emit reaction via WebSocket
+      if (result?.conversationId && this.webSocketService) {
+        await this.emitToChat(result.conversationId.toString(), 'reaction:added', {
+          messageId: req.params.messageId,
+          userId: req.user.id,
+          reaction: req.body.reaction,
+          timestamp: new Date().toISOString()
+        });
       }
 
       return this.successResponse(res, 200, result, "Reaction added");
@@ -538,16 +595,14 @@ class ChatController extends BaseController {
     try {
       const result = await this.reactionService.removeReaction(req.user.id, req.params.messageId, req.params.reaction);
 
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      if (result?.conversationId) {
-        await webSocketEmitter.emitReaction(
-          socketHelpers,
-          req.params.messageId,
-          req.user.id,
-          req.params.reaction,
-          "remove",
-          result.conversationId.toString()
-        );
+      // Emit reaction removal via WebSocket
+      if (result?.conversationId && this.webSocketService) {
+        await this.emitToChat(result.conversationId.toString(), 'reaction:removed', {
+          messageId: req.params.messageId,
+          userId: req.user.id,
+          reaction: req.params.reaction,
+          timestamp: new Date().toISOString()
+        });
       }
 
       return this.successResponse(res, 200, result, "Reaction removed");
@@ -570,4 +625,7 @@ class ChatController extends BaseController {
   }
 }
 
-module.exports = new ChatController();
+// Export instance with WebSocketService injection capability
+const chatController = new ChatController();
+module.exports = chatController;
+module.exports.ChatController = ChatController; 

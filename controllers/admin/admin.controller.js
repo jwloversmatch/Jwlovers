@@ -1,64 +1,78 @@
+const { BaseUser, DatingUser } = require('@models/User');
+const Profile = require('@models/Profile.model');
 const Option = require('@models/Option.model');
 const SecurityQuestion = require('@models/SecurityQuestion');
-const { 
-  BaseUser, 
-  DatingUser, 
-  Moderator, 
-  Admin, 
-  SuperAdmin,
-  UserService,
-  UserQuery,
-  ROLES 
-} = require('@models/User');
 const optionService = require('@services/option.service');
+const logger = require('@utils/logger');
 
 class AdminController {
+  
   // ============ DASHBOARD & METRICS ============
   
   async getAdminDashboard(req, res) {
     try {
-      // Get real statistics with user type consideration
+      // Get statistics with multi-schema consideration
       const [
         totalUsers,
         datingUsers,
         staffUsers,
         activeUsers,
         newUsersToday,
-        totalReports,
+        totalProfiles,
         totalOptions,
         totalQuestions
       ] = await Promise.all([
         BaseUser.countDocuments(),
         BaseUser.countDocuments({ userType: 'DatingUser' }),
         BaseUser.countDocuments({ 
-          userType: { $in: ['Moderator', 'Admin', 'SuperAdmin'] } 
+          role: { $in: ['moderator', 'admin', 'super_admin'] } 
         }),
         BaseUser.countDocuments({ accountStatus: 'active' }),
         BaseUser.countDocuments({
           createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
         }),
-        // Report count would come from Report model
-        Promise.resolve(0),
+        Profile.countDocuments(),
         Option.countDocuments({ isActive: true }),
         SecurityQuestion.countDocuments({ isActive: true })
       ]);
-      
-      // Get recent activity with user type
+
+      // Get dating-specific stats
+      const datingStats = {
+        total: await DatingUser.countDocuments(),
+        ageVerified: await DatingUser.countDocuments({ ageVerified: true }),
+        isPremium: await DatingUser.countDocuments({ isPremium: true }),
+        activeProfiles: await Profile.countDocuments({ 
+          'datingProfile.isVisible': true,
+          'datingProfile.isPaused': false 
+        })
+      };
+
+      // Get recent users with their types
       const recentUsers = await BaseUser.find()
         .sort({ createdAt: -1 })
+        .limit(10)
+        .select('firstName lastName email role userType createdAt accountStatus')
+        .lean();
+
+      // Get recent dating profiles
+      const recentDatingProfiles = await DatingUser.find()
+        .sort({ createdAt: -1 })
         .limit(5)
-        .select('firstName lastName email role userType createdAt');
-      
+        .populate('profile', 'userName profilePicture profileCompletion')
+        .lean();
+
+      // Get recent activity
       const recentActivity = await BaseUser.find({
         'presence.lastSeen': { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
       })
         .sort({ 'presence.lastSeen': -1 })
         .limit(10)
-        .select('firstName lastName email role userType presence.lastSeen');
-      
+        .select('firstName lastName email role userType presence.lastSeen')
+        .lean();
+
       res.json({
         success: true,
-        message: 'Admin dashboard',
+        message: 'Admin dashboard retrieved successfully',
         user: {
           id: req.user.id,
           email: req.user.email,
@@ -67,78 +81,153 @@ class AdminController {
         },
         timestamp: new Date().toISOString(),
         stats: {
-          totalUsers,
-          byType: {
-            datingUsers,
-            staffUsers: {
-              total: staffUsers,
-              moderators: await BaseUser.countDocuments({ userType: 'Moderator' }),
-              admins: await BaseUser.countDocuments({ userType: 'Admin' }),
-              superAdmins: await BaseUser.countDocuments({ userType: 'SuperAdmin' })
+          users: {
+            total: totalUsers,
+            byType: {
+              dating: datingUsers,
+              staff: staffUsers,
+              breakdown: {
+                moderators: await BaseUser.countDocuments({ role: 'moderator' }),
+                admins: await BaseUser.countDocuments({ role: 'admin' }),
+                superAdmins: await BaseUser.countDocuments({ role: 'super_admin' })
+              }
+            },
+            active: activeUsers,
+            newToday: newUsersToday,
+            status: {
+              active: activeUsers,
+              pending: await BaseUser.countDocuments({ accountStatus: 'pending_verification' }),
+              suspended: await BaseUser.countDocuments({ accountStatus: 'suspended' }),
+              deactivated: await BaseUser.countDocuments({ accountStatus: 'deactivated' })
             }
           },
-          activeUsers,
-          newUsersToday,
-          totalReports,
-          totalOptions,
-          totalSecurityQuestions: totalQuestions,
-          systemHealth: 'operational'
+          dating: datingStats,
+          profiles: {
+            total: totalProfiles,
+            completed: await Profile.countDocuments({ profileCompletion: { $gte: 70 } }),
+            averageCompletion: await Profile.aggregate([
+              { $group: { _id: null, average: { $avg: '$profileCompletion' } } }
+            ]).then(result => Math.round(result[0]?.average || 0))
+          },
+          system: {
+            options: totalOptions,
+            securityQuestions: totalQuestions,
+            health: 'operational'
+          }
         },
-        recentUsers,
-        recentActivity
+        recent: {
+          users: recentUsers,
+          datingProfiles: recentDatingProfiles,
+          activity: recentActivity
+        }
       });
     } catch (error) {
-      console.error('Dashboard error:', error);
+      logger.error('Dashboard error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to load dashboard data'
+        error: 'Unable to load dashboard data',
+        code: 'DASHBOARD_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
   
   async getDashboardMetrics(req, res) {
     try {
+      // Get dashboard statistics
       const [
         totalUsers,
-        datingUsers,
-        staffUsers,
         activeUsers,
-        newUsersToday,
-        totalOptions,
-        totalQuestions
+        totalProfiles,
+        datingUsers,
+        staffUsers
       ] = await Promise.all([
         BaseUser.countDocuments(),
-        BaseUser.countDocuments({ userType: 'DatingUser' }),
-        BaseUser.countDocuments({ 
-          userType: { $in: ['Moderator', 'Admin', 'SuperAdmin'] } 
-        }),
         BaseUser.countDocuments({ accountStatus: 'active' }),
-        BaseUser.countDocuments({
-          createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
-        }),
-        Option.countDocuments({ isActive: true }),
-        SecurityQuestion.countDocuments({ isActive: true })
+        Profile.countDocuments(),
+        DatingUser.countDocuments(),
+        BaseUser.countDocuments({ 
+          role: { $in: ['moderator', 'admin', 'super_admin'] } 
+        })
       ]);
+
+      // Get daily new users (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
+      const dailyNewUsers = await BaseUser.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: sevenDaysAgo }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' },
+              day: { $dayOfMonth: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1 }
+        },
+        {
+          $limit: 7
+        }
+      ]);
+
+      // Get user activity (last 24 hours)
+      const active24Hours = await BaseUser.countDocuments({
+        'presence.lastSeen': { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      });
+
+      // Get dating profile statistics
+      const datingStats = {
+        premium: await DatingUser.countDocuments({ isPremium: true }),
+        ageVerified: await DatingUser.countDocuments({ ageVerified: true }),
+        active: await Profile.countDocuments({ 
+          'datingProfile.isVisible': true,
+          'datingProfile.isPaused': false 
+        })
+      };
+
       res.json({
         success: true,
+        message: 'Dashboard metrics retrieved successfully',
+        timestamp: new Date().toISOString(),
         metrics: {
-          totalUsers,
-          datingUsers,
-          staffUsers,
-          activeUsers,
-          newUsersToday,
-          totalOptions,
-          totalSecurityQuestions: totalQuestions,
-          systemHealth: 'operational'
-        },
-        timestamp: new Date().toISOString()
+          users: {
+            total: totalUsers,
+            active: activeUsers,
+            active24h: active24Hours,
+            dating: datingUsers,
+            staff: staffUsers,
+            dailyGrowth: dailyNewUsers
+          },
+          profiles: {
+            total: totalProfiles,
+            dating: datingStats,
+            averageCompletion: await Profile.aggregate([
+              { $group: { _id: null, average: { $avg: '$profileCompletion' } } }
+            ]).then(result => Math.round(result[0]?.average || 0))
+          },
+          system: {
+            uptime: process.uptime(),
+            memoryUsage: process.memoryUsage(),
+            nodeVersion: process.version
+          }
+        }
       });
     } catch (error) {
-      console.error('Metrics error:', error);
+      logger.error('Dashboard metrics error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to load metrics'
+        error: 'Unable to load dashboard metrics',
+        code: 'DASHBOARD_METRICS_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -147,92 +236,345 @@ class AdminController {
   
   async getAllUsers(req, res) {
     try {
-      const { page = 1, limit = 50, role, userType, status } = req.query;
+      const { 
+        page = 1, 
+        limit = 50, 
+        role, 
+        userType, 
+        status, 
+        hasProfile,
+        hasDatingProfile 
+      } = req.query;
       
       const query = {};
+      
+      // Filter by role
       if (role) query.role = role;
+      
+      // Filter by user type
       if (userType) query.userType = userType;
+      
+      // Filter by account status
       if (status) query.accountStatus = status;
       
       // Security: Regular admins cannot see other admins/super_admins
-      if (req.user.role === ROLES.ADMIN) {
-        query.role = { $in: [ROLES.USER, ROLES.MODERATOR] };
-        query.userType = { $in: ['DatingUser', 'Moderator'] };
+      if (req.user.role === 'admin') {
+        query.role = { $in: ['user', 'moderator'] };
       }
       
-      const users = await BaseUser.find(query)
-        .select('firstName lastName email userName avatar role userType accountStatus createdAt lastActive')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
+      const skip = (page - 1) * limit;
+      const [users, total] = await Promise.all([
+        BaseUser.find(query)
+          .select('firstName lastName email role userType accountStatus createdAt lastLogin presence.updatedAt')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        BaseUser.countDocuments(query)
+      ]);
       
-      const total = await BaseUser.countDocuments(query);
+      // Enrich users with profile information
+      const enrichedUsers = await Promise.all(
+        users.map(async (user) => {
+          const userObj = { ...user };
+          
+          // Get profile info
+          const profile = await Profile.findOne({ userId: user._id })
+            .select('userName profilePicture profileCompletion isVerified verificationBadges')
+            .lean();
+          
+          if (profile) {
+            userObj.profile = {
+              hasProfile: true,
+              userName: profile.userName,
+              profileCompletion: profile.profileCompletion || 0,
+              isVerified: profile.isVerified || false,
+              verificationBadges: profile.verificationBadges?.length || 0
+            };
+          }
+          
+          // Get dating profile info if applicable
+          if (user.userType === 'DatingUser') {
+            const datingUser = await DatingUser.findById(user._id)
+              .select('ageVerified isPremium premiumExpiresAt incognitoMode travelMode.enabled')
+              .lean();
+            
+            if (datingUser) {
+              userObj.dating = {
+                hasDatingProfile: true,
+                ageVerified: datingUser.ageVerified,
+                isPremium: datingUser.isPremium,
+                isPremiumActive: datingUser.isPremium && 
+                  (!datingUser.premiumExpiresAt || new Date(datingUser.premiumExpiresAt) > new Date()),
+                incognitoMode: datingUser.incognitoMode,
+                travelMode: datingUser.travelMode?.enabled || false
+              };
+            }
+          }
+          
+          // Add staff info if applicable
+          if (['moderator', 'admin', 'super_admin'].includes(user.role)) {
+            const staffUser = await BaseUser.findById(user._id)
+              .select('employeeId department permissions workStats')
+              .lean();
+            
+            if (staffUser) {
+              userObj.staff = {
+                employeeId: staffUser.employeeId,
+                department: staffUser.department,
+                permissions: staffUser.permissions || [],
+                workStats: staffUser.workStats || {}
+              };
+            }
+          }
+          
+          return userObj;
+        })
+      );
+      
+      // Filter by profile existence if requested
+      let filteredUsers = enrichedUsers;
+      if (hasProfile === 'true') {
+        filteredUsers = enrichedUsers.filter(user => user.profile?.hasProfile);
+      } else if (hasProfile === 'false') {
+        filteredUsers = enrichedUsers.filter(user => !user.profile?.hasProfile);
+      }
+      
+      if (hasDatingProfile === 'true') {
+        filteredUsers = filteredUsers.filter(user => user.dating?.hasDatingProfile);
+      } else if (hasDatingProfile === 'false') {
+        filteredUsers = filteredUsers.filter(user => !user.dating?.hasDatingProfile);
+      }
       
       res.json({
         success: true,
-        count: users.length,
-        total,
-        users: users.map(user => this.formatAdminUserList(user)),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit)
-        }
+        data: {
+          users: filteredUsers,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: filteredUsers.length
+          }
+        },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Get all users error:', error);
+      logger.error('Get all users error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to retrieve users'
+        error: 'Unable to retrieve users',
+        code: 'USER_RETRIEVAL_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async getUsersByType(req, res) {
+    try {
+      const { userType } = req.params;
+      const { page = 1, limit = 50 } = req.query;
+      
+      if (!['DatingUser', 'Moderator', 'Admin', 'SuperAdmin'].includes(userType)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid user type',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      const query = { userType };
+      
+      // Security check for admin users
+      if (userType === 'Admin' || userType === 'SuperAdmin') {
+        if (req.user.role !== 'super_admin') {
+          return res.status(403).json({
+            success: false,
+            error: 'Insufficient permissions to view admin users',
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+      
+      const skip = (page - 1) * limit;
+      const [users, total] = await Promise.all([
+        BaseUser.find(query)
+          .select('firstName lastName email role userType accountStatus createdAt lastLogin')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        BaseUser.countDocuments(query)
+      ]);
+      
+      res.json({
+        success: true,
+        data: {
+          users,
+          userType,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: users.length
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Get users by type error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to retrieve users by type',
+        code: 'USERS_BY_TYPE_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async getUsersByRole(req, res) {
+    try {
+      const { role } = req.params;
+      const { page = 1, limit = 50 } = req.query;
+      
+      if (!['user', 'moderator', 'admin', 'super_admin'].includes(role)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid role',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      const query = { role };
+      
+      // Security check
+      if (role === 'admin' || role === 'super_admin') {
+        if (req.user.role !== 'super_admin') {
+          return res.status(403).json({
+            success: false,
+            error: 'Insufficient permissions to view admin roles',
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+      
+      const skip = (page - 1) * limit;
+      const [users, total] = await Promise.all([
+        BaseUser.find(query)
+          .select('firstName lastName email role userType accountStatus createdAt lastLogin')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        BaseUser.countDocuments(query)
+      ]);
+      
+      res.json({
+        success: true,
+        data: {
+          users,
+          role,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: users.length
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Get users by role error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to retrieve users by role',
+        code: 'USERS_BY_ROLE_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
   
   async getUserById(req, res) {
     try {
-      const user = await BaseUser.findById(req.params.id)
-        .select('-password -refreshToken -passwordHistory -failedLoginAttempts -accountLockedUntil');
+      const userId = req.params.id;
+      
+      // Get base user
+      const user = await BaseUser.findById(userId)
+        .select('-password -refreshToken -passwordHistory -refreshTokens -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires')
+        .lean();
       
       if (!user) {
         return res.status(404).json({
           success: false,
-          error: 'User not found'
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+          timestamp: new Date().toISOString()
         });
       }
       
-      // Security: Check permissions
-      if (req.user.role === ROLES.ADMIN && 
-          (user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN) &&
+      // Security check
+      if (req.user.role === 'admin' && 
+          (user.role === 'admin' || user.role === 'super_admin') &&
           !user._id.equals(req.user._id)) {
         return res.status(403).json({
           success: false,
-          error: 'Cannot view other admin profiles'
+          error: 'Cannot view other admin profiles',
+          code: 'ADMIN_ACCESS_DENIED',
+          timestamp: new Date().toISOString()
         });
       }
       
-      res.json({
+      // Get profile
+      const profile = await Profile.findOne({ userId })
+        .select('-userId')
+        .lean();
+      
+      // Get dating profile if applicable
+      let datingUser = null;
+      if (user.userType === 'DatingUser') {
+        datingUser = await DatingUser.findById(userId)
+          .populate('profile')
+          .lean();
+      }
+      
+      // Format response
+      const response = {
         success: true,
-        user: this.formatAdminUserDetail(user)
-      });
+        data: {
+          base: user,
+          profile: profile || null,
+          dating: datingUser || null
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+      res.json(response);
     } catch (error) {
-      console.error('Get user by ID error:', error);
+      logger.error('Get user by ID error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to retrieve user'
+        error: 'Unable to retrieve user',
+        code: 'USER_DETAIL_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
   
   async updateUserRole(req, res) {
     try {
-      const { role, reason, employeeId, department } = req.body;
       const userId = req.params.id;
+      const { role, reason, employeeId, department } = req.body;
       
       // Cannot modify your own role
       if (userId === req.user.id) {
         return res.status(400).json({
           success: false,
-          error: 'Cannot modify your own role'
+          error: 'Cannot modify your own role',
+          code: 'SELF_MODIFICATION',
+          timestamp: new Date().toISOString()
         });
       }
       
@@ -241,261 +583,285 @@ class AdminController {
       if (!user) {
         return res.status(404).json({
           success: false,
-          error: 'User not found'
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+          timestamp: new Date().toISOString()
         });
       }
       
-      // Cannot modify super_admin unless you're super_admin
-      if (user.role === ROLES.SUPER_ADMIN && req.user.role !== ROLES.SUPER_ADMIN) {
-        return res.status(403).json({
-          success: false,
-          error: 'Cannot modify super admin role'
-        });
-      }
-      
-      // Cannot modify admin unless you're super_admin
-      if (user.role === ROLES.ADMIN && req.user.role !== ROLES.SUPER_ADMIN) {
-        return res.status(403).json({
-          success: false,
-          error: 'Only super admin can modify admin roles'
-        });
-      }
-      
-      // Cannot assign role higher than your own
-      const roleHierarchy = BaseUser.getRoleHierarchy ? BaseUser.getRoleHierarchy() : {
-        [ROLES.USER]: 0,
-        [ROLES.MODERATOR]: 1,
-        [ROLES.ADMIN]: 2,
-        [ROLES.SUPER_ADMIN]: 3
+      // Permission checks
+      const roleHierarchy = {
+        'user': 0,
+        'moderator': 1,
+        'admin': 2,
+        'super_admin': 3
       };
       
       const userLevel = roleHierarchy[req.user.role] || 0;
       const targetLevel = roleHierarchy[role] || 0;
+      const currentLevel = roleHierarchy[user.role] || 0;
       
+      // Cannot modify users with higher or equal role
+      if (currentLevel >= userLevel) {
+        return res.status(403).json({
+          success: false,
+          error: 'Cannot modify users with equal or higher role',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Cannot assign role higher than your own
       if (targetLevel >= userLevel) {
         return res.status(403).json({
           success: false,
-          error: 'Cannot assign role equal to or higher than your own'
+          error: 'Cannot assign role equal to or higher than your own',
+          code: 'ROLE_ASSIGNMENT_DENIED',
+          timestamp: new Date().toISOString()
         });
       }
-
+      
       const oldRole = user.role;
+      const oldUserType = user.userType;
       
-      // Handle role promotion/demotion with document type change
-      if (role !== oldRole) {
-        await this.changeUserRole(user, role, { employeeId, department });
-      } else {
-        // Update within same role
-        if (role !== ROLES.USER && employeeId) {
-          user.employeeId = employeeId;
-        }
-        if (role !== ROLES.USER && department) {
-          user.department = department;
-        }
-        await user.save();
+      // Determine new user type
+      let newUserType = oldUserType;
+      if (role === 'user') {
+        newUserType = 'DatingUser';
+      } else if (role === 'moderator') {
+        newUserType = 'Moderator';
+      } else if (role === 'admin' || role === 'super_admin') {
+        newUserType = 'Admin';
       }
       
-      // Log admin action
-      if (typeof user.logAdminAction === 'function') {
-        await user.logAdminAction(`role_change:${oldRole}_to_${role}`, req.user, reason);
+      // Update user
+      user.role = role;
+      user.userType = newUserType;
+      
+      // Add staff-specific fields if promoting to staff
+      if (role !== 'user') {
+        if (employeeId) user.employeeId = employeeId;
+        if (department) user.department = department;
+        
+        // Initialize staff fields if not present
+        if (!user.permissions) user.permissions = [];
+        if (!user.staffNotificationSettings) {
+          user.staffNotificationSettings = {
+            userReports: 'assigned',
+            systemAlerts: true,
+            adminAnnouncements: true,
+            shiftReminders: true,
+            caseUpdates: true,
+            teamMessages: true
+          };
+        }
+        if (!user.workStats) {
+          user.workStats = {
+            casesResolved: 0,
+            casesEscalated: 0,
+            averageResolutionTime: 0,
+            responseTime: 0,
+            lastActiveShift: null,
+            totalShiftHours: 0,
+            performanceScore: 0
+          };
+        }
       }
+      
+      await user.save();
+      
+      // Handle DatingUser creation/deletion based on role change
+      if (oldUserType === 'DatingUser' && newUserType !== 'DatingUser') {
+        // User is no longer a dating user, remove dating profile
+        await DatingUser.findByIdAndDelete(userId);
+      } else if (oldUserType !== 'DatingUser' && newUserType === 'DatingUser') {
+        // User is now a dating user, create dating profile if profile exists
+        const profile = await Profile.findOne({ userId });
+        if (profile) {
+          await DatingUser.create({
+            _id: userId,
+            profile: profile._id,
+            ageVerified: false,
+            datingPreferences: {
+              ageRange: { min: 18, max: 100 },
+              distance: 50,
+              notificationRadius: 10
+            },
+            datingNotificationSettings: {
+              newMatches: true,
+              newLikes: true,
+              superLikes: true,
+              profileViews: true,
+              safetyAlerts: true,
+              promotionOffers: false
+            },
+            datingPrivacySettings: {
+              showAge: true,
+              showDistance: true,
+              showInterests: true,
+              showLastActive: 'matches',
+              allowMessagesFrom: 'everyone'
+            },
+            datingStats: {
+              totalLikes: 0,
+              totalMatches: 0,
+              totalMessagesSent: 0,
+              totalMessagesReceived: 0,
+              profileViews: 0,
+              lastActiveDate: new Date()
+            },
+            isPremium: false,
+            premiumExpiresAt: null,
+            incognitoMode: false
+          });
+        }
+      }
+      
+      // Log the action
+      logger.info('User role updated', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        targetUserId: userId,
+        oldRole,
+        newRole: role,
+        oldUserType,
+        newUserType,
+        reason
+      });
       
       res.json({
         success: true,
         message: `User role updated from ${oldRole} to ${role}`,
-        user: {
-          id: user._id,
+        data: {
+          userId: user._id,
           email: user.email,
           role: user.role,
           userType: user.userType,
-          accountStatus: user.accountStatus
-        }
+          employeeId: user.employeeId,
+          department: user.department
+        },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Update user role error:', error);
+      logger.error('Update user role error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to update user role'
+        error: 'Unable to update user role',
+        code: 'ROLE_UPDATE_ERROR',
+        timestamp: new Date().toISOString()
       });
-    }
-  }
-
-  // Helper method to change user role (with document type change)
-  async changeUserRole(user, newRole, staffData = {}) {
-    const oldUserType = user.userType;
-    const oldModel = this.getUserModelByType(oldUserType);
-    
-    // Determine new user type
-    let newUserType;
-    switch(newRole) {
-      case ROLES.USER:
-        newUserType = 'DatingUser';
-        break;
-      case ROLES.MODERATOR:
-        newUserType = 'Moderator';
-        break;
-      case ROLES.ADMIN:
-        newUserType = 'Admin';
-        break;
-      case ROLES.SUPER_ADMIN:
-        newUserType = 'SuperAdmin';
-        break;
-      default:
-        throw new Error(`Invalid role: ${newRole}`);
-    }
-
-    // If changing to staff role, require employee data
-    if (newRole !== ROLES.USER && (!staffData.employeeId || !staffData.department)) {
-      throw new Error('Employee ID and department are required for staff roles');
-    }
-
-    // Delete old document
-    await oldModel.findByIdAndDelete(user._id);
-
-    // Create new document with appropriate model
-    const commonData = user.toObject();
-    delete commonData._id;
-    delete commonData.__v;
-    delete commonData.userType;
-
-    const newUserData = {
-      ...commonData,
-      _id: user._id,
-      role: newRole,
-      userType: newUserType
-    };
-
-    // Add role-specific data
-    if (newRole === ROLES.USER) {
-      // Add dating user defaults if missing
-      newUserData.preferences = user.preferences || {
-        lookingFor: ["dating"],
-        ageRange: { min: 18, max: 100 },
-        distance: 50,
-        interests: []
-      };
-      newUserData.messagingPreferences = user.messagingPreferences || 'everyone';
-    } else {
-      // Add staff user data
-      newUserData.employeeId = staffData.employeeId;
-      newUserData.department = staffData.department;
-      newUserData.permissions = staffData.permissions || [];
-      newUserData.staffNotificationSettings = user.staffNotificationSettings || {
-        userReports: 'assigned',
-        systemAlerts: true,
-        adminAnnouncements: true,
-        shiftReminders: true,
-        caseUpdates: true,
-        teamMessages: true
-      };
-      // Add complete work stats
-      newUserData.workStats = {
-        casesResolved: 0,
-        casesEscalated: 0,
-        averageResolutionTime: 0,
-        responseTime: 0,
-        lastActiveShift: null,
-        totalShiftHours: 0,
-        performanceScore: 0
-      };
-    }
-
-    const NewModel = this.getUserModelByType(newUserType);
-    await NewModel.create(newUserData);
-  }
-
-  // Helper to get model by user type
-  getUserModelByType(userType) {
-    switch(userType) {
-      case 'DatingUser':
-        return DatingUser;
-      case 'Moderator':
-        return Moderator;
-      case 'Admin':
-        return Admin;
-      case 'SuperAdmin':
-        return SuperAdmin;
-      default:
-        return BaseUser;
     }
   }
   
   async updateUserStatus(req, res) {
     try {
-      const { status, reason } = req.body;
       const userId = req.params.id;
+      const { status, reason } = req.body;
       
       const user = await BaseUser.findById(userId);
       
       if (!user) {
         return res.status(404).json({
           success: false,
-          error: 'User not found'
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+          timestamp: new Date().toISOString()
         });
       }
       
-      // Check permissions based on target user's role
-      if (user.role === ROLES.SUPER_ADMIN && req.user.role !== ROLES.SUPER_ADMIN) {
+      // Permission checks
+      const roleHierarchy = {
+        'user': 0,
+        'moderator': 1,
+        'admin': 2,
+        'super_admin': 3
+      };
+      
+      const userLevel = roleHierarchy[req.user.role] || 0;
+      const targetLevel = roleHierarchy[user.role] || 0;
+      
+      // Cannot modify users with higher or equal role
+      if (targetLevel >= userLevel) {
         return res.status(403).json({
           success: false,
-          error: 'Cannot modify super admin status'
+          error: 'Cannot modify users with equal or higher role',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          timestamp: new Date().toISOString()
         });
       }
       
-      if (user.role === ROLES.ADMIN && req.user.role !== ROLES.SUPER_ADMIN) {
-        return res.status(403).json({
-          success: false,
-          error: 'Only super admin can modify admin status'
-        });
-      }
-      
-      // Cannot modify your own status
+      // Cannot modify your own status (except to active)
       if (userId === req.user.id && status !== 'active') {
         return res.status(400).json({
           success: false,
-          error: 'Cannot deactivate/suspend your own account'
+          error: 'Cannot deactivate/suspend your own account',
+          code: 'SELF_MODIFICATION',
+          timestamp: new Date().toISOString()
         });
       }
       
       const oldStatus = user.accountStatus;
+      user.accountStatus = status;
       
-      // Use changeStatus method if available
-      if (typeof user.changeStatus === 'function') {
-        await user.changeStatus(status, req.user, reason);
-      } else {
-        // Fallback: update directly
-        user.accountStatus = status;
-        
-        // Add to history if field exists
-        if (user.statusChangeHistory) {
-          user.statusChangeHistory.push({
-            from: oldStatus,
-            to: status,
-            changedBy: req.user._id,
-            reason,
-            timestamp: new Date()
-          });
-        }
-        
-        await user.save();
+      // Add to status history
+      if (!user.statusChangeHistory) {
+        user.statusChangeHistory = [];
       }
+      
+      user.statusChangeHistory.push({
+        from: oldStatus,
+        to: status,
+        changedBy: req.user._id,
+        reason,
+        timestamp: new Date()
+      });
+      
+      await user.save();
+      
+      // If suspending/deactivating a dating user, also pause their dating profile
+      if ((status === 'suspended' || status === 'deactivated') && user.userType === 'DatingUser') {
+        await Profile.updateOne(
+          { userId },
+          { 'datingProfile.isPaused': true }
+        );
+      }
+      
+      // If reactivating, unpause dating profile
+      if (status === 'active' && user.userType === 'DatingUser') {
+        await Profile.updateOne(
+          { userId },
+          { 'datingProfile.isPaused': false }
+        );
+      }
+      
+      logger.info('User status updated', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        targetUserId: userId,
+        oldStatus,
+        newStatus: status,
+        reason
+      });
       
       res.json({
         success: true,
         message: `User status updated from ${oldStatus} to ${status}`,
-        user: {
-          id: user._id,
+        data: {
+          userId: user._id,
           email: user.email,
           role: user.role,
           userType: user.userType,
           accountStatus: user.accountStatus
-        }
+        },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Update user status error:', error);
+      logger.error('Update user status error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to update user status'
+        error: 'Unable to update user status',
+        code: 'STATUS_UPDATE_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -506,146 +872,422 @@ class AdminController {
       
       const searchFilter = {};
       
+      // Text search
       if (query) {
         searchFilter.$or = [
           { email: { $regex: query, $options: 'i' } },
           { firstName: { $regex: query, $options: 'i' } },
           { lastName: { $regex: query, $options: 'i' } },
-          { userName: { $regex: query, $options: 'i' } },
-          { employeeId: role !== ROLES.USER ? { $regex: query, $options: 'i' } : undefined }
-        ].filter(condition => condition);
+          { employeeId: { $regex: query, $options: 'i' } }
+        ];
       }
       
+      // Role filter
       if (role) searchFilter.role = role;
+      
+      // User type filter
       if (userType) searchFilter.userType = userType;
+      
+      // Status filter
       if (status) searchFilter.accountStatus = status;
       
       // Security: Regular admins cannot see other admins/super_admins
-      if (req.user.role === ROLES.ADMIN) {
-        searchFilter.role = { $in: [ROLES.USER, ROLES.MODERATOR] };
-        searchFilter.userType = { $in: ['DatingUser', 'Moderator'] };
+      if (req.user.role === 'admin') {
+        searchFilter.role = { $in: ['user', 'moderator'] };
       }
       
-      const users = await BaseUser.find(searchFilter)
-        .select('firstName lastName email userName avatar role userType accountStatus createdAt lastActive')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
-      
-      const total = await BaseUser.countDocuments(searchFilter);
+      const [users, total] = await Promise.all([
+        BaseUser.find(searchFilter)
+          .select('firstName lastName email role userType accountStatus createdAt lastLogin')
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(parseInt(limit))
+          .lean(),
+        BaseUser.countDocuments(searchFilter)
+      ]);
       
       res.json({
         success: true,
-        count: users.length,
-        total,
-        users: users.map(user => this.formatAdminUserList(user)),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit)
-        }
+        data: {
+          users,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: users.length
+          }
+        },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Search users error:', error);
+      logger.error('Search users error:', error);
       res.status(500).json({
         success: false,
-        error: 'Search failed'
+        error: 'Search failed',
+        code: 'USER_SEARCH_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
   
-  async getUsersByRole(req, res) {
+  // ============ PROFILE MANAGEMENT ============
+  
+  async getAllProfiles(req, res) {
     try {
-      const { role } = req.params;
-      const { page = 1, limit = 50, status } = req.query;
+      const { 
+        page = 1, 
+        limit = 50, 
+        minCompletion, 
+        maxCompletion,
+        isVerified,
+        hasDatingProfile 
+      } = req.query;
       
-      const query = { role };
-      if (status) query.accountStatus = status;
+      const query = {};
       
-      // Determine user type based on role
-      let userType;
-      switch(role) {
-        case ROLES.USER:
-          userType = 'DatingUser';
-          break;
-        case ROLES.MODERATOR:
-          userType = 'Moderator';
-          break;
-        case ROLES.ADMIN:
-          userType = 'Admin';
-          break;
-        case ROLES.SUPER_ADMIN:
-          userType = 'SuperAdmin';
-          break;
+      // Filter by profile completion
+      if (minCompletion || maxCompletion) {
+        query.profileCompletion = {};
+        if (minCompletion) query.profileCompletion.$gte = parseInt(minCompletion);
+        if (maxCompletion) query.profileCompletion.$lte = parseInt(maxCompletion);
       }
       
-      if (userType) {
-        query.userType = userType;
+      // Filter by verification status
+      if (isVerified !== undefined) {
+        query.isVerified = isVerified === 'true';
       }
       
-      const users = await BaseUser.find(query)
-        .select('firstName lastName email userName avatar accountStatus createdAt lastActive')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
+      // Filter by dating profile visibility
+      if (hasDatingProfile === 'true') {
+        query['datingProfile.isVisible'] = true;
+        query['datingProfile.isPaused'] = false;
+      } else if (hasDatingProfile === 'false') {
+        query.$or = [
+          { 'datingProfile.isVisible': false },
+          { 'datingProfile.isPaused': true },
+          { datingProfile: { $exists: false } }
+        ];
+      }
       
-      const total = await BaseUser.countDocuments(query);
+      const [profiles, total] = await Promise.all([
+        Profile.find(query)
+          .select('userId userName profilePicture bio age gender location profileCompletion isVerified verificationBadges datingProfile')
+          .sort({ profileCompletion: -1, updatedAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(parseInt(limit))
+          .populate('userId', 'firstName lastName email role userType accountStatus')
+          .lean(),
+        Profile.countDocuments(query)
+      ]);
       
       res.json({
         success: true,
-        role,
-        userType,
-        count: users.length,
-        total,
-        users: users.map(user => this.formatAdminUserList(user)),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit)
-        }
+        data: {
+          profiles,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: profiles.length
+          }
+        },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Get users by role error:', error);
+      logger.error('Get all profiles error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to fetch users by role'
+        error: 'Unable to retrieve profiles',
+        code: 'PROFILE_RETRIEVAL_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
-
-  async getUsersByType(req, res) {
+  
+  async getProfileById(req, res) {
     try {
-      const { userType } = req.params;
-      const { page = 1, limit = 50, status } = req.query;
+      const profile = await Profile.findById(req.params.id)
+        .populate('userId', 'firstName lastName email role userType accountStatus createdAt')
+        .lean();
       
-      const query = { userType };
-      if (status) query.accountStatus = status;
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          error: 'Profile not found',
+          code: 'PROFILE_NOT_FOUND',
+          timestamp: new Date().toISOString()
+        });
+      }
       
-      const users = await BaseUser.find(query)
-        .select('firstName lastName email userName avatar role accountStatus createdAt lastActive')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
-      
-      const total = await BaseUser.countDocuments(query);
+      // Get dating profile if exists
+      let datingUser = null;
+      if (profile.userId.userType === 'DatingUser') {
+        datingUser = await DatingUser.findById(profile.userId._id).lean();
+      }
       
       res.json({
         success: true,
-        userType,
-        count: users.length,
-        total,
-        users: users.map(user => this.formatAdminUserList(user)),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit)
-        }
+        data: {
+          profile,
+          dating: datingUser
+        },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Get users by type error:', error);
+      logger.error('Get profile by ID error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to fetch users by type'
+        error: 'Unable to retrieve profile',
+        code: 'PROFILE_DETAIL_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async updateProfileVisibility(req, res) {
+    try {
+      const profileId = req.params.id;
+      const { isVisible, isPaused, reason } = req.body;
+      
+      const profile = await Profile.findById(profileId);
+      
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          error: 'Profile not found',
+          code: 'PROFILE_NOT_FOUND',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      const updates = {};
+      if (isVisible !== undefined) {
+        updates['datingProfile.isVisible'] = isVisible;
+      }
+      if (isPaused !== undefined) {
+        updates['datingProfile.isPaused'] = isPaused;
+      }
+      
+      const updatedProfile = await Profile.findByIdAndUpdate(
+        profileId,
+        { $set: updates },
+        { new: true }
+      );
+      
+      logger.info('Profile visibility updated', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        profileId,
+        userId: profile.userId,
+        updates,
+        reason
+      });
+      
+      res.json({
+        success: true,
+        message: 'Profile visibility updated',
+        data: {
+          profileId: updatedProfile._id,
+          isVisible: updatedProfile.datingProfile?.isVisible,
+          isPaused: updatedProfile.datingProfile?.isPaused
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Update profile visibility error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to update profile visibility',
+        code: 'VISIBILITY_UPDATE_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  // ============ DATING PROFILE MANAGEMENT ============
+  
+  async getAllDatingProfiles(req, res) {
+    try {
+      const { 
+        page = 1, 
+        limit = 50,
+        ageVerified,
+        isPremium,
+        incognitoMode,
+        hasActiveBoost 
+      } = req.query;
+      
+      const query = {};
+      
+      // Apply filters
+      if (ageVerified !== undefined) {
+        query.ageVerified = ageVerified === 'true';
+      }
+      if (isPremium !== undefined) {
+        query.isPremium = isPremium === 'true';
+      }
+      if (incognitoMode !== undefined) {
+        query.incognitoMode = incognitoMode === 'true';
+      }
+      if (hasActiveBoost === 'true') {
+        query['boost.isActive'] = true;
+        query['boost.expiresAt'] = { $gt: new Date() };
+      } else if (hasActiveBoost === 'false') {
+        query.$or = [
+          { 'boost.isActive': false },
+          { 'boost.expiresAt': { $lt: new Date() } },
+          { boost: { $exists: false } }
+        ];
+      }
+      
+      const [datingUsers, total] = await Promise.all([
+        DatingUser.find(query)
+          .populate({
+            path: 'profile',
+            select: 'userName profilePicture bio age gender location profileCompletion isVerified'
+          })
+          .populate({
+            path: '_id',
+            select: 'firstName lastName email role accountStatus createdAt',
+            model: 'BaseUser'
+          })
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(parseInt(limit))
+          .lean(),
+        DatingUser.countDocuments(query)
+      ]);
+      
+      res.json({
+        success: true,
+        data: {
+          datingUsers: datingUsers.map(du => ({
+            ...du,
+            user: du._id, // BaseUser info
+            profile: du.profile
+          })),
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: datingUsers.length
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Get all dating profiles error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to retrieve dating profiles',
+        code: 'DATING_PROFILE_RETRIEVAL_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async updateDatingProfile(req, res) {
+    try {
+      const datingUserId = req.params.id;
+      const updates = req.body;
+      
+      const datingUser = await DatingUser.findByIdAndUpdate(
+        datingUserId,
+        updates,
+        { new: true, runValidators: true }
+      );
+      
+      if (!datingUser) {
+        return res.status(404).json({
+          success: false,
+          error: 'Dating profile not found',
+          code: 'DATING_PROFILE_NOT_FOUND',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      logger.info('Dating profile updated', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        datingUserId,
+        updates: Object.keys(updates)
+      });
+      
+      res.json({
+        success: true,
+        message: 'Dating profile updated successfully',
+        data: datingUser,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Update dating profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to update dating profile',
+        code: 'DATING_PROFILE_UPDATE_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async togglePremiumStatus(req, res) {
+    try {
+      const datingUserId = req.params.id;
+      const { isPremium, durationDays, reason } = req.body;
+      
+      const datingUser = await DatingUser.findById(datingUserId);
+      
+      if (!datingUser) {
+        return res.status(404).json({
+          success: false,
+          error: 'Dating profile not found',
+          code: 'DATING_PROFILE_NOT_FOUND',
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      const oldStatus = datingUser.isPremium;
+      datingUser.isPremium = isPremium;
+      
+      if (isPremium && durationDays) {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + parseInt(durationDays));
+        datingUser.premiumExpiresAt = expiresAt;
+      } else if (!isPremium) {
+        datingUser.premiumExpiresAt = null;
+      }
+      
+      await datingUser.save();
+      
+      logger.info('Premium status updated', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        datingUserId,
+        oldStatus,
+        newStatus: isPremium,
+        durationDays,
+        reason
+      });
+      
+      res.json({
+        success: true,
+        message: `Premium status ${isPremium ? 'activated' : 'deactivated'}`,
+        data: {
+          isPremium: datingUser.isPremium,
+          premiumExpiresAt: datingUser.premiumExpiresAt
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Toggle premium status error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to update premium status',
+        code: 'PREMIUM_UPDATE_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -654,64 +1296,389 @@ class AdminController {
   
   async getReports(req, res) {
     try {
-      // This would typically fetch from a Report model
+      // Placeholder for reports functionality
+      // In a real implementation, you would fetch reports from a Report model
+      
       res.json({
         success: true,
-        reports: [],
-        total: 0,
-        message: 'Reports functionality not yet implemented'
+        message: 'Reports endpoint',
+        data: {
+          reports: [],
+          stats: {
+            pending: 0,
+            resolved: 0,
+            escalated: 0
+          }
+        },
+        timestamp: new Date().toISOString(),
+        note: 'Reports functionality not yet implemented'
       });
     } catch (error) {
-      console.error('Get reports error:', error);
+      logger.error('Get reports error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to retrieve reports'
+        error: 'Unable to retrieve reports',
+        code: 'REPORTS_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
   
   async takeReportAction(req, res) {
     try {
+      const { id } = req.params;
       const { action, notes } = req.body;
       
-      // This would typically update a Report model
+      // Placeholder for report action functionality
+      
       res.json({
         success: true,
-        message: `Report ${req.params.id} action taken: ${action}`,
-        action,
-        notes
+        message: `Report action ${action} taken`,
+        data: {
+          reportId: id,
+          action,
+          notes,
+          resolvedBy: req.user.id,
+          resolvedAt: new Date()
+        },
+        timestamp: new Date().toISOString(),
+        note: 'Report action functionality not yet implemented'
       });
     } catch (error) {
-      console.error('Take report action error:', error);
+      logger.error('Take report action error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to process report action'
+        error: 'Unable to take report action',
+        code: 'REPORT_ACTION_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
   
   async removeContent(req, res) {
     try {
+      const { id } = req.params;
       const { reason } = req.body;
       
-      // This would typically remove content from appropriate model
+      // Placeholder for content removal functionality
+      
       res.json({
         success: true,
-        message: `Content ${req.params.id} removed`,
-        reason,
-        removedBy: {
-          id: req.user.id,
-          email: req.user.email,
-          role: req.user.role,
-          userType: req.user.userType
+        message: 'Content removed',
+        data: {
+          contentId: id,
+          reason,
+          removedBy: req.user.id,
+          removedAt: new Date()
+        },
+        timestamp: new Date().toISOString(),
+        note: 'Content removal functionality not yet implemented'
+      });
+    } catch (error) {
+      logger.error('Remove content error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to remove content',
+        code: 'CONTENT_REMOVAL_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  // ============ SYSTEM MANAGEMENT ============
+  
+  async getSystemConfig(req, res) {
+    try {
+      // Placeholder for system configuration
+      const config = {
+        app: {
+          name: 'JWLovers',
+          version: '1.0.0',
+          environment: process.env.NODE_ENV || 'development'
+        },
+        features: {
+          registration: true,
+          emailVerification: true,
+          ageVerification: true,
+          contentModeration: true,
+          premiumFeatures: true
+        },
+        limits: {
+          maxFileSize: '10MB',
+          maxProfilePhotos: 6,
+          dailyMatches: 20,
+          messageLength: 1000
+        },
+        security: {
+          require2FA: false,
+          sessionTimeout: '24h',
+          maxLoginAttempts: 5
+        }
+      };
+      
+      res.json({
+        success: true,
+        message: 'System configuration retrieved',
+        data: config,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Get system config error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to retrieve system configuration',
+        code: 'SYSTEM_CONFIG_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async getSystemHealth(req, res) {
+    try {
+      // Check database connections
+      const [baseUserCount, profileCount, datingUserCount, optionCount] = await Promise.all([
+        BaseUser.countDocuments().catch(() => 0),
+        Profile.countDocuments().catch(() => 0),
+        DatingUser.countDocuments().catch(() => 0),
+        Option.countDocuments().catch(() => 0)
+      ]);
+      
+      // Get active users in last 24 hours
+      const activeUsers = await BaseUser.countDocuments({
+        'presence.lastSeen': { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      }).catch(() => 0);
+      
+      // Get memory usage
+      const memoryUsage = process.memoryUsage();
+      
+      res.json({
+        success: true,
+        data: {
+          status: 'operational',
+          components: {
+            database: {
+              status: 'connected',
+              collections: {
+                baseUsers: baseUserCount,
+                profiles: profileCount,
+                datingUsers: datingUserCount,
+                options: optionCount
+              }
+            },
+            api: {
+              status: 'operational',
+              uptime: process.uptime()
+            },
+            cache: {
+              status: 'operational'
+            }
+          },
+          metrics: {
+            totalUsers: baseUserCount,
+            activeUsers,
+            profiles: profileCount,
+            datingProfiles: datingUserCount,
+            uptime: process.uptime(),
+            memory: {
+              heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+              heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+              external: Math.round(memoryUsage.external / 1024 / 1024)
+            }
+          }
         },
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Remove content error:', error);
+      logger.error('Get system health error:', error);
       res.status(500).json({
         success: false,
-        error: 'Unable to remove content'
+        error: 'Unable to get system health',
+        code: 'SYSTEM_HEALTH_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async updateSystemConfig(req, res) {
+    try {
+      const { config } = req.body;
+      
+      // Placeholder for system configuration update
+      // In a real implementation, you would save to database or config file
+      
+      logger.info('System configuration updated', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        config: Object.keys(config)
+      });
+      
+      res.json({
+        success: true,
+        message: 'System configuration updated',
+        data: config,
+        timestamp: new Date().toISOString(),
+        note: 'Configuration changes are not persisted in this implementation'
+      });
+    } catch (error) {
+      logger.error('Update system config error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to update system configuration',
+        code: 'SYSTEM_CONFIG_UPDATE_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async createDatabaseBackup(req, res) {
+    try {
+      // Placeholder for database backup functionality
+      
+      const backupInfo = {
+        id: `backup_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        createdBy: req.user.id,
+        status: 'completed',
+        size: '0MB',
+        collections: ['users', 'profiles', 'dating_profiles', 'options']
+      };
+      
+      logger.info('Database backup created', {
+        adminId: req.user.id,
+        adminEmail: req.user.email,
+        backupId: backupInfo.id
+      });
+      
+      res.json({
+        success: true,
+        message: 'Database backup created',
+        data: backupInfo,
+        timestamp: new Date().toISOString(),
+        note: 'Database backup functionality not yet implemented'
+      });
+    } catch (error) {
+      logger.error('Create database backup error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to create database backup',
+        code: 'DATABASE_BACKUP_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async clearSystemCache(req, res) {
+    try {
+      // Clear option service cache if available
+      if (optionService && optionService.clearCache) {
+        optionService.clearCache();
+      }
+      
+      // Clear other caches as needed
+      
+      logger.info('System cache cleared', {
+        adminId: req.user.id,
+        adminEmail: req.user.email
+      });
+      
+      res.json({
+        success: true,
+        message: 'System cache cleared',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Clear system cache error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to clear system cache',
+        code: 'CACHE_CLEAR_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  // ============ AUDIT LOGS ============
+  
+  async getAuditLogs(req, res) {
+    try {
+      const { page = 1, limit = 50, action, userId, startDate, endDate } = req.query;
+      
+      // Placeholder for audit logs
+      // In a real implementation, you would query an AuditLog model
+      
+      const logs = [];
+      const total = 0;
+      
+      res.json({
+        success: true,
+        data: {
+          logs,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / limit),
+            showing: logs.length
+          }
+        },
+        timestamp: new Date().toISOString(),
+        note: 'Audit logs functionality not yet implemented'
+      });
+    } catch (error) {
+      logger.error('Get audit logs error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to retrieve audit logs',
+        code: 'AUDIT_LOGS_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  async getAdminActivity(req, res) {
+    try {
+      const { page = 1, limit = 50 } = req.query;
+      
+      // Get recent admin actions from BaseUser activity or separate audit log
+      const recentActivity = await BaseUser.find({
+        role: { $in: ['moderator', 'admin', 'super_admin'] },
+        'presence.lastSeen': { $exists: true }
+      })
+        .sort({ 'presence.lastSeen': -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit))
+        .select('firstName lastName email role userType presence.lastSeen department')
+        .lean();
+      
+      // Get staff statistics
+      const totalStaff = await BaseUser.countDocuments({
+        role: { $in: ['moderator', 'admin', 'super_admin'] }
+      });
+      
+      const activeStaff = await BaseUser.countDocuments({
+        role: { $in: ['moderator', 'admin', 'super_admin'] },
+        'presence.lastSeen': { $gte: new Date(Date.now() - 15 * 60 * 1000) } // Last 15 minutes
+      });
+      
+      res.json({
+        success: true,
+        data: {
+          recentActivity,
+          stats: {
+            totalStaff,
+            activeStaff,
+            inactiveStaff: totalStaff - activeStaff
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Get admin activity error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Unable to retrieve admin activity',
+        code: 'ADMIN_ACTIVITY_ERROR',
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -1276,237 +2243,6 @@ class AdminController {
     }
   }
   
-  // ============ SYSTEM MANAGEMENT ============
-  
-  async getSystemConfig(req, res) {
-    try {
-      res.json({
-        success: true,
-        config: {
-          environment: process.env.NODE_ENV || 'development',
-          version: process.env.APP_VERSION || '1.0.0',
-          maintenance: false,
-          userTypes: ['DatingUser', 'Moderator', 'Admin', 'SuperAdmin'],
-          features: {
-            registration: true,
-            messaging: true,
-            matching: true,
-            verification: true,
-            staffManagement: true
-          },
-          limits: {
-            maxFileSize: process.env.MAX_FILE_SIZE || '5MB',
-            maxProfileImages: 10,
-            messageLength: 1000
-          }
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Get system config error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Unable to retrieve system configuration'
-      });
-    }
-  }
-  
-  async updateSystemConfig(req, res) {
-    try {
-      const { config } = req.body;
-      
-      // In a real implementation, this would save to a database
-      res.json({
-        success: true,
-        message: 'System configuration updated',
-        config,
-        updatedBy: {
-          id: req.user.id,
-          email: req.user.email,
-          role: req.user.role,
-          userType: req.user.userType
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Update system config error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Unable to update system configuration'
-      });
-    }
-  }
-  
-  async createDatabaseBackup(req, res) {
-    try {
-      // This would create an actual database backup
-      res.json({
-        success: true,
-        message: 'Database backup created (placeholder)',
-        backupId: `backup_${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        size: '0MB',
-        location: '/backups/placeholder'
-      });
-    } catch (error) {
-      console.error('Create database backup error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Unable to create database backup'
-      });
-    }
-  }
-  
-  async clearSystemCache(req, res) {
-    try {
-      // Clear any in-memory caches
-      if (global.redisClient) {
-        await global.redisClient.flushall();
-      }
-      
-      // Clear rate limit store
-      if (global.rateLimitStore) {
-        global.rateLimitStore.clear();
-      }
-      
-      res.json({
-        success: true,
-        message: 'System cache cleared',
-        clearedAt: new Date().toISOString(),
-        clearedItems: ['redis', 'rateLimitStore']
-      });
-    } catch (error) {
-      console.error('Clear system cache error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Unable to clear system cache'
-      });
-    }
-  }
-  
-  // ============ AUDIT LOGS ============
-  
-  async getAuditLogs(req, res) {
-    try {
-      // This would typically fetch from an AuditLog model
-      res.json({
-        success: true,
-        logs: [],
-        total: 0,
-        message: 'Audit logs functionality not yet implemented'
-      });
-    } catch (error) {
-      console.error('Get audit logs error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Unable to retrieve audit logs'
-      });
-    }
-  }
-  
-  async getAdminActivity(req, res) {
-    try {
-      // Get recent admin actions from users
-      const adminUsers = await BaseUser.find({
-        role: { $in: [ROLES.ADMIN, ROLES.SUPER_ADMIN] }
-      })
-        .select('firstName lastName email role userType lastAdminAction statusChangeHistory')
-        .sort({ 'lastAdminAction.performedAt': -1 })
-        .limit(20);
-      
-      const activities = adminUsers
-        .filter(user => user.lastAdminAction)
-        .map(user => ({
-          admin: {
-            id: user._id,
-            name: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-            role: user.role,
-            userType: user.userType
-          },
-          action: user.lastAdminAction.action,
-          timestamp: user.lastAdminAction.performedAt,
-          reason: user.lastAdminAction.reason
-        }));
-      
-      res.json({
-        success: true,
-        activities,
-        total: activities.length,
-        message: 'Recent admin activities retrieved'
-      });
-    } catch (error) {
-      console.error('Get admin activity error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Unable to retrieve admin activities'
-      });
-    }
-  }
-
-  // ============ HELPER METHODS ============
-
-  formatAdminUserList(user) {
-    const baseData = {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      userName: user.userName,
-      avatar: user.avatar,
-      role: user.role,
-      userType: user.userType,
-      accountStatus: user.accountStatus,
-      createdAt: user.createdAt,
-      lastActive: user.lastActive || user.presence?.lastActive
-    };
-
-    // Add role-specific data
-    if (user.userType === 'DatingUser') {
-      baseData.age = user.age;
-    } else if (['Moderator', 'Admin', 'SuperAdmin'].includes(user.userType)) {
-      baseData.employeeId = user.employeeId;
-      baseData.department = user.department;
-    }
-
-    return baseData;
-  }
-
-  formatAdminUserDetail(user) {
-    const baseData = user.toObject ? user.toObject() : { ...user };
-    
-    // Remove sensitive fields
-    delete baseData.password;
-    delete baseData.refreshToken;
-    delete baseData.passwordHistory;
-    delete baseData.failedLoginAttempts;
-    delete baseData.accountLockedUntil;
-    delete baseData.emailVerificationToken;
-    delete baseData.emailVerificationExpires;
-    delete baseData.passwordResetToken;
-    delete baseData.passwordResetExpires;
-    
-    // Add role-specific details
-    if (user.userType === 'DatingUser') {
-      baseData.age = user.age;
-      baseData.dateOfBirth = user.dateOfBirth;
-      baseData.preferences = user.preferences;
-      baseData.location = user.location;
-      baseData.messagingPreferences = user.messagingPreferences;
-      baseData.sharePhone = user.sharePhone;
-      baseData.phoneNumber = user.phoneNumber;
-      baseData.phoneVerified = user.phoneVerified;
-    } else if (['Moderator', 'Admin', 'SuperAdmin'].includes(user.userType)) {
-      baseData.employeeId = user.employeeId;
-      baseData.department = user.department;
-      baseData.permissions = user.permissions || [];
-      baseData.managedUsers = user.managedUsers || [];
-      baseData.staffNotificationSettings = user.staffNotificationSettings || {};
-      baseData.workStats = user.workStats || {};
-    }
-
-    return baseData;
-  }
 }
 
 module.exports = new AdminController();

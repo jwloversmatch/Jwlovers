@@ -1,5 +1,7 @@
-// controllers/auth/AuthenticationController.js - Login/Logout Module
+// controllers/auth/AuthenticationController.js - UPDATED for consistent user structure
 const { BaseUser, ROLES } = require("@models/User");
+const DatingUser = require("@models/User/datingUserSchema");
+const Profile = require("@models/Profile.model"); 
 const authService = require("@services/AuthService");
 const authHelpers = require("@utils/AuthHelpers");
 
@@ -9,7 +11,7 @@ class AuthenticationController {
   }
 
   /**
-   * Handle user login
+   * Handle user login - UPDATED to match middleware structure
    */
   async login(req, res, {
     standardizedSuccessResponse,
@@ -59,6 +61,61 @@ class AuthenticationController {
         );
       }
 
+      // UPDATED: Populate profile and dating data using same pattern as middleware
+      const userId = result.user._id.toString();
+      let datingUser = null;
+      let profile = null;
+
+      try {
+        // Get dating user and profile - SAME AS AUTHMIDDLEWARE
+        if (result.user.userType === 'DatingUser') {
+          datingUser = await DatingUser.findById(userId)
+            .populate({
+              path: 'profile',
+              select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
+            })
+            .lean();
+          
+          // Extract profile from populated datingUser
+          profile = datingUser?.profile || null;
+        }
+
+        // If no profile from datingUser, query directly by userId
+        if (!profile) {
+          profile = await Profile.findOne({ userId: userId })
+            .select('userName profilePicture profileCompletion age gender location hobbies verificationBadges bio')
+            .lean();
+        }
+
+        // Build enhanced user object - SAME STRUCTURE AS MIDDLEWARE
+        const enhancedUser = {
+          ...result.user.toObject(),
+          // Add computed properties
+          hasDatingProfile: !!datingUser,
+          hasProfile: !!profile,
+          profileCompletion: profile?.profileCompletion || 0,
+          // Store separate for easy access
+          base: result.user.toObject(),
+          dating: datingUser,
+          profile: profile,
+          // Backward compatibility
+          _id: result.user._id,
+          id: result.user._id.toString(),
+          role: result.user.role,
+          userType: result.user.userType,
+          email: result.user.email,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName
+        };
+
+        // Replace result.user with enhanced version
+        result.user = enhancedUser;
+
+      } catch (profileError) {
+        this.logger.warn("Could not load profile/dating data:", profileError.message);
+        // Continue without profile data - user object remains as is
+      }
+
       // Log security event
       await authHelpers.logSecurityEvent(result.user._id, "login_success", {
         role: result.user.role,
@@ -69,16 +126,19 @@ class AuthenticationController {
         securityLevel: result.user.role !== ROLES.USER ? "elevated" : "standard",
       });
 
-      // Generate auth response
+      // Generate auth response (will use enhanceUserResponse which now understands the structure)
       const authResponseData = generateAuthResponseData(result.user, true);
 
-      // Update user session
-      result.user.refreshToken = authResponseData.refreshToken;
-      result.user.lastLogin = new Date();
-      if (typeof result.user.updatePresence === "function") {
-        await result.user.updatePresence("online");
+      // Update user session (need to get actual BaseUser instance for save)
+      const userInstance = await BaseUser.findById(userId);
+      if (userInstance) {
+        userInstance.refreshToken = authResponseData.refreshToken;
+        userInstance.lastLogin = new Date();
+        if (typeof userInstance.updatePresence === "function") {
+          await userInstance.updatePresence("online");
+        }
+        await userInstance.save({ validateBeforeSave: false });
       }
-      await result.user.save({ validateBeforeSave: false });
 
       // Set cookies
       authHelpers.setAuthCookies(

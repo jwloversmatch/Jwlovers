@@ -17,6 +17,9 @@ const {
 // Import logger
 const logger = require('@utils/logger');
 
+// Import ROLES from your base schema
+const { ROLES } = require('@models/User/baseUserSchema');
+
 // ========== CUSTOM PRESENCE RATE LIMITERS ==========
 
 // Heartbeat rate limiter (frequent updates)
@@ -24,7 +27,7 @@ const heartbeatLimiter = createDynamicRateLimiter({
   windowMs: 30 * 1000,
   max: 10,
   keyGenerator: (req) => {
-    const userId = req.userId || req.user?.id;
+    const userId = req.user?.id;
     return userId ? `presence:heartbeat:user:${userId}` : `presence:heartbeat:ip:${req.ip}`;
   },
   message: 'Too many heartbeat updates. Please slow down.'
@@ -35,7 +38,7 @@ const statusUpdateLimiter = createDynamicRateLimiter({
   windowMs: 60 * 1000,
   max: 20,
   keyGenerator: (req) => {
-    const userId = req.userId || req.user?.id;
+    const userId = req.user?.id;
     return userId ? `presence:status:user:${userId}` : `presence:status:ip:${req.ip}`;
   },
   message: 'Too many status updates. Please wait before changing status again.'
@@ -46,7 +49,7 @@ const bulkPresenceLimiter = createDynamicRateLimiter({
   windowMs: 60 * 1000,
   max: 5,
   keyGenerator: (req) => {
-    const userId = req.userId || req.user?.id;
+    const userId = req.user?.id;
     return userId ? `presence:bulk:user:${userId}` : `presence:bulk:ip:${req.ip}`;
   },
   message: 'Too many bulk presence operations. Please slow down.'
@@ -57,7 +60,7 @@ const onlineQueryLimiter = createDynamicRateLimiter({
   windowMs: 10 * 1000,
   max: 30,
   keyGenerator: (req) => {
-    const userId = req.userId || req.user?.id;
+    const userId = req.user?.id;
     return userId ? `presence:online:user:${userId}` : `presence:online:ip:${req.ip}`;
   },
   message: 'Too many online user queries. Please reduce polling frequency.'
@@ -68,7 +71,7 @@ const userPresenceLimiter = createDynamicRateLimiter({
   windowMs: 30 * 1000,
   max: 50,
   keyGenerator: (req) => {
-    const userId = req.userId || req.user?.id;
+    const userId = req.user?.id;
     const targetUserId = req.params?.userId;
     
     if (userId && targetUserId) {
@@ -99,7 +102,7 @@ router.use((req, res, next) => {
   if (req.path !== '/health') {
     logger.debug(`Presence API: ${req.method} ${req.path}`, {
       requestId: req.requestId,
-      userId: req.userId || req.user?.id,
+      userId: req.user?.id,
       ip: req.ip,
       userAgent: req.headers['user-agent']
     });
@@ -117,7 +120,7 @@ router.use((req, res, next) => {
         requestId: req.requestId,
         statusCode: res.statusCode,
         duration,
-        userId: req.userId || req.user?.id
+        userId: req.user?.id
       });
     }
     
@@ -132,7 +135,7 @@ router.use((req, res, next) => {
         requestId: req.requestId,
         statusCode: res.statusCode,
         duration,
-        userId: req.userId || req.user?.id
+        userId: req.user?.id
       });
     }
     
@@ -221,7 +224,7 @@ router.get('/recent',
       .withMessage('Status must be online, offline, or all'),
     query('userType')
       .optional()
-      .isIn(['all', 'dating', 'staff', 'moderator', 'admin', 'superadmin'])
+      .isIn(['all', 'dating', 'staff', 'moderator', 'admin'])
       .withMessage('Invalid user type'),
     query('sort')
       .optional()
@@ -258,18 +261,8 @@ router.get('/online',
       .toInt(),
     query('userType')
       .optional()
-      .isIn(['all', 'dating', 'staff'])
+      .isIn(['all', 'dating', 'staff', 'moderator', 'admin'])
       .withMessage('Invalid user type'),
-    query('nearby')
-      .optional()
-      .isBoolean()
-      .withMessage('Nearby must be true or false')
-      .toBoolean(),
-    query('radius')
-      .optional()
-      .isFloat({ min: 1, max: 100 })
-      .withMessage('Radius must be between 1 and 100 km')
-      .toFloat(),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -291,7 +284,7 @@ router.get('/online',
       logger.error('Error in /online endpoint:', {
         error: error.message,
         requestId: req.requestId,
-        userId: req.userId
+        userId: req.user?.id
       });
       
       res.status(500).json({
@@ -308,7 +301,6 @@ router.get('/online',
 // Get nearby online users (for dating app)
 router.get('/nearby',
   onlineQueryLimiter,
-  protect,
   [
     query('radius')
       .optional()
@@ -334,34 +326,16 @@ router.get('/nearby',
   ],
   async (req, res) => {
     try {
-      const userId = req.userId || req.user?.id;
-      const radius = parseFloat(req.query.radius) || 10;
-      const limit = parseInt(req.query.limit) || 25;
-      
-      // Call controller method for nearby users
-      if (presenceController.getNearbyOnlineUsers) {
-        await presenceController.getNearbyOnlineUsers(req, res);
-      } else {
-        // Fallback implementation
-        const onlineUsers = await presenceController.getOnlineUsers(limit, 0, 'dating');
-        
-        // Filter by location if user has location data
-        // This is a simplified version - you'd need real geospatial logic
-        res.json({
-          success: true,
-          count: onlineUsers.length,
-          radius,
-          limit,
-          users: onlineUsers,
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId
-        });
-      }
+      // Your controller doesn't have getNearbyOnlineUsers method
+      // Use getActiveUsers with dating filter instead
+      req.query.status = 'online';
+      req.query.userType = 'dating';
+      await presenceController.getActiveUsers(req, res);
     } catch (error) {
       logger.error('Error in /nearby endpoint:', {
         error: error.message,
         requestId: req.requestId,
-        userId: req.userId
+        userId: req.user?.id
       });
       
       res.status(500).json({
@@ -399,25 +373,18 @@ router.put('/me/status',
   [
     body('status')
       .optional()
-      .isIn(['online', 'away', 'busy', 'offline', 'dnd', 'invisible'])
-      .withMessage('Status must be one of: online, away, busy, offline, dnd, invisible'),
+      .isIn(['online', 'away', 'busy', 'offline', 'invisible'])
+      .withMessage('Status must be one of: online, away, busy, offline, invisible'),
+    body('online')
+      .optional()
+      .isBoolean()
+      .withMessage('Online must be a boolean'),
     body('customStatus')
       .optional()
       .isString()
       .trim()
       .isLength({ max: 100 })
       .withMessage('Custom status must be less than 100 characters'),
-    body('expiresAt')
-      .optional()
-      .isISO8601()
-      .withMessage('Expires at must be a valid ISO date')
-      .custom((value) => {
-        const expiry = new Date(value);
-        const now = new Date();
-        const maxExpiry = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)); // 1 week max
-        return expiry > now && expiry <= maxExpiry;
-      })
-      .withMessage('Expiry must be between now and 1 week from now'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -444,51 +411,13 @@ router.patch('/me/offline',
     max: 10,
     message: 'Too many offline status updates.'
   }),
-  [
-    body('force')
-      .optional()
-      .isBoolean()
-      .withMessage('Force must be a boolean')
-      .toBoolean(),
-    (req, res, next) => {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          errors: errors.array(),
-          code: 'VALIDATION_ERROR'
-        });
-      }
-      next();
-    }
-  ],
-  async (req, res) => {
-    try {
-      // Call updateStatus with offline status
-      req.body = { status: 'offline', ...req.body };
-      await presenceController.updateStatus(req, res);
-    } catch (error) {
-      logger.error('Error in /me/offline endpoint:', {
-        error: error.message,
-        requestId: req.requestId,
-        userId: req.userId
-      });
-      
-      res.status(500).json({
-        success: false,
-        message: 'Failed to set offline status',
-        code: 'OFFLINE_ERROR',
-        requestId: req.requestId
-      });
-    }
-  }
+  presenceController.markOffline
 );
 
 // ========== BULK OPERATIONS ==========
 // Mark multiple users offline (admin/staff)
 router.post('/bulk-offline',
   bulkPresenceLimiter,
-  protect,
   adminOnly,
   [
     body('userIds')
@@ -517,62 +446,7 @@ router.post('/bulk-offline',
       next();
     }
   ],
-  async (req, res) => {
-    try {
-      const { userIds, reason } = req.body;
-      
-      // If controller has method, use it
-      if (presenceController.markMultipleUsersOffline) {
-        return await presenceController.markMultipleUsersOffline(req, res);
-      }
-      
-      // Otherwise handle manually
-      const results = [];
-      const errors = [];
-      
-      for (const userId of userIds) {
-        try {
-          // You'd need to call your presence service here
-          // This is a placeholder implementation
-          results.push({
-            userId,
-            success: true,
-            timestamp: new Date().toISOString()
-          });
-        } catch (error) {
-          errors.push({
-            userId,
-            error: error.message
-          });
-        }
-      }
-      
-      res.json({
-        success: true,
-        processed: userIds.length,
-        succeeded: results.length,
-        failed: errors.length,
-        results,
-        errors: errors.length > 0 ? errors : undefined,
-        reason,
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    } catch (error) {
-      logger.error('Error in /bulk-offline endpoint:', {
-        error: error.message,
-        requestId: req.requestId,
-        userId: req.userId
-      });
-      
-      res.status(500).json({
-        success: false,
-        message: 'Failed to mark users offline',
-        code: 'BULK_OFFLINE_ERROR',
-        requestId: req.requestId
-      });
-    }
-  }
+  presenceController.batchUpdatePresence
 );
 
 // ========== ADMIN ROUTES ==========
@@ -588,10 +462,6 @@ router.delete('/cache',
       .optional()
       .isMongoId()
       .withMessage('userId must be a valid MongoDB ID'),
-    query('scope')
-      .optional()
-      .isIn(['user', 'all', 'stale'])
-      .withMessage('Scope must be user, all, or stale'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -625,6 +495,10 @@ router.post('/admin/cleanup',
       .isBoolean()
       .withMessage('Dry run must be a boolean')
       .toBoolean(),
+    query('userType')
+      .optional()
+      .isIn(['all', 'dating', 'staff', 'moderator', 'admin'])
+      .withMessage('Invalid user type'),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -668,11 +542,6 @@ router.get('/user/:userId',
     param('userId')
       .isMongoId()
       .withMessage('Valid user ID is required'),
-    query('detailed')
-      .optional()
-      .isBoolean()
-      .withMessage('Detailed must be true or false')
-      .toBoolean(),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -710,36 +579,13 @@ router.get('/user/:userId/last-seen',
   ],
   async (req, res) => {
     try {
-      // Call getUserPresence but return only lastSeen info
+      // Use getUserPresence controller method
       await presenceController.getUserPresence(req, res);
-      
-      // Modify response to only include lastSeen
-      if (res.headersSent) return;
-      
-      const originalJson = res.json;
-      res.json = function(data) {
-        if (data.success && data.data) {
-          const { lastSeen, isOnline, status } = data.data;
-          const modifiedData = {
-            success: true,
-            data: {
-              userId: req.params.userId,
-              lastSeen,
-              isOnline,
-              status,
-              timestamp: new Date().toISOString()
-            },
-            requestId: data.requestId || req.requestId
-          };
-          return originalJson.call(this, modifiedData);
-        }
-        return originalJson.call(this, data);
-      };
     } catch (error) {
       logger.error('Error in /user/:userId/last-seen endpoint:', {
         error: error.message,
         requestId: req.requestId,
-        userId: req.userId,
+        userId: req.user?.id,
         targetUserId: req.params.userId
       });
       
@@ -771,7 +617,7 @@ router.get('/rate-limit/status',
       success: true,
       service: 'presence-api',
       user: {
-        id: req.userId || req.user?.id,
+        id: req.user?.id,
         authenticated: true
       },
       rateLimiting: {
@@ -810,8 +656,7 @@ router.get('/rate-limit/status',
         "Use WebSocket for real-time presence updates",
         "Cache presence results for frequently queried users",
         "Use batch endpoints for multiple user presence checks",
-        "Implement client-side polling with exponential backoff",
-        "For dating apps: Use /nearby endpoint for location-based queries"
+        "Implement client-side polling with exponential backoff"
       ],
       currentIp: req.ip,
       requestId: req.requestId,
@@ -846,13 +691,9 @@ router.get('/ws-info',
           'presence:update': 'User presence status changed',
           'user:online': 'User came online',
           'user:offline': 'User went offline',
-          'presence:heartbeat': 'Heartbeat acknowledgment',
-          'typing:start': 'User started typing',
-          'typing:stop': 'User stopped typing',
-          'message:received': 'New message received'
+          'presence:heartbeat': 'Heartbeat acknowledgment'
         },
-        authentication: 'Bearer token in handshake',
-        rateLimiting: 'Socket-level rate limiting applied'
+        authentication: 'Bearer token in handshake'
       },
       httpFallback: {
         recommendedPollingInterval: 30000,
@@ -869,9 +710,7 @@ router.get('/ws-info',
         javascript: {
           socketIo: 'Use socket.io-client with auth token',
           example: `import { io } from 'socket.io-client';\nconst socket = io('${wsUrl}', {\n  auth: { token: 'YOUR_JWT_TOKEN' }\n});`
-        },
-        reactNative: 'Use socket.io-client with appropriate transport',
-        flutter: 'Use socket_io_client package'
+        }
       }
     });
   }
@@ -888,7 +727,7 @@ if (process.env.NODE_ENV === 'development') {
     (req, res) => {
       logger.debug('Debug auth test request', {
         requestId: req.requestId,
-        userId: req.userId,
+        userId: req.user?.id,
         user: req.user,
         ip: req.ip
       });
@@ -896,9 +735,9 @@ if (process.env.NODE_ENV === 'development') {
       res.json({
         success: true,
         authentication: {
-          userId: req.userId,
+          userId: req.user?.id,
           user: req.user,
-          authenticated: !!req.userId,
+          authenticated: !!req.user?.id,
           userType: req.user?.userType,
           role: req.user?.role
         },
@@ -924,7 +763,7 @@ router.use((err, req, res, next) => {
     requestId,
     path: req.path,
     method: req.method,
-    userId: req.userId || req.user?.id,
+    userId: req.user?.id,
     error: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
@@ -1012,8 +851,6 @@ router.use((req, res) => {
       'POST   /bulk-offline',
       'GET    /user/:userId',
       'GET    /user/:userId/last-seen',
-      'GET    /rate-limit/status',
-      'GET    /ws-info',
       'DELETE /cache (admin)',
       'POST   /admin/cleanup (admin)',
       'GET    /admin/metrics (admin)',
@@ -1025,8 +862,7 @@ router.use((req, res) => {
     },
     adminEndpoints: {
       note: 'Endpoints marked with (admin) require admin privileges'
-    },
-    documentation: 'See /ws-info for WebSocket integration details'
+    }
   });
 });
 

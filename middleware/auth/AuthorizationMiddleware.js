@@ -1,4 +1,4 @@
-// middleware/auth/AuthorizationMiddleware.js
+// middleware/auth/AuthorizationMiddleware.js - MINOR UPDATES
 const crypto = require("crypto");
 const { ROLES } = require("@models/User");
 const roleChecker = require("@utils/RoleChecker");
@@ -43,6 +43,7 @@ class AuthorizationMiddleware {
             ip: req.ip
           });
           
+          // Track suspicious activity for role escalation attempts
           if (req.user.role === 'user' && allowedRoles.includes('moderator')) {
             await RateLimit.trackSuspiciousActivity(req.ip, 'role_escalation_attempt');
           }
@@ -202,7 +203,189 @@ class AuthorizationMiddleware {
     };
   }
 
-  // Convenience methods
+  // ========== NEW: PROFILE-BASED AUTHORIZATION ==========
+  
+  requireProfile() {
+    return async (req, res, next) => {
+      const requestId = crypto.randomBytes(4).toString('hex');
+      
+      try {
+        if (!req.user) {
+          return res.status(401).json({
+            success: false,
+            error: "Authentication required",
+            code: "AUTH_REQUIRED",
+            requestId
+          });
+        }
+        
+        // Check if user has a profile
+        if (!req.userData?.profile) {
+          logger.warn(`Profile required but not found [${requestId}]`, {
+            userId: req.user._id,
+            userType: req.user.userType,
+            path: req.path
+          });
+          
+          return res.status(403).json({
+            success: false,
+            error: "Profile required to access this feature",
+            code: "PROFILE_REQUIRED",
+            endpoint: "/api/auth/profile",
+            requestId
+          });
+        }
+        
+        logger.debug(`Profile check passed [${requestId}]`, {
+          userId: req.user._id,
+          hasProfile: true,
+          path: req.path
+        });
+        
+        next();
+      } catch (error) {
+        logger.error(`Profile check error [${requestId}]`, { error: error.message, path: req.path });
+        
+        return res.status(500).json({
+          success: false,
+          error: "Profile check failed",
+          code: "PROFILE_CHECK_ERROR",
+          requestId
+        });
+      }
+    };
+  }
+
+  requireDatingProfile() {
+    return async (req, res, next) => {
+      const requestId = crypto.randomBytes(4).toString('hex');
+      
+      try {
+        if (!req.user) {
+          return res.status(401).json({
+            success: false,
+            error: "Authentication required",
+            code: "AUTH_REQUIRED",
+            requestId
+          });
+        }
+        
+        // Check if user is a dating user type
+        if (req.user.userType !== 'DatingUser') {
+          return res.status(403).json({
+            success: false,
+            error: "This feature is only available for dating users",
+            code: "DATING_USER_REQUIRED",
+            userType: req.user.userType,
+            requestId
+          });
+        }
+        
+        // Check if user has a dating profile
+        if (!req.userData?.datingUser) {
+          logger.warn(`Dating profile required but not found [${requestId}]`, {
+            userId: req.user._id,
+            userType: req.user.userType,
+            path: req.path
+          });
+          
+          return res.status(403).json({
+            success: false,
+            error: "Dating profile required to access this feature",
+            code: "DATING_PROFILE_REQUIRED",
+            endpoint: "/api/auth/dating-profile",
+            requestId
+          });
+        }
+        
+        logger.debug(`Dating profile check passed [${requestId}]`, {
+          userId: req.user._id,
+          hasDatingProfile: true,
+          path: req.path
+        });
+        
+        next();
+      } catch (error) {
+        logger.error(`Dating profile check error [${requestId}]`, { error: error.message, path: req.path });
+        
+        return res.status(500).json({
+          success: false,
+          error: "Dating profile check failed",
+          code: "DATING_PROFILE_CHECK_ERROR",
+          requestId
+        });
+      }
+    };
+  }
+
+  requireCompleteProfile(minCompletion = 80) {
+    return async (req, res, next) => {
+      const requestId = crypto.randomBytes(4).toString('hex');
+      
+      try {
+        if (!req.user) {
+          return res.status(401).json({
+            success: false,
+            error: "Authentication required",
+            code: "AUTH_REQUIRED",
+            requestId
+          });
+        }
+        
+        // Check if user has a profile
+        if (!req.userData?.profile) {
+          return res.status(403).json({
+            success: false,
+            error: "Profile required",
+            code: "PROFILE_REQUIRED",
+            endpoint: "/api/auth/profile",
+            requestId
+          });
+        }
+        
+        // Check profile completion
+        const profileCompletion = req.userData.profile.profileCompletion || 0;
+        
+        if (profileCompletion < minCompletion) {
+          logger.warn(`Profile completion too low [${requestId}]`, {
+            userId: req.user._id,
+            currentCompletion: profileCompletion,
+            requiredCompletion: minCompletion,
+            path: req.path
+          });
+          
+          return res.status(403).json({
+            success: false,
+            error: `Profile must be at least ${minCompletion}% complete to access this feature`,
+            code: "INCOMPLETE_PROFILE",
+            currentCompletion: profileCompletion,
+            requiredCompletion: minCompletion,
+            requestId
+          });
+        }
+        
+        logger.debug(`Profile completion check passed [${requestId}]`, {
+          userId: req.user._id,
+          completion: profileCompletion,
+          required: minCompletion,
+          path: req.path
+        });
+        
+        next();
+      } catch (error) {
+        logger.error(`Profile completion check error [${requestId}]`, { error: error.message, path: req.path });
+        
+        return res.status(500).json({
+          success: false,
+          error: "Profile completion check failed",
+          code: "PROFILE_COMPLETION_CHECK_ERROR",
+          requestId
+        });
+      }
+    };
+  }
+
+  // ========== CONVENIENCE METHODS (Updated) ==========
   get userOnly() {
     return this.authorizeUserType('DatingUser');
   }
@@ -221,6 +404,19 @@ class AuthorizationMiddleware {
 
   get superAdminOnly() {
     return this.authorize(ROLES.SUPER_ADMIN);
+  }
+
+  // NEW: Convenience methods for profile-based authorization
+  get withProfile() {
+    return this.requireProfile();
+  }
+
+  get withDatingProfile() {
+    return this.requireDatingProfile();
+  }
+
+  get withCompleteProfile() {
+    return this.requireCompleteProfile(80);
   }
 }
 

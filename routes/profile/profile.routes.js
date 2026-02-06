@@ -6,8 +6,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const profileController = require("@controllers/profile/profile.controller");
-const { protect, authorize } = require("@middleware/authmiddleware");
+// FIX 1: Updated controller import path
+const profileController = require("@controllers/profile/profile.controller"); 
+const { protect, authorize, requireDatingProfile, requireProfileCompletion } = require("@middleware/authmiddleware");
 
 // Import enhanced rate limiter middleware
 const {
@@ -226,7 +227,8 @@ router.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: {
       public: ['/options', '/defaults', '/public/:userId', '/search', '/health'],
-      protected: ['/create', '/me', '/update', '/upload', '/photos', '/match-preferences', '/verification', '/stats', '/completion', '/export', '/delete']
+      protected: ['/create', '/me', '/update', '/upload', '/photos', '/match-preferences', '/verification', '/stats', '/completion', '/export', '/delete'],
+      dating: ['/dating/profile', '/dating/visibility', '/dating/settings']
     }
   });
 });
@@ -283,10 +285,7 @@ router.get("/search",
     query('online').optional().isBoolean().toBoolean()
   ]),
   async (req, res) => {
-    // Forward to controller or implement search logic
     try {
-      // This would typically call a searchProfiles method
-      // For now, return mock response
       res.json({
         success: true,
         data: {
@@ -306,7 +305,9 @@ router.get("/search",
       res.status(500).json({
         success: false,
         error: 'Search failed',
-        code: 'SEARCH_ERROR'
+        code: 'SEARCH_ERROR',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     }
   }
@@ -314,6 +315,17 @@ router.get("/search",
 
 // ============ PROTECTED ROUTES ============
 router.use(protect);
+
+// Get own complete profile
+router.get("/me",
+  createDynamicRateLimiter({
+    windowMs: 10 * 1000,
+    max: 20,
+    message: 'Too many profile requests. Please cache your profile data.'
+  }),
+  cacheControl(60), // 1 minute cache for personal profile
+  profileController.getCompleteProfile
+);
 
 // Profile creation
 router.post("/create",
@@ -335,54 +347,99 @@ router.post("/create",
     body('dateOfBirth')
       .optional()
       .isISO8601()
-      .withMessage('Valid date of birth is required (YYYY-MM-DD)')
-      .custom((value) => {
-        const birthDate = new Date(value);
-        const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-        return age >= 18;
-      })
-      .withMessage('Must be at least 18 years old'),
+      .withMessage('Valid date of birth is required (YYYY-MM-DD)'),
+    body('age')
+      .optional()
+      .isInt({ min: 13, max: 100 })
+      .withMessage('Age must be between 13 and 100'),
     body('gender')
       .optional()
       .isString()
-      .isIn(['male', 'female', 'non-binary', 'other', 'prefer-not-to-say'])
-      .withMessage('Valid gender is required'),
-    body('lookingFor')
-      .optional()
-      .isArray()
-      .withMessage('Looking for must be an array'),
-    body('lookingFor.*')
       .isIn(['male', 'female', 'non-binary', 'other'])
-      .withMessage('Valid looking for option required'),
-    body('currentLocation')
+      .withMessage('Valid gender is required'),
+    // FIX 2: Updated field names to match controller
+    body('location')
       .optional()
       .isObject()
-      .withMessage('Current location must be an object'),
-    body('currentLocation.city')
+      .withMessage('Location must be an object'),
+    body('location.coordinates')
+      .optional()
+      .isArray()
+      .withMessage('Coordinates must be an array'),
+    body('location.coordinates.*')
+      .optional()
+      .isFloat()
+      .withMessage('Coordinates must be numbers'),
+    body('location.city')
       .optional()
       .isString()
       .trim()
       .isLength({ max: 100 })
       .withMessage('City must be less than 100 characters'),
-    body('currentLocation.country')
+    body('location.country')
       .optional()
       .isString()
       .trim()
       .isLength({ max: 100 })
-      .withMessage('Country must be less than 100 characters')
+      .withMessage('Country must be less than 100 characters'),
+    // FIX 3: Added validation for new schema fields
+    body('countryOfOrigin')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 100 }),
+    body('homeLanguage')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 50 }),
+    body('religion')
+      .optional()
+      .isString()
+      .trim(),
+    body('servingAs')
+      .optional()
+      .isString()
+      .trim(),
+    body('relationshipStatus')
+      .optional()
+      .isString()
+      .trim(),
+    body('lookingFor')
+      .optional()
+      .isArray()
+      .withMessage('Looking for must be an array'),
+    body('lookingFor.*')
+      .isIn(['male', 'female', 'non-binary', 'other', 'dating', 'relationship', 'marriage', 'friendship'])
+      .withMessage('Valid looking for option required'),
+    body('haveChildren')
+      .optional()
+      .isString()
+      .trim(),
+    body('wantsChildren')
+      .optional()
+      .isString()
+      .trim(),
+    body('education')
+      .optional()
+      .isString()
+      .trim(),
+    body('occupation')
+      .optional()
+      .isString()
+      .trim(),
+    body('income')
+      .optional()
+      .isString()
+      .trim(),
+    body('hobbies')
+      .optional()
+      .isArray(),
+    body('languages')
+      .optional()
+      .isArray()
   ]),
   profileController.createProfile
-);
-
-// Get own complete profile
-router.get("/me",
-  createDynamicRateLimiter({
-    windowMs: 10 * 1000,
-    max: 20,
-    message: 'Too many profile requests. Please cache your profile data.'
-  }),
-  cacheControl(60), // 1 minute cache for personal profile
-  profileController.getCompleteProfile
 );
 
 // Update profile
@@ -403,34 +460,67 @@ router.put("/update",
       .isLength({ max: 500 }),
     body('dateOfBirth')
       .optional()
-      .isISO8601()
-      .custom((value) => {
-        const birthDate = new Date(value);
-        const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-        return age >= 18;
-      }),
+      .isISO8601(),
+    body('age')
+      .optional()
+      .isInt({ min: 13, max: 100 }),
     body('gender')
       .optional()
       .isString()
-      .isIn(['male', 'female', 'non-binary', 'other', 'prefer-not-to-say']),
-    body('currentLocation')
+      .isIn(['male', 'female', 'non-binary', 'other']),
+    // FIX 4: Updated field names
+    body('location')
       .optional()
       .isObject(),
-    body('currentLocation.city')
+    body('location.coordinates')
+      .optional()
+      .isArray(),
+    body('location.coordinates.*')
+      .optional()
+      .isFloat(),
+    body('location.city')
       .optional()
       .isString()
       .trim()
       .isLength({ max: 100 }),
-    body('currentLocation.country')
+    body('location.country')
       .optional()
       .isString()
       .trim()
       .isLength({ max: 100 }),
+    // FIX 5: Added validation for new schema fields
+    body('countryOfOrigin')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 100 }),
+    body('homeLanguage')
+      .optional()
+      .isString()
+      .trim()
+      .isLength({ max: 50 }),
     body('religion')
       .optional()
       .isString()
       .trim(),
+    body('servingAs')
+      .optional()
+      .isString()
+      .trim(),
     body('relationshipStatus')
+      .optional()
+      .isString()
+      .trim(),
+    body('lookingFor')
+      .optional()
+      .isArray(),
+    body('lookingFor.*')
+      .isIn(['male', 'female', 'non-binary', 'other', 'dating', 'relationship', 'marriage', 'friendship']),
+    body('haveChildren')
+      .optional()
+      .isString()
+      .trim(),
+    body('wantsChildren')
       .optional()
       .isString()
       .trim(),
@@ -446,14 +536,32 @@ router.put("/update",
       .optional()
       .isString()
       .trim(),
+    body('hobbies')
+      .optional()
+      .isArray(),
+    body('hobbies.*')
+      .isString()
+      .trim()
+      .isLength({ max: 50 }),
+    body('languages')
+      .optional()
+      .isArray(),
+    body('languages.*')
+      .isString()
+      .trim()
+      .isLength({ max: 50 }),
+    body('datingProfile')
+      .optional()
+      .isObject(),
+    body('datingProfile.isVisible')
+      .optional()
+      .isBoolean(),
+    body('datingProfile.isPaused')
+      .optional()
+      .isBoolean(),
     body('height')
       .optional()
       .isInt({ min: 100, max: 250 }),
-    body('lookingFor')
-      .optional()
-      .isArray(),
-    body('lookingFor.*')
-      .isIn(['male', 'female', 'non-binary', 'other']),
     body('interests')
       .optional()
       .isArray(),
@@ -479,17 +587,11 @@ router.post("/upload",
         return res.status(400).json({
           success: false,
           error: 'No file uploaded',
-          code: 'NO_FILE'
+          code: 'NO_FILE',
+          timestamp: new Date().toISOString(),
+          requestId: req.requestId
         });
       }
-      
-      // Process the uploaded file
-      // In a real implementation, you would:
-      // 1. Validate image dimensions
-      // 2. Compress/resize if needed
-      // 3. Move to permanent storage
-      // 4. Save to database
-      // 5. Update profile
       
       const fileInfo = {
         originalName: req.file.originalname,
@@ -500,8 +602,7 @@ router.post("/upload",
         uploadedAt: new Date()
       };
       
-      // Call controller method to handle profile picture update
-      // For now, return success with file info
+      // Note: This should call a service to process and update the profile
       res.json({
         success: true,
         data: {
@@ -520,7 +621,9 @@ router.post("/upload",
       res.status(500).json({
         success: false,
         error: error.message || 'Upload failed',
-        code: 'UPLOAD_ERROR'
+        code: 'UPLOAD_ERROR',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     }
   }
@@ -549,15 +652,11 @@ router.put("/photos",
     body('photos')
       .isArray()
       .withMessage('Photos must be an array')
-      .isLength({ min: 1, max: 10 })
-      .withMessage('You can upload between 1 and 10 photos'),
+      .isLength({ min: 1, max: 9 }) // Updated to match controller MAX_PHOTOS
+      .withMessage('You can upload between 1 and 9 photos'),
     body('photos.*.url')
       .isURL()
       .withMessage('Valid photo URL is required'),
-    body('photos.*.isPrimary')
-      .optional()
-      .isBoolean()
-      .withMessage('isPrimary must be a boolean'),
     body('photos.*.caption')
       .optional()
       .isString()
@@ -566,8 +665,12 @@ router.put("/photos",
       .withMessage('Caption must be less than 100 characters'),
     body('photos.*.order')
       .optional()
-      .isInt({ min: 0, max: 9 })
-      .withMessage('Order must be between 0 and 9')
+      .isInt({ min: 0, max: 8 })
+      .withMessage('Order must be between 0 and 8'),
+    body('photos.*.isVerified')
+      .optional()
+      .isBoolean()
+      .withMessage('isVerified must be a boolean')
   ]),
   profileController.updatePhotos
 );
@@ -577,42 +680,45 @@ router.put("/match-preferences",
   profileUpdateLimiter,
   sanitizeInput,
   validateRequest([
-    body('ageRange')
+    body('matchPreferences')
+      .optional()
+      .isObject()
+      .withMessage('Match preferences must be an object'),
+    body('matchPreferences.gender')
+      .optional()
+      .isArray()
+      .withMessage('Gender preference must be an array'),
+    body('matchPreferences.gender.*')
+      .isIn(['male', 'female', 'non-binary', 'other'])
+      .withMessage('Valid gender option required'),
+    body('matchPreferences.ageRange')
       .optional()
       .isObject()
       .withMessage('Age range must be an object'),
-    body('ageRange.min')
+    body('matchPreferences.ageRange.min')
       .optional()
       .isInt({ min: 18, max: 100 })
       .withMessage('Minimum age must be 18-100'),
-    body('ageRange.max')
+    body('matchPreferences.ageRange.max')
       .optional()
       .isInt({ min: 18, max: 100 })
       .withMessage('Maximum age must be 18-100'),
-    body('distance')
+    body('matchPreferences.locationRange')
       .optional()
       .isInt({ min: 1, max: 10000 })
-      .withMessage('Distance must be 1-10000 km'),
-    body('gender')
+      .withMessage('Location range must be 1-10000 km'),
+    body('matchPreferences.relationshipGoals')
       .optional()
-      .isString()
-      .isIn(['male', 'female', 'non-binary', 'other', 'any'])
-      .withMessage('Valid gender option required'),
-    body('religion')
+      .isArray()
+      .withMessage('Relationship goals must be an array'),
+    body('matchPreferences.mustHaves')
       .optional()
-      .isString()
-      .trim()
-      .withMessage('Religion must be a string'),
-    body('educationLevel')
+      .isArray()
+      .withMessage('Must haves must be an array'),
+    body('matchPreferences.dealBreakers')
       .optional()
-      .isString()
-      .trim()
-      .withMessage('Education level must be a string'),
-    body('wantsChildren')
-      .optional()
-      .isString()
-      .trim()
-      .withMessage('Wants children must be a string')
+      .isArray()
+      .withMessage('Deal breakers must be an array')
   ]),
   profileController.updateMatchPreferences
 );
@@ -621,17 +727,9 @@ router.put("/match-preferences",
 router.post("/verification",
   verificationLimiter,
   validateRequest([
-    body('badgeType')
-      .isIn(['email', 'phone', 'photo', 'document', 'social', 'video'])
-      .withMessage('Valid badge type is required'),
-    body('documentUrl')
-      .optional()
-      .isURL()
-      .withMessage('Valid document URL is required'),
-    body('verificationData')
-      .optional()
-      .isObject()
-      .withMessage('Verification data must be an object')
+    body('badge')
+      .isIn(['email', 'phone', 'photo', 'identity', 'premium', 'social'])
+      .withMessage('Valid badge type is required')
   ]),
   profileController.addVerificationBadge
 );
@@ -657,11 +755,6 @@ router.get("/export",
   profileExportLimiter,
   async (req, res) => {
     try {
-      // In a real implementation, this would:
-      // 1. Generate comprehensive profile data
-      // 2. Format as JSON/PDF
-      // 3. Send email or provide download link
-      
       res.json({
         success: true,
         data: {
@@ -670,13 +763,16 @@ router.get("/export",
           estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           format: 'JSON'
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     } catch (error) {
       res.status(500).json({
         success: false,
         error: 'Export failed',
-        code: 'EXPORT_ERROR'
+        code: 'EXPORT_ERROR',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     }
   }
@@ -698,8 +794,6 @@ router.delete("/delete",
   ]),
   async (req, res) => {
     try {
-      // This would call profileController.deleteProfile
-      // For now, return confirmation
       res.json({
         success: true,
         data: {
@@ -708,13 +802,101 @@ router.delete("/delete",
           scheduledFor: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           note: 'You can cancel this request within 24 hours.'
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     } catch (error) {
       res.status(500).json({
         success: false,
         error: 'Deletion request failed',
-        code: 'DELETION_ERROR'
+        code: 'DELETION_ERROR',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    }
+  }
+);
+
+// ============ DATING PROFILE ROUTES ============
+// FIX 6: Added dating profile routes
+router.use("/dating", requireDatingProfile);
+
+// Get dating profile
+router.get("/dating/profile",
+  createDynamicRateLimiter({
+    windowMs: 10 * 1000,
+    max: 20,
+    message: 'Too many dating profile requests.'
+  }),
+  async (req, res) => {
+    try {
+      // Call dating user's getDatingProfile method
+      const datingProfile = await req.datingUser.getDatingProfile(req.userId);
+      
+      res.json({
+        success: true,
+        data: datingProfile,
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get dating profile',
+        code: 'DATING_PROFILE_ERROR',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    }
+  }
+);
+
+// Update dating profile visibility
+router.put("/dating/visibility",
+  profileUpdateLimiter,
+  validateRequest([
+    body('isVisible')
+      .optional()
+      .isBoolean()
+      .withMessage('isVisible must be a boolean'),
+    body('isPaused')
+      .optional()
+      .isBoolean()
+      .withMessage('isPaused must be a boolean')
+  ]),
+  async (req, res) => {
+    try {
+      const { isVisible, isPaused } = req.body;
+      
+      // Update profile's dating profile settings
+      const profile = await Profile.findOneAndUpdate(
+        { userId: req.userId },
+        { 
+          $set: { 
+            'datingProfile.isVisible': isVisible,
+            'datingProfile.isPaused': isPaused 
+          }
+        },
+        { new: true }
+      );
+      
+      res.json({
+        success: true,
+        data: {
+          isVisible: profile.datingProfile.isVisible,
+          isPaused: profile.datingProfile.isPaused
+        },
+        message: 'Dating profile visibility updated',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update visibility',
+        code: 'VISIBILITY_UPDATE_ERROR',
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId
       });
     }
   }
@@ -734,8 +916,10 @@ router.get("/rate-limit/status",
       version: '1.0.0',
       user: req.user ? {
         id: req.user.id,
-        hasProfile: !!req.user.profileId,
-        role: req.user.role
+        hasProfile: !!req.user.profile,
+        role: req.user.role,
+        userType: req.user.userType,
+        hasDatingProfile: !!req.user.dating
       } : null,
       rateLimiting: {
         enabled: true,
@@ -793,7 +977,9 @@ router.get("/admin/profiles",
         total: 0,
         page: 1,
         limit: 20
-      }
+      },
+      timestamp: new Date().toISOString(),
+      requestId: req.requestId
     });
   }
 );
@@ -832,7 +1018,8 @@ router.use((err, req, res, next) => {
       error: 'File too large. Maximum size is 10MB.',
       code: 'FILE_TOO_LARGE',
       maxSize: '10MB',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -842,7 +1029,8 @@ router.use((err, req, res, next) => {
       error: err.message,
       code: 'INVALID_FILE_TYPE',
       allowedTypes: UPLOAD_CONFIG.ALLOWED_TYPES,
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -854,7 +1042,8 @@ router.use((err, req, res, next) => {
       code: 'RATE_LIMIT_EXCEEDED',
       retryAfter: Math.ceil(err.msBeforeNext / 1000),
       recommendation: 'Consider caching data or reducing request frequency',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -865,7 +1054,8 @@ router.use((err, req, res, next) => {
       error: 'Validation failed',
       details: err.errors || err.message,
       code: 'VALIDATION_ERROR',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -875,7 +1065,8 @@ router.use((err, req, res, next) => {
       success: false,
       error: 'Authentication failed',
       code: 'AUTH_ERROR',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -885,7 +1076,8 @@ router.use((err, req, res, next) => {
       success: false,
       error: 'Not authorized',
       code: 'FORBIDDEN',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -895,7 +1087,8 @@ router.use((err, req, res, next) => {
       success: false,
       error: 'Age restriction: Must be 18 years or older',
       code: 'AGE_RESTRICTION',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -905,7 +1098,8 @@ router.use((err, req, res, next) => {
       success: false,
       error: err.message || 'Resource not found',
       code: 'NOT_FOUND',
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -917,7 +1111,8 @@ router.use((err, req, res, next) => {
       error: `${field} already exists`,
       code: 'DUPLICATE_KEY',
       field,
-      requestId: req.requestId
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -980,6 +1175,10 @@ router.use((req, res) => {
         'GET  /export - Export profile data',
         'DELETE /delete - Delete profile',
         'GET  /rate-limit/status - Rate limit status'
+      ],
+      datingRoutes: [
+        'GET  /dating/profile - Get dating profile',
+        'PUT  /dating/visibility - Update dating profile visibility'
       ],
       authentication: {
         method: 'Bearer token',

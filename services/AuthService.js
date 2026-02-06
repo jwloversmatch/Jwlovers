@@ -1,9 +1,10 @@
+// services/AuthService.js - UPDATED FOR TWO-STEP REGISTRATION
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const validator = require("validator");
-const { BaseUser, DatingUser, Moderator, Admin, SuperAdmin, ROLES } = require("@models/User");
-const Profile = require("@models/Profile.model");
+const { BaseUser, ROLES, DatingUser, Staff } = require("@models/User");
+const Profile = require("@models/Profile.model"); 
 const InviteCode = require("@models/InviteCode.model");
 
 class AuthService {
@@ -12,22 +13,21 @@ class AuthService {
     this.MAX_FAILED_ATTEMPTS = 5;
   }
 
-  // ========== USER CREATION ==========
+  // ========== USER CREATION - UPDATED FOR TWO-STEP FLOW ==========
   async createUserWithRole(data, session) {
-    const { email, password, firstName, lastName, userName, dateOfBirth, role, phoneNumber } = data;
+    const { userType, email, password, firstName, lastName, role, phoneNumber } = data;
 
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const finalUsername = userName?.trim().toLowerCase() || await this.generateUsername(firstName, session);
-
-    const commonData = {
+    // Base user data - IMPORTANT: No profile field here!
+    const baseUserData = {
       email: email.toLowerCase().trim(),
       password: hashedPassword,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      userName: finalUsername,
       role: role || ROLES.USER,
+      userType: userType || (role === ROLES.USER ? "DatingUser" : "Staff"),
       accountStatus: "pending_verification",
       emailVerified: false,
       failedLoginAttempts: 0,
@@ -35,88 +35,214 @@ class AuthService {
       passwordHistory: [hashedPassword],
       lastPasswordChange: new Date(),
       presence: { status: "offline", lastSeen: new Date(), lastActive: new Date() },
-      notificationSettings: { email: true, push: true },
-      privacySettings: { profileVisibility: "public", showOnlineStatus: true },
+      tokenVersion: 1,
+      registrationDate: new Date()
     };
 
     if (phoneNumber) {
-      commonData.phoneNumber = phoneNumber.trim();
-      commonData.phoneVerified = false;
+      baseUserData.phoneNumber = phoneNumber.trim();
+      baseUserData.phoneVerified = false;
     }
 
+    // Staff-specific fields
+    if (userType === "Staff") {
+      baseUserData.employeeId = data.employeeId || `EMP${Date.now()}`;
+      baseUserData.department = data.department || "management";
+      baseUserData.permissions = data.permissions || [];
+      baseUserData.hireDate = data.hireDate || new Date();
+      baseUserData.accessLevel = data.accessLevel || "basic";
+      baseUserData.managedUsers = data.managedUsers || [];
+      
+      // Staff notifications
+      baseUserData.staffNotificationSettings = {
+        userReports: "assigned", systemAlerts: true, adminAnnouncements: true,
+        shiftReminders: true, caseUpdates: true, teamMessages: true,
+      };
+      
+      // Staff work stats
+      baseUserData.workStats = {
+        casesResolved: 0, casesEscalated: 0, averageResolutionTime: 0,
+        responseTime: 0, lastActiveShift: null, totalShiftHours: 0, performanceScore: 0,
+      };
+    }
+
+    // ===== CRITICAL CHANGE =====
+    // Remove profile field if it exists (for two-step flow)
+    // Profile will be added later
+    if (baseUserData.profile !== undefined) {
+      delete baseUserData.profile;
+    }
+
+    this.logger.info(`🔄 Creating ${userType} user WITHOUT profile...`);
+    this.logger.debug(`User data:`, {
+      email: baseUserData.email,
+      userType: baseUserData.userType,
+      hasProfileField: 'profile' in baseUserData
+    });
+
+    // Create appropriate user based on type
     let user;
-    switch (role) {
-      case ROLES.USER:
-        user = new DatingUser({
-          ...commonData,
-          dateOfBirth: new Date(dateOfBirth),
-          ageVerified: true,
-          preferences: { lookingFor: ["dating"], ageRange: { min: 18, max: 100 }, distance: 50, interests: [] },
-          datingNotificationSettings: { messages: true, matches: true, likes: true, safetyAlerts: true },
-          datingPrivacySettings: { showLastSeen: "everyone", allowMessagesFrom: "everyone" },
-          messagingPreferences: "everyone",
-          sharePhone: "hidden",
-        });
-        break;
-
-      case ROLES.MODERATOR:
-      case ROLES.ADMIN:
-      case ROLES.SUPER_ADMIN:
-        const staffData = {
-          ...commonData,
-          employeeId: data.employeeId || `EMP${Date.now()}`,
-          department: data.department || "management",
-          permissions: data.permissions || [],
-          staffNotificationSettings: {
-            userReports: "assigned", systemAlerts: true, adminAnnouncements: true,
-            shiftReminders: true, caseUpdates: true, teamMessages: true,
-          },
-          workStats: {
-            casesResolved: 0, casesEscalated: 0, averageResolutionTime: 0,
-            responseTime: 0, lastActiveShift: null, totalShiftHours: 0, performanceScore: 0,
-          },
-          hireDate: data.hireDate || new Date(),
-          accessLevel: data.accessLevel || "basic",
-          managedUsers: data.managedUsers || [],
-        };
-
-        if (role === ROLES.MODERATOR) user = new Moderator(staffData);
-        else if (role === ROLES.ADMIN) user = new Admin(staffData);
-        else user = new SuperAdmin(staffData);
-        break;
-
-      default:
-        throw new Error(`Invalid role: ${role}`);
+    try {
+      if (userType === "DatingUser") {
+        // Create DatingUser WITHOUT profile initially
+        const datingUser = new DatingUser(baseUserData);
+        
+        // Validate before saving
+        const validationError = datingUser.validateSync();
+        if (validationError) {
+          this.logger.error('❌ DatingUser validation failed:', validationError.errors);
+          throw validationError;
+        }
+        
+        await datingUser.save({ session });
+        user = datingUser;
+        this.logger.info(`✅ DatingUser created WITHOUT profile: ${user._id}`);
+        
+      } else if (userType === "Staff") {
+        // Create Staff user
+        const staffUser = new Staff(baseUserData);
+        await staffUser.save({ session });
+        user = staffUser;
+        this.logger.info(`✅ Staff user created: ${user._id}`);
+        
+      } else {
+        // Create regular BaseUser
+        const baseUser = new BaseUser(baseUserData);
+        await baseUser.save({ session });
+        user = baseUser;
+        this.logger.info(`✅ BaseUser created: ${user._id}`);
+      }
+      
+      return user;
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to create user:`, error.message);
+      if (error.errors && error.errors.profile) {
+        this.logger.error(`Profile validation issue:`, error.errors.profile.message);
+        // If it's a required profile error for DatingUser, provide clearer message
+        if (error.errors.profile.message.includes('required') && userType === "DatingUser") {
+          throw new Error('Dating user will be updated with profile in the next step');
+        }
+      }
+      throw error;
     }
-
-    await user.save({ session });
-    return user;
   }
 
+  /**
+   * Create profile for user (to be called AFTER user creation)
+   */
+  async createProfileForUser(profileData, session) {
+    const {
+      userId,
+      userName,
+      dateOfBirth,
+      gender,
+      phoneNumber,
+      country,
+      userType
+    } = profileData;
+
+    this.logger.info(`📝 Creating Profile for user ${userId}...`);
+
+    const profile = new Profile({
+      userId,
+      userName: userName || `user_${Date.now()}`,
+      dateOfBirth,
+      gender: gender || "prefer-not-to-say",
+      phoneNumber: phoneNumber || "",
+      countryOfOrigin: country || "",
+      profilePicture: null,
+      bio: "",
+      hobbies: [],
+      datingProfile: {
+        isVisible: userType === "DatingUser",
+        isPaused: false
+      },
+      profileCompletion: 10,
+      location: {
+        type: 'Point',
+        coordinates: [0, 0],
+        city: '',
+        country: ''
+      },
+      matchPreferences: {
+        gender: [],
+        ageRange: { min: 18, max: 45 },
+        locationRange: 50,
+        relationshipGoals: [],
+        mustHaves: [],
+        dealBreakers: []
+      },
+      verificationBadges: [],
+      photos: []
+    });
+
+    // Validate before saving
+    const validationError = profile.validateSync();
+    if (validationError) {
+      this.logger.error(`❌ Profile validation error:`, validationError.errors);
+      throw validationError;
+    }
+    
+    await profile.save({ session });
+    
+    if (!profile._id) {
+      throw new Error("Profile was saved but has no _id");
+    }
+    
+    this.logger.info(`✅ Profile created: ${profile._id} for user: ${userId}`);
+    return profile;
+  }
+
+  /**
+   * Update DatingUser with profile reference (to be called AFTER profile creation)
+   */
+  async updateDatingUserWithProfile(userId, profileId, session) {
+    try {
+      // Find the DatingUser
+      const datingUser = await DatingUser.findById(userId).session(session);
+      
+      if (!datingUser) {
+        throw new Error(`DatingUser not found: ${userId}`);
+      }
+      
+      this.logger.info(`📌 Updating DatingUser ${userId} with profile ${profileId}`);
+      
+      // Update with profile reference
+      datingUser.profile = profileId;
+      
+      // Validate before saving
+      const validationError = datingUser.validateSync();
+      if (validationError) {
+        this.logger.error(`❌ DatingUser validation error when adding profile:`, validationError.errors);
+        throw validationError;
+      }
+      
+      await datingUser.save({ session });
+      
+      this.logger.info(`✅ DatingUser updated with profile: ${datingUser._id} -> ${profileId}`);
+      
+      return datingUser;
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to update DatingUser profile:`, error);
+      throw error;
+    }
+  }
+
+  // ========== USERNAME GENERATION ==========
   async generateUsername(firstName, session) {
     const baseName = firstName.toLowerCase().replace(/[^a-z]/g, "");
     let finalUsername = `${baseName}${Math.floor(1000 + Math.random() * 9000)}`;
 
     for (let attempts = 0; attempts < 5; attempts++) {
-      const existingUser = await BaseUser.findOne({ userName: finalUsername }).session(session || null);
-      if (!existingUser) return finalUsername;
+      const existingProfile = await Profile.findOne({ userName: finalUsername }).session(session || null);
+      if (!existingProfile) return finalUsername;
       finalUsername = `${baseName}${Math.floor(1000 + Math.random() * 9000)}`;
     }
 
     const timestamp = Date.now().toString().slice(-6);
     return `user_${timestamp}_${Math.floor(Math.random() * 1000)}`;
-  }
-
-  async createProfile(user, session) {
-    if (user.role !== ROLES.USER) return null;
-    
-    const [profile] = await Profile.create([{
-      userId: user._id,
-      profileCompletion: 0,
-      verificationBadges: [],
-    }], { session });
-    
-    return profile;
   }
 
   // ========== INVITE CODE VALIDATION ==========
@@ -374,7 +500,6 @@ class AuthService {
     return { plain: plainToken, hashed: hashedToken };
   }
 
-  // ADD THIS METHOD - Fix for EmailHandlers.js error
   hashToken(token) {
     return crypto.createHash("sha256").update(token).digest("hex");
   }

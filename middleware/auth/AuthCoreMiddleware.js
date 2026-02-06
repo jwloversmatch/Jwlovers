@@ -1,7 +1,9 @@
-// middleware/auth/AuthCoreMiddleware.js
+// middleware/auth/AuthCoreMiddleware.js - UPDATED for multi-schema
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 const { BaseUser } = require("@models/User");
+const DatingUser = require("@models/User/datingUserSchema"); // ADD THIS
+const Profile = require("@models/Profile.model"); // ADD THIS
 const AUTH_CONFIG = require("@config/AuthConfig");
 const tokenService = require("@services/TokenService");
 const userSanitizer = require("@utils/UserSanitizer");
@@ -93,6 +95,7 @@ class AuthCoreMiddleware {
         });
       }
       
+      // Get base user
       const user = await BaseUser.findById(userId)
         .select('+role +userType +accountStatus +emailVerified')
         .lean();
@@ -130,21 +133,32 @@ class AuthCoreMiddleware {
         });
       }
       
-      if (user.userType === 'DatingUser' && !user.ageVerified) {
-        logger.warn(`Age not verified [${requestId}]`, {
-          userId: user._id.toString(),
-          email: user.email,
-          path: req.path,
-          userType: user.userType
-        });
+      // UPDATED: Age verification check now uses DatingUser instead of BaseUser
+      if (user.userType === 'DatingUser') {
+        const datingUser = await DatingUser.findById(userId).select('ageVerified').lean();
         
-        return res.status(403).json({
-          success: false,
-          error: "Age verification required for dating users",
-          code: "AGE_VERIFICATION_REQUIRED",
-          requestId
-        });
+        if (datingUser && !datingUser.ageVerified) {
+          logger.warn(`Age not verified [${requestId}]`, {
+            userId: user._id.toString(),
+            email: user.email,
+            path: req.path,
+            userType: user.userType
+          });
+          
+          return res.status(403).json({
+            success: false,
+            error: "Age verification required for dating users",
+            code: "AGE_VERIFICATION_REQUIRED",
+            requestId
+          });
+        }
       }
+      
+      // Get additional user data (profile and dating info)
+      const [profile, datingUser] = await Promise.all([
+        Profile.findOne({ userId }).lean(),
+        DatingUser.findById(userId).lean()
+      ]);
       
       req.userId = user._id;
       req.user = userSanitizer.sanitizeUser(user);
@@ -159,9 +173,28 @@ class AuthCoreMiddleware {
         userType: user.userType
       };
       
+      // Attach additional user data to request
+      req.userData = {
+        baseUser: user,
+        profile: profile,
+        datingUser: datingUser
+      };
+      
+      // Update last seen
       BaseUser.updateLastSeen(user._id).catch(err => 
         logger.error('Failed to update last seen:', err)
       );
+      
+      // Update dating stats if dating user
+      if (datingUser && user.userType === 'DatingUser') {
+        DatingUser.findByIdAndUpdate(
+          userId,
+          { 'datingStats.lastActiveDate': new Date() },
+          { new: true }
+        ).catch(err => 
+          logger.error('Failed to update dating last active:', err)
+        );
+      }
       
       if (needsRefresh) {
         process.nextTick(() => {
@@ -182,6 +215,8 @@ class AuthCoreMiddleware {
         email: user.email,
         role: user.role,
         userType: user.userType,
+        hasProfile: !!profile,
+        hasDatingProfile: !!datingUser,
         duration: `${duration}ms`,
         path: req.path,
         needsRefresh
@@ -236,7 +271,11 @@ class AuthCoreMiddleware {
           const userId = decoded.userId;
           
           if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-            const user = await BaseUser.findById(userId).lean();
+            const [user, profile, datingUser] = await Promise.all([
+              BaseUser.findById(userId).lean(),
+              Profile.findOne({ userId }).lean(),
+              DatingUser.findById(userId).lean()
+            ]);
             
             if (user && AUTH_CONFIG.ALLOWED_STATUSES.includes(user.accountStatus)) {
               req.userId = user._id;
@@ -247,10 +286,19 @@ class AuthCoreMiddleware {
                 sessionId: decoded.jti
               };
               
+              // Attach additional data
+              req.userData = {
+                baseUser: user,
+                profile: profile,
+                datingUser: datingUser
+              };
+              
               logger.debug(`Optional auth: User authenticated [${requestId}]`, {
                 userId: user._id.toString(),
                 email: user.email,
                 userType: user.userType,
+                hasProfile: !!profile,
+                hasDatingProfile: !!datingUser,
                 path: req.path
               });
             }
@@ -265,6 +313,108 @@ class AuthCoreMiddleware {
         path: req.path
       });
       next();
+    }
+  }
+
+  // NEW: Middleware to populate user data for authorized requests
+  async withUserData(req, res, next) {
+    try {
+      if (req.userId) {
+        const [profile, datingUser] = await Promise.all([
+          Profile.findOne({ userId: req.userId }).lean(),
+          DatingUser.findById(req.userId).lean()
+        ]);
+        
+        req.userData = {
+          baseUser: req.user,
+          profile: profile,
+          datingUser: datingUser
+        };
+      }
+      next();
+    } catch (error) {
+      logger.warn('Failed to populate user data:', {
+        error: error.message,
+        userId: req.userId,
+        path: req.path
+      });
+      next(); // Continue without user data
+    }
+  }
+
+  // NEW: Middleware to require profile
+  async requireProfile(req, res, next) {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({
+          success: false,
+          error: "Authentication required",
+          code: "AUTH_REQUIRED"
+        });
+      }
+
+      const profile = await Profile.findOne({ userId: req.userId });
+      
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          error: "Profile not found. Please create a profile first.",
+          code: "PROFILE_NOT_FOUND",
+          endpoint: "/api/auth/profile"
+        });
+      }
+      
+      req.profile = profile;
+      next();
+    } catch (error) {
+      logger.error('Require profile middleware error:', {
+        error: error.message,
+        userId: req.userId
+      });
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to check profile status",
+        code: "PROFILE_CHECK_ERROR"
+      });
+    }
+  }
+
+  // NEW: Middleware to require dating profile
+  async requireDatingProfile(req, res, next) {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({
+          success: false,
+          error: "Authentication required",
+          code: "AUTH_REQUIRED"
+        });
+      }
+
+      const datingUser = await DatingUser.findById(req.userId);
+      
+      if (!datingUser) {
+        return res.status(404).json({
+          success: false,
+          error: "Dating profile not found. Please create a dating profile first.",
+          code: "DATING_PROFILE_NOT_FOUND",
+          endpoint: "/api/auth/dating-profile"
+        });
+      }
+      
+      req.datingUser = datingUser;
+      next();
+    } catch (error) {
+      logger.error('Require dating profile middleware error:', {
+        error: error.message,
+        userId: req.userId
+      });
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to check dating profile status",
+        code: "DATING_PROFILE_CHECK_ERROR"
+      });
     }
   }
 }

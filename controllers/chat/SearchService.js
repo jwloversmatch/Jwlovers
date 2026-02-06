@@ -1,6 +1,6 @@
 const Message = require('@models/Message');
 const Conversation = require('@models/Conversation');
-const User = require('@models/User/User.model');
+const User = require('@models/User');
 const { applyPagination } = require('./helpers/pagination');
 
 class SearchService {

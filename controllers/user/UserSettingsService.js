@@ -1,11 +1,5 @@
-const { 
-  BaseUser, 
-  DatingUser, 
-  Moderator, 
-  Admin, 
-  SuperAdmin,
-  ROLES 
-} = require('@models/User');
+// services/UserSettingsService.js - UPDATED for multi-schema
+const { BaseUser, DatingUser } = require('@models/User');
 const logger = require('@utils/logger');
 const UserValidationService = require('./UserValidationService');
 
@@ -24,8 +18,9 @@ class UserSettingsService {
       });
     }
 
+    // Get base user settings
     const user = await BaseUser.findById(userId)
-      .select('notificationSettings privacySettings role userType');
+      .select('notificationSettings privacySettings messagingPreferences role userType');
     
     if (!user) {
       return controller.errorResponse(res, 404, "User not found", {
@@ -35,43 +30,33 @@ class UserSettingsService {
     }
 
     const settings = {
-      notificationSettings: user.notificationSettings || {},
-      privacySettings: user.privacySettings || {}
+      general: {
+        notificationSettings: user.notificationSettings || {},
+        privacySettings: user.privacySettings || {},
+        messagingPreferences: user.messagingPreferences || 'everyone'
+      }
     };
 
-    // Add role-specific settings
-    if (user.role === ROLES.USER) {
+    // Get dating settings if user has dating profile
+    if (user.userType === 'DatingUser' || user.role === 'user') {
       const datingUser = await DatingUser.findById(userId)
-        .select('datingNotificationSettings datingPrivacySettings messagingPreferences');
+        .select('datingNotificationSettings datingPrivacySettings datingPreferences');
       
       if (datingUser) {
-        settings.datingNotificationSettings = datingUser.datingNotificationSettings || {};
-        settings.datingPrivacySettings = datingUser.datingPrivacySettings || {};
-        settings.messagingPreferences = datingUser.messagingPreferences || 'everyone';
+        settings.dating = {
+          notificationSettings: datingUser.datingNotificationSettings || {},
+          privacySettings: datingUser.datingPrivacySettings || {},
+          preferences: datingUser.datingPreferences || {}
+        };
       }
-    } else if (['Moderator', 'Admin', 'SuperAdmin'].includes(user.userType)) {
-      let staffUser;
-      switch(user.userType) {
-        case 'Moderator':
-          staffUser = await Moderator.findById(userId)
-            .select('staffNotificationSettings');
-          break;
-        case 'Admin':
-          staffUser = await Admin.findById(userId)
-            .select('staffNotificationSettings');
-          break;
-        case 'SuperAdmin':
-          staffUser = await SuperAdmin.findById(userId)
-            .select('staffNotificationSettings');
-          break;
-        default:
-          staffUser = await BaseUser.findById(userId)
-            .select('staffNotificationSettings');
-      }
-      
-      if (staffUser) {
-        settings.staffNotificationSettings = staffUser.staffNotificationSettings || {};
-      }
+    }
+
+    // Get staff settings for staff users
+    if (['moderator', 'admin', 'super_admin'].includes(user.role)) {
+      settings.staff = {
+        notificationSettings: user.staffNotificationSettings || {},
+        workSettings: user.workSettings || {}
+      };
     }
 
     return controller.successResponse(res, 200, settings, null, {
@@ -81,12 +66,19 @@ class UserSettingsService {
 
   async updateSettings(req, res, controller) {
     const { 
+      // General settings
       notificationSettings, 
       privacySettings,
+      messagingPreferences,
+      
+      // Dating settings
       datingNotificationSettings,
       datingPrivacySettings,
-      messagingPreferences,
-      staffNotificationSettings
+      datingPreferences,
+      
+      // Staff settings
+      staffNotificationSettings,
+      workSettings
     } = req.body;
     
     const userId = req.userId || req.user?.id;
@@ -115,10 +107,12 @@ class UserSettingsService {
       });
     }
 
-    // Prepare updates based on user type
-    const updateData = {};
-    
-    // Common settings for all users
+    // Track what was updated
+    const updatedSections = [];
+    const baseUpdates = {};
+    const datingUpdates = {};
+
+    // ========== GENERAL SETTINGS (BaseUser) ==========
     if (notificationSettings && typeof notificationSettings === 'object') {
       if (!this.validationService.validateNotificationSettings(notificationSettings)) {
         return controller.errorResponse(res, 400, "Invalid notification settings structure", {
@@ -126,10 +120,11 @@ class UserSettingsService {
           requestId: req.requestId
         });
       }
-      updateData.notificationSettings = this.validationService.mergeSettings(
+      baseUpdates.notificationSettings = this.mergeSettings(
         user.notificationSettings || {}, 
         notificationSettings
       );
+      updatedSections.push('notificationSettings');
     }
     
     if (privacySettings && typeof privacySettings === 'object') {
@@ -139,17 +134,20 @@ class UserSettingsService {
           requestId: req.requestId
         });
       }
-      updateData.privacySettings = this.validationService.mergeSettings(
+      baseUpdates.privacySettings = this.mergeSettings(
         user.privacySettings || {}, 
         privacySettings
       );
+      updatedSections.push('privacySettings');
     }
 
-    // Role-specific settings
-    if (user.role === ROLES.USER) {
-      // Dating user specific settings
-      const datingUpdates = {};
-      
+    if (messagingPreferences && ['everyone', 'matches', 'friends', 'nobody'].includes(messagingPreferences)) {
+      baseUpdates.messagingPreferences = messagingPreferences;
+      updatedSections.push('messagingPreferences');
+    }
+
+    // ========== DATING SETTINGS (DatingUser) ==========
+    if (user.userType === 'DatingUser' || user.role === 'user') {
       if (datingNotificationSettings && typeof datingNotificationSettings === 'object') {
         if (!this.validationService.validateDatingNotificationSettings(datingNotificationSettings)) {
           return controller.errorResponse(res, 400, "Invalid dating notification settings", {
@@ -157,10 +155,11 @@ class UserSettingsService {
             requestId: req.requestId
           });
         }
-        datingUpdates.datingNotificationSettings = this.validationService.mergeSettings(
-          user.datingNotificationSettings || {}, 
+        datingUpdates.datingNotificationSettings = this.mergeSettings(
+          {}, // Start fresh since DatingUser might not exist yet
           datingNotificationSettings
         );
+        updatedSections.push('datingNotificationSettings');
       }
       
       if (datingPrivacySettings && typeof datingPrivacySettings === 'object') {
@@ -170,23 +169,30 @@ class UserSettingsService {
             requestId: req.requestId
           });
         }
-        datingUpdates.datingPrivacySettings = this.validationService.mergeSettings(
-          user.datingPrivacySettings || {}, 
+        datingUpdates.datingPrivacySettings = this.mergeSettings(
+          {},
           datingPrivacySettings
         );
+        updatedSections.push('datingPrivacySettings');
       }
       
-      if (messagingPreferences && ['everyone', 'matches_only', 'friends_only', 'disabled'].includes(messagingPreferences)) {
-        datingUpdates.messagingPreferences = messagingPreferences;
+      if (datingPreferences && typeof datingPreferences === 'object') {
+        if (!this.validationService.validateDatingPreferences(datingPreferences)) {
+          return controller.errorResponse(res, 400, "Invalid dating preferences", {
+            code: "INVALID_DATING_PREFERENCES",
+            requestId: req.requestId
+          });
+        }
+        datingUpdates.datingPreferences = this.mergeSettings(
+          {},
+          datingPreferences
+        );
+        updatedSections.push('datingPreferences');
       }
+    }
 
-      // Apply dating updates if any
-      if (Object.keys(datingUpdates).length > 0) {
-        await DatingUser.findByIdAndUpdate(userId, datingUpdates);
-      }
-      
-    } else if (['Moderator', 'Admin', 'SuperAdmin'].includes(user.userType)) {
-      // Staff specific settings
+    // ========== STAFF SETTINGS (BaseUser for staff) ==========
+    if (['moderator', 'admin', 'super_admin'].includes(user.role)) {
       if (staffNotificationSettings && typeof staffNotificationSettings === 'object') {
         if (!this.validationService.validateStaffNotificationSettings(staffNotificationSettings)) {
           return controller.errorResponse(res, 400, "Invalid staff notification settings", {
@@ -194,44 +200,134 @@ class UserSettingsService {
             requestId: req.requestId
           });
         }
-        updateData.staffNotificationSettings = this.validationService.mergeSettings(
+        baseUpdates.staffNotificationSettings = this.mergeSettings(
           user.staffNotificationSettings || {}, 
           staffNotificationSettings
         );
+        updatedSections.push('staffNotificationSettings');
+      }
+
+      if (workSettings && typeof workSettings === 'object') {
+        baseUpdates.workSettings = this.mergeSettings(
+          user.workSettings || {},
+          workSettings
+        );
+        updatedSections.push('workSettings');
       }
     }
 
-    if (Object.keys(updateData).length === 0 && 
-        Object.keys(req.body).filter(k => !['notificationSettings', 'privacySettings'].includes(k)).length === 0) {
+    // Check if any updates were provided
+    if (updatedSections.length === 0) {
       return controller.errorResponse(res, 400, "No settings provided to update", {
         code: "NO_SETTINGS_PROVIDED",
         requestId: req.requestId
       });
     }
 
-    // Update common settings
-    if (Object.keys(updateData).length > 0) {
-      await BaseUser.findByIdAndUpdate(
+    // ========== APPLY UPDATES ==========
+    try {
+      // Update BaseUser
+      if (Object.keys(baseUpdates).length > 0) {
+        await BaseUser.findByIdAndUpdate(
+          userId,
+          { $set: baseUpdates },
+          { new: true }
+        );
+      }
+
+      // Update DatingUser if updates exist and user is dating type
+      if (Object.keys(datingUpdates).length > 0) {
+        if (user.userType === 'DatingUser' || user.role === 'user') {
+          await DatingUser.findOneAndUpdate(
+            { _id: userId },
+            { $set: datingUpdates },
+            { upsert: true, new: true } // Create if doesn't exist
+          );
+        }
+      }
+
+      // Get updated settings
+      const updatedSettings = await this.getUpdatedSettings(userId);
+
+      // Log the update
+      logger.info('User settings updated', {
+        userId: userId.toString(),
+        userType: user.userType,
+        role: user.role,
+        updatedSections,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        requestId: req.requestId
+      });
+
+      return controller.successResponse(res, 200, updatedSettings, "Settings updated successfully", {
+        requestId: req.requestId,
+        updatedSections
+      });
+
+    } catch (error) {
+      logger.error('Failed to update settings:', {
         userId,
-        { $set: updateData }
-      );
+        error: error.message,
+        updatedSections,
+        requestId: req.requestId
+      });
+
+      throw error;
+    }
+  }
+
+  // Helper method to merge settings
+  mergeSettings(existing, updates) {
+    return {
+      ...existing,
+      ...updates
+    };
+  }
+
+  // Helper method to get updated settings
+  async getUpdatedSettings(userId) {
+    const user = await BaseUser.findById(userId)
+      .select('notificationSettings privacySettings messagingPreferences role userType staffNotificationSettings workSettings');
+
+    const settings = {
+      general: {
+        notificationSettings: user.notificationSettings || {},
+        privacySettings: user.privacySettings || {},
+        messagingPreferences: user.messagingPreferences || 'everyone'
+      }
+    };
+
+    // Get dating settings if applicable
+    if (user.userType === 'DatingUser' || user.role === 'user') {
+      const datingUser = await DatingUser.findById(userId)
+        .select('datingNotificationSettings datingPrivacySettings datingPreferences');
+      
+      if (datingUser) {
+        settings.dating = {
+          notificationSettings: datingUser.datingNotificationSettings || {},
+          privacySettings: datingUser.datingPrivacySettings || {},
+          preferences: datingUser.datingPreferences || {}
+        };
+      }
     }
 
-    // Get updated settings (call our own method)
-    const getSettingsResponse = await this.getSettings(req, res, controller);
-    
-    // Log the update for audit purposes
-    logger.info('User settings updated', {
-      userId: userId.toString(),
-      userType: user.userType,
-      role: user.role,
-      updatedSettings: Object.keys(req.body),
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-      requestId: req.requestId
-    });
+    // Get staff settings if applicable
+    if (['moderator', 'admin', 'super_admin'].includes(user.role)) {
+      settings.staff = {
+        notificationSettings: user.staffNotificationSettings || {},
+        workSettings: user.workSettings || {}
+      };
+    }
 
-    return getSettingsResponse;
+    return settings;
+  }
+
+  // You'll need to add these validation methods or update UserValidationService
+  validateDatingPreferences(preferences) {
+    // Basic validation for dating preferences
+    const allowedFields = ['ageRange', 'distance', 'notificationRadius', 'dealBreakers'];
+    return Object.keys(preferences).every(key => allowedFields.includes(key));
   }
 }
 

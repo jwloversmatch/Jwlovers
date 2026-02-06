@@ -12,7 +12,7 @@ const {
 const UserSettings = require("@models/UserSettings.model");
 const UserProfile = require("@models/UserProfile.model");
 const UserContact = require("@models/UserContact.model");
-const UserBlock = require("@models/UserBlock.model");
+const UserBlock = require("@models/Block.model");
 const redisClient = require("@config/redis");
 const logger = require("@utils/logger");
 

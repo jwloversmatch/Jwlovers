@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const { BaseUser, DatingUser, UserQuery } = require('@models/User');
+const { BaseUser, DatingUser} = require('@models/User');
+// const DatingUser = require('@models/User/datingUserSchema');
+const Profile = require('@models/Profile.model');
 const logger = require('@utils/logger');
 
 class SocketAuthMiddleware {
@@ -20,7 +22,9 @@ class SocketAuthMiddleware {
       totalAuthentications: 0,
       failedAuthentications: 0,
       suspiciousConnections: 0,
-      connectionsByUserType: {}
+      connectionsByUserType: {},
+      cacheHits: 0,
+      cacheMisses: 0
     };
     
     // Cleanup cache every minute
@@ -28,8 +32,13 @@ class SocketAuthMiddleware {
   }
 
   extractToken(socket) {
+    // Try multiple token sources (same as updated version)
     if (socket.handshake.auth?.token) {
       return socket.handshake.auth.token;
+    }
+    
+    if (socket.handshake.query?.token) {
+      return socket.handshake.query.token;
     }
     
     if (socket.handshake.headers?.authorization) {
@@ -39,7 +48,24 @@ class SocketAuthMiddleware {
       }
     }
     
+    // Check cookies
+    if (socket.handshake.headers?.cookie) {
+      const cookies = this.parseCookies(socket.handshake.headers.cookie);
+      if (cookies.accessToken) {
+        return cookies.accessToken;
+      }
+    }
+    
     return null;
+  }
+
+  parseCookies(cookieHeader) {
+    const cookies = {};
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, ...rest] = cookie.split('=');
+      cookies[name.trim()] = rest.join('=').trim();
+    });
+    return cookies;
   }
 
   verifyToken(token) {
@@ -203,44 +229,95 @@ class SocketAuthMiddleware {
       // Check cache first
       const cachedUser = this.userCache.get(userId);
       if (cachedUser && Date.now() - cachedUser.timestamp < this.config.USER_CACHE_TTL) {
+        this.metrics.cacheHits++;
         socket.user = cachedUser.data;
         socket.userId = userId;
+        socket.userRole = cachedUser.data.role;
+        socket.userType = cachedUser.data.userType;
         this.setupSocket(socket, clientIp, next);
         return;
       }
       
-      // Fetch user from database
-      const user = await UserQuery.getUserById(userId);
+      this.metrics.cacheMisses++;
       
-      if (!user) {
+      // Fetch user from database - SAME AS AUTHMIDDLEWARE
+      const baseUser = await BaseUser.findById(userId)
+        .select("-password")
+        .lean();
+      
+      if (!baseUser) {
         this.metrics.failedAuthentications++;
         return next(new Error('User not found'));
       }
       
       // Account validation
-      if (user.accountStatus !== 'active') {
+      if (baseUser.accountStatus !== 'active') {
+        const statusMessages = {
+          'pending_verification': 'Account requires email verification',
+          'suspended': 'Account suspended',
+          'deactivated': 'Account deactivated',
+          'banned': 'Account banned'
+        };
         this.metrics.failedAuthentications++;
-        return next(new Error(`Account is ${user.accountStatus}`));
+        return next(new Error(statusMessages[baseUser.accountStatus] || 'Account is not active'));
       }
       
-      // Age verification for dating users
-      if (user.userType === 'DatingUser') {
-        if (!user.ageVerified || !user.dateOfBirth) {
-          this.metrics.failedAuthentications++;
-          return next(new Error('Age verification required'));
-        }
+      // Get dating user and profile if exists - SAME AS AUTHMIDDLEWARE
+      let datingUser = null;
+      let profile = null;
+      
+      if (baseUser.userType === 'DatingUser') {
+        datingUser = await DatingUser.findById(userId)
+          .populate({
+            path: 'profile',
+            select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
+          })
+          .lean();
         
-        const age = this.calculateAge(new Date(user.dateOfBirth));
-        if (age < 18) {
-          this.metrics.failedAuthentications++;
-          return next(new Error('Must be 18 or older'));
+        // Extract profile from populated datingUser
+        profile = datingUser?.profile || null;
+      }
+      
+      // If no profile from datingUser, query directly by userId
+      if (!profile) {
+        profile = await Profile.findOne({ userId: userId })
+          .select('userName profilePicture profileCompletion age gender location hobbies verificationBadges bio')
+          .lean();
+      }
+      
+      // Build user object - SAME STRUCTURE AS AUTHMIDDLEWARE
+      const userData = {
+        ...baseUser,
+        // Add computed properties
+        hasDatingProfile: !!datingUser,
+        hasProfile: !!profile,
+        profileCompletion: profile?.profileCompletion || 0,
+        // Store separate for easy access
+        base: baseUser,
+        dating: datingUser,
+        profile: profile,
+        // Backward compatibility
+        _id: baseUser._id,
+        id: baseUser._id.toString(),
+        role: baseUser.role,
+        userType: baseUser.userType,
+        email: baseUser.email,
+        firstName: baseUser.firstName,
+        lastName: baseUser.lastName
+      };
+      
+      // Additional validation for dating users
+      if (baseUser.userType === 'DatingUser' && datingUser) {
+        if (!datingUser.ageVerified) {
+          logger.warn('Dating user not age verified', { userId, socketId });
+          // Don't block connection, but log it
         }
       }
       
-      // Prepare user data
-      const userData = this.prepareUserData(user);
       socket.user = userData;
-      socket.userId = user._id.toString();
+      socket.userId = baseUser._id.toString();
+      socket.userRole = baseUser.role;
+      socket.userType = baseUser.userType;
       
       // Cache user data
       this.userCache.set(userId, {
@@ -256,49 +333,12 @@ class SocketAuthMiddleware {
       logger.error('Socket auth error:', {
         socketId,
         ip: clientIp,
-        error: error.message
+        error: error.message,
+        stack: error.stack
       });
       
       next(new Error('Authentication failed'));
     }
-  }
-
-  prepareUserData(user) {
-    const baseData = {
-      id: user._id.toString(),
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      name: `${user.firstName} ${user.lastName}`.trim(),
-      userName: user.userName || `${user.firstName} ${user.lastName}`.toLowerCase().replace(/\s+/g, '.'),
-      avatar: user.avatar,
-      role: user.role,
-      userType: user.userType || 'DatingUser',
-      accountStatus: user.accountStatus,
-      emailVerified: user.emailVerified,
-      phoneVerified: user.phoneVerified
-    };
-    
-    // Add type-specific fields
-    if (user.userType === 'DatingUser') {
-      Object.assign(baseData, {
-        age: user.age,
-        ageVerified: user.ageVerified,
-        dateOfBirth: user.dateOfBirth,
-        preferences: user.preferences,
-        location: user.location,
-        sharePhone: user.sharePhone,
-        messagingPreferences: user.messagingPreferences
-      });
-    } else if (['Moderator', 'Admin', 'SuperAdmin'].includes(user.userType)) {
-      Object.assign(baseData, {
-        employeeId: user.employeeId,
-        department: user.department,
-        permissions: user.permissions || []
-      });
-    }
-    
-    return baseData;
   }
 
   setupSocket(socket, clientIp, next) {
@@ -322,10 +362,12 @@ class SocketAuthMiddleware {
     logger.info('Socket authenticated', {
       socketId: socket.id,
       userId,
-      userName: user.userName,
+      userName: user.profile?.userName || `${user.firstName} ${user.lastName}`,
       userType: user.userType,
       role: user.role,
-      ip: clientIp
+      ip: clientIp,
+      hasDatingProfile: user.hasDatingProfile,
+      hasProfile: user.hasProfile
     });
     
     next();
@@ -340,8 +382,15 @@ class SocketAuthMiddleware {
     
     if (user.userType === 'DatingUser') {
       socket.join('userType:dating');
-      if (user.preferences?.lookingFor) {
-        socket.join(`lookingFor:${user.preferences.lookingFor}`);
+      
+      // Use profile lookingFor if available
+      const lookingFor = user.profile?.lookingFor || user.dating?.datingProfile?.lookingFor;
+      if (lookingFor) {
+        if (Array.isArray(lookingFor)) {
+          lookingFor.forEach(goal => socket.join(`lookingFor:${goal}`));
+        } else {
+          socket.join(`lookingFor:${lookingFor}`);
+        }
       }
     } else if (user.userType === 'Moderator') {
       socket.join('userType:moderator');
@@ -403,14 +452,27 @@ class SocketAuthMiddleware {
 
   cleanupCache() {
     const now = Date.now();
+    let cleaned = 0;
     for (const [userId, cache] of this.userCache.entries()) {
       if (now - cache.timestamp > this.config.USER_CACHE_TTL) {
         this.userCache.delete(userId);
+        cleaned++;
       }
+    }
+    if (cleaned > 0) {
+      logger.debug(`Cleaned ${cleaned} cached socket auth entries`);
     }
   }
 
-  // Role middleware functions (keep as is, they're good)
+  invalidateUserCache(userId) {
+    const deleted = this.userCache.delete(userId);
+    if (deleted) {
+      logger.debug(`Invalidated socket auth cache for user ${userId}`);
+    }
+    return deleted;
+  }
+
+  // Role middleware functions
   requireRole(requiredRole) {
     return (socket, next) => {
       if (!socket.user) {
@@ -511,11 +573,15 @@ class SocketAuthMiddleware {
   getMetrics() {
     const total = this.metrics.totalAuthentications;
     const failed = this.metrics.failedAuthentications;
+    const cacheTotal = this.metrics.cacheHits + this.metrics.cacheMisses;
     
     return {
       ...this.metrics,
       successRate: total > 0 
         ? ((total - failed) / total * 100).toFixed(2) + '%'
+        : '0%',
+      cacheHitRate: cacheTotal > 0
+        ? ((this.metrics.cacheHits / cacheTotal) * 100).toFixed(2) + '%'
         : '0%',
       cacheSize: this.userCache.size
     };

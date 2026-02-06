@@ -1,9 +1,10 @@
-// controllers/AuthController.js - REFACTORED VERSION (Orchestrator)
+// controllers/AuthController.js - UPDATED for consistent user data structure
 const BaseController = require("../BaseController");
 const { BaseUser, ROLES } = require("@models/User");
+const DatingUser = require("@models/User/datingUserSchema");
+const Profile = require("@models/Profile.model");
 const authService = require("@services/AuthService");
 const authHelpers = require("@utils/AuthHelpers");
-const jwt = require("jsonwebtoken");
 
 // Import specialized controllers
 const registrationController = require("./RegistrationController");
@@ -41,22 +42,14 @@ class AuthController extends BaseController {
   }
 
   standardizedErrorResponse(res, statusCode, errorMessage, fieldErrors = null, additionalData = {}) {
-    // Convert object to string if needed
     let messageString;
     let finalAdditionalData = { ...additionalData };
     
     if (typeof errorMessage === 'object' && errorMessage !== null) {
-      // Extract message from object
-      messageString = errorMessage.message || 
-                      errorMessage.error || 
-                      "An error occurred";
-      
-      // If we have an object, also merge its properties into additionalData
-      // (excluding common message fields)
+      messageString = errorMessage.message || errorMessage.error || "An error occurred";
       const { message, error, ...rest } = errorMessage;
       finalAdditionalData = { ...rest, ...finalAdditionalData };
     } else {
-      // It's already a string
       messageString = String(errorMessage);
     }
 
@@ -65,7 +58,7 @@ class AuthController extends BaseController {
       message: messageString,
       statusCode,
       timestamp: new Date().toISOString(),
-      ...finalAdditionalData, // Spread additional data here
+      ...finalAdditionalData, 
     };
 
     if (fieldErrors && Object.keys(fieldErrors).length > 0) {
@@ -102,8 +95,27 @@ class AuthController extends BaseController {
       userData.isSuperAdminUser = user.role === ROLES.SUPER_ADMIN;
     }
 
-    if (user.userType === "DatingUser" && user.dateOfBirth) {
-      userData.age = this.calculateAge(new Date(user.dateOfBirth));
+    // Add profile data if available
+    if (user.profile) {
+      userData.userName = user.profile.userName;
+      userData.avatar = user.profile.profilePicture?.url || null;
+      userData.profileCompletion = user.profile.profileCompletion || 0;
+      userData.age = user.profile.age;
+    }
+
+    // Add dating data if available
+    if (user.dating) {
+      userData.ageVerified = user.dating.ageVerified;
+      userData.isPremium = user.dating.isPremium;
+      userData.hasDatingProfile = true;
+    }
+
+    // Computed properties
+    if (userData.hasDatingProfile === undefined) {
+      userData.hasDatingProfile = !!user.dating;
+    }
+    if (userData.hasProfile === undefined) {
+      userData.hasProfile = !!user.profile;
     }
 
     return userData;
@@ -184,7 +196,7 @@ class AuthController extends BaseController {
     };
   }
 
-  // ========== DELEGATION METHODS (Route handlers delegate to specialized controllers) ==========
+  // ========== DELEGATION METHODS ==========
 
   async register(req, res) {
     try {
@@ -271,36 +283,37 @@ class AuthController extends BaseController {
     }
   }
 
-  // ========== GET CURRENT USER (Kept in main controller) ==========
+  // ========== GET CURRENT USER - UPDATED TO MATCH MIDDLEWARE STRUCTURE ==========
   async getCurrentUser(req, res) {
     try {
       if (!req.userId) {
         return this.standardizedErrorResponse(res, 401, "Not authenticated");
       }
 
-      const user = await BaseUser.findById(req.userId).select(
-        "-password -refreshToken -passwordHistory -__v -securitySessionId -emailVerificationToken -emailVerificationExpires",
-      );
+      // Use same query pattern as authmiddleware
+      const baseUser = await BaseUser.findById(req.userId)
+        .select("-password -refreshToken -passwordHistory -__v -securitySessionId -emailVerificationToken -emailVerificationExpires")
+        .lean();
 
-      if (!user) {
+      if (!baseUser) {
         return this.standardizedErrorResponse(res, 404, "User not found");
       }
 
-      if (!user.isActive ||
-          (user.accountStatus && ["suspended", "banned", "deactivated"].includes(user.accountStatus))) {
+      if (!baseUser.isActive ||
+          (baseUser.accountStatus && ["suspended", "banned", "deactivated"].includes(baseUser.accountStatus))) {
         return this.standardizedErrorResponse(
           res,
           403,
-          `Account is ${user.accountStatus || "not active"}`,
+          `Account is ${baseUser.accountStatus || "not active"}`,
           null,
           {
-            accountStatus: user.accountStatus,
-            requiresVerification: !user.emailVerified
+            accountStatus: baseUser.accountStatus,
+            requiresVerification: !baseUser.emailVerified
           }
         );
       }
 
-      if (user.userType === "DatingUser" && !user.emailVerified) {
+      if (baseUser.userType === "DatingUser" && !baseUser.emailVerified) {
         return this.standardizedErrorResponse(
           res,
           403,
@@ -308,10 +321,50 @@ class AuthController extends BaseController {
           null,
           {
             requiresVerification: true,
-            accountStatus: user.accountStatus
+            accountStatus: baseUser.accountStatus
           }
         );
       }
+
+      // Get dating user and profile - SAME AS AUTHMIDDLEWARE
+      let datingUser = null;
+      let profile = null;
+
+      if (baseUser.userType === 'DatingUser') {
+        datingUser = await DatingUser.findById(req.userId)
+          .populate({
+            path: 'profile',
+            select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
+          })
+          .lean();
+        
+        profile = datingUser?.profile || null;
+      }
+
+      // If no profile from datingUser, query directly by userId
+      if (!profile) {
+        profile = await Profile.findOne({ userId: req.userId })
+          .select('userName profilePicture profileCompletion age gender location hobbies verificationBadges bio')
+          .lean();
+      }
+
+      // Build user object - SAME STRUCTURE AS AUTHMIDDLEWARE
+      const user = {
+        ...baseUser,
+        hasDatingProfile: !!datingUser,
+        hasProfile: !!profile,
+        profileCompletion: profile?.profileCompletion || 0,
+        base: baseUser,
+        dating: datingUser,
+        profile: profile,
+        _id: baseUser._id,
+        id: baseUser._id.toString(),
+        role: baseUser.role,
+        userType: baseUser.userType,
+        email: baseUser.email,
+        firstName: baseUser.firstName,
+        lastName: baseUser.lastName
+      };
 
       const accessToken = req.headers.authorization?.replace("Bearer ", "");
 
@@ -351,7 +404,7 @@ class AuthController extends BaseController {
         res,
         400,
         "Validation error",
-        fieldErrors // This is fieldErrors parameter
+        fieldErrors
       );
     }
 
