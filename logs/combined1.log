@@ -111042,3 +111042,4125 @@ TypeError: Cannot destructure property 'password' of 'req.body' as it is undefin
 2026-02-06T19:00:48.907Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
 2026-02-06T19:01:07.195Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
 2026-02-06T19:40:51.204Z [info]: Cleaning up MessageService...
+2026-02-06T22:20:14.686Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-06T22:20:14.692Z [info]:    API: 100 requests/15 minutes
+2026-02-06T22:20:14.693Z [info]:    Dating: 300 actions/1 minutes
+2026-02-06T22:20:14.695Z [info]:    Premium multiplier: 2x
+2026-02-06T22:20:14.695Z [info]:    Boost multiplier: 3x
+2026-02-06T22:20:14.697Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-06T22:20:14.698Z [info]:    API: 100 requests/15 minutes
+2026-02-06T22:20:14.698Z [info]:    Dating: 300 actions/1 minutes
+2026-02-06T22:20:14.699Z [info]:    Premium multiplier: 2x
+2026-02-06T22:20:14.700Z [info]:    Boost multiplier: 3x
+2026-02-06T22:20:14.701Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-06T22:20:14.702Z [info]:    API: 100 requests/15 minutes
+2026-02-06T22:20:14.703Z [info]:    Dating: 300 actions/1 minutes
+2026-02-06T22:20:14.704Z [info]:    Premium multiplier: 2x
+2026-02-06T22:20:14.704Z [info]:    Boost multiplier: 3x
+2026-02-06T22:20:14.705Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-06T22:20:14.706Z [info]:    API: 100 requests/15 minutes
+2026-02-06T22:20:14.706Z [info]:    Dating: 300 actions/1 minutes
+2026-02-06T22:20:14.707Z [info]:    Premium multiplier: 2x
+2026-02-06T22:20:14.707Z [info]:    Boost multiplier: 3x
+2026-02-06T22:20:14.709Z [warn]: Redis not available, using memory store for rate limiting
+2026-02-06T22:20:17.098Z [error]: Socket.IO instance is not valid. PresenceService requires a valid Socket.IO instance.
+2026-02-06T22:20:17.099Z [warn]: Redis not available, skipping subscription setup
+2026-02-06T22:20:17.100Z [info]: ✅ PresenceService initialized with optimizations
+2026-02-06T22:20:19.182Z [info]: 🔄 Initializing Redis connections...
+2026-02-06T22:20:22.982Z [info]: ✅ Redis Pub Client connected
+2026-02-06T22:20:22.986Z [info]: ✅ Redis Sub Client connected
+2026-02-06T22:20:23.000Z [info]: ✅ Redis connection test successful
+2026-02-06T22:20:23.008Z [warn]: Safety service not available, continuing without it:
+2026-02-06T22:20:23.009Z [info]: MessageService services initialized
+2026-02-06T22:20:23.013Z [info]: ✅ Redis Sub Client ready
+2026-02-06T22:20:56.567Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-06T22:21:37.676Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-06T22:21:37.678Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-06T22:21:38.053Z [debug]: User authenticated successfully
+{
+  "userId": "6970ec17124f97342f50943d",
+  "userType": "SuperAdmin",
+  "role": "super_admin",
+  "hasDatingProfile": false,
+  "hasProfile": false
+}
+2026-02-06T22:22:08.531Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-06T22:22:09.114Z [debug]: User authenticated successfully
+{
+  "userId": "6970ec17124f97342f50943d",
+  "userType": "SuperAdmin",
+  "role": "super_admin",
+  "hasDatingProfile": false,
+  "hasProfile": false
+}
+2026-02-06T22:22:09.118Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-06T22:22:09.387Z [error]: UserController error:
+TypeError: DatingUser.findById is not a function
+    at C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\user\UserController.js:435:47
+    at Array.map (<anonymous>)
+    at UserController.adminGetDeactivatedUsers (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\controllers\user\UserController.js:418:13)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+{
+  "error": "DatingUser.findById is not a function",
+  "userId": "6970ec17124f97342f50943d",
+  "path": "/admin/deactivated-users",
+  "method": "GET",
+  "requestId": "df0a83ae1a752d3b",
+  "ip": "127.0.0.1"
+}
+2026-02-06T22:25:11.146Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-06T22:36:17.857Z [info]: User 6970ec17124f97342f50943d (SuperAdmin) went offline
+2026-02-06T22:36:17.860Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-06T22:36:17.862Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-06T22:36:17.863Z [debug]: Broadcasted status update for user 6970ec17124f97342f50943d: offline
+2026-02-06T22:36:17.864Z [info]: Cleaned up stale presence for user 6970ec17124f97342f50943d (SuperAdmin)
+2026-02-07T00:16:12.235Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T00:16:12.880Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:17:02.258Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:17:02.964Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:55:04.047Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:55:04.753Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:55:28.204Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:55:31.192Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:55:31.405Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:57:11.508Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:57:52.524Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:57:52.526Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:57:53.298Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:57:53.300Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:04.465Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:07.520Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:07.522Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:07.524Z [debug]: Presence API: GET /online
+{
+  "requestId": "0aed8ae4620da94e",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:58:08.092Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:08.093Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:08.388Z [debug]: Presence API Response: GET /online 200 859ms
+{
+  "requestId": "0aed8ae4620da94e",
+  "statusCode": 200,
+  "duration": 859,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:08.391Z [debug]: Presence API Response: GET /online 200 867ms
+{
+  "requestId": "0aed8ae4620da94e",
+  "statusCode": 200,
+  "duration": 867,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:08.403Z [warn]: Dating user not age verified
+{
+  "userId": "6986f05a206a14547343e073",
+  "socketId": "tn93Rv6NC7QVmRlcAAAB"
+}
+2026-02-07T07:58:08.411Z [info]: Socket authenticated
+{
+  "socketId": "tn93Rv6NC7QVmRlcAAAB",
+  "userId": "6986f05a206a14547343e073",
+  "userName": "expressd",
+  "userType": "DatingUser",
+  "role": "user",
+  "ip": "127.0.0.1",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:08.443Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:08.444Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:08.446Z [debug]: Presence API: GET /online
+{
+  "requestId": "af110811710bb9bd",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:58:08.958Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T07:58:08.963Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T07:58:08.996Z [debug]: Broadcasted status update for user 6986f05a206a14547343e073: online
+2026-02-07T07:58:09.004Z [info]: User 6986f05a206a14547343e073 (DatingUser) came online (socket: tn93Rv6NC7QVmRlcAAAB)
+2026-02-07T07:58:09.160Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:09.161Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:09.347Z [debug]: Presence API Response: GET /online 200 902ms
+{
+  "requestId": "af110811710bb9bd",
+  "statusCode": 200,
+  "duration": 902,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:09.348Z [debug]: Presence API Response: GET /online 200 903ms
+{
+  "requestId": "af110811710bb9bd",
+  "statusCode": 200,
+  "duration": 903,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:15.842Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:15.843Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:15.844Z [debug]: Presence API: GET /online
+{
+  "requestId": "625f1a70238f8fc8",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:58:16.533Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:16.535Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:16.723Z [debug]: Presence API Response: GET /online 200 879ms
+{
+  "requestId": "625f1a70238f8fc8",
+  "statusCode": 200,
+  "duration": 879,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:16.726Z [debug]: Presence API Response: GET /online 200 882ms
+{
+  "requestId": "625f1a70238f8fc8",
+  "statusCode": 200,
+  "duration": 882,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:16.740Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:16.741Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:16.741Z [debug]: Presence API: GET /online
+{
+  "requestId": "57e4305f17e95f7b",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:58:17.380Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:17.381Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:17.593Z [debug]: Presence API Response: GET /online 200 851ms
+{
+  "requestId": "57e4305f17e95f7b",
+  "statusCode": 200,
+  "duration": 851,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:17.595Z [debug]: Presence API Response: GET /online 200 854ms
+{
+  "requestId": "57e4305f17e95f7b",
+  "statusCode": 200,
+  "duration": 854,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:42.730Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:42.731Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:42.731Z [debug]: Presence API: GET /online
+{
+  "requestId": "351e27af14ab28e2",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:58:43.481Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:43.482Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:43.707Z [debug]: Presence API Response: GET /online 200 976ms
+{
+  "requestId": "351e27af14ab28e2",
+  "statusCode": 200,
+  "duration": 976,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:43.709Z [debug]: Presence API Response: GET /online 200 977ms
+{
+  "requestId": "351e27af14ab28e2",
+  "statusCode": 200,
+  "duration": 977,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:43.716Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:43.717Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:43.718Z [debug]: Presence API: GET /online
+{
+  "requestId": "d11c81af33f535a2",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:58:44.940Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:58:44.942Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:58:45.136Z [debug]: Presence API Response: GET /online 200 1419ms
+{
+  "requestId": "d11c81af33f535a2",
+  "statusCode": 200,
+  "duration": 1419,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:58:45.139Z [debug]: Presence API Response: GET /online 200 1422ms
+{
+  "requestId": "d11c81af33f535a2",
+  "statusCode": 200,
+  "duration": 1422,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:59:07.461Z [debug]: Flushed 1 batched presence updates
+2026-02-07T07:59:16.458Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:16.466Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:17.120Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:17.135Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:17.423Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:17.666Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:18.093Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:18.639Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:33.342Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:33.343Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:33.344Z [debug]: Presence API: GET /online
+{
+  "requestId": "e884437f9435bd07",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:59:34.079Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:34.080Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:34.293Z [debug]: Presence API Response: GET /online 200 949ms
+{
+  "requestId": "e884437f9435bd07",
+  "statusCode": 200,
+  "duration": 949,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:59:34.294Z [debug]: Presence API Response: GET /online 200 950ms
+{
+  "requestId": "e884437f9435bd07",
+  "statusCode": 200,
+  "duration": 950,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:59:34.302Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:34.303Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:34.304Z [debug]: Presence API: GET /online
+{
+  "requestId": "2fb608ab40ba2593",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T07:59:35.104Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:35.106Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:35.323Z [debug]: Presence API Response: GET /online 200 1020ms
+{
+  "requestId": "2fb608ab40ba2593",
+  "statusCode": 200,
+  "duration": 1020,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:59:35.325Z [debug]: Presence API Response: GET /online 200 1021ms
+{
+  "requestId": "2fb608ab40ba2593",
+  "statusCode": 200,
+  "duration": 1021,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T07:59:36.402Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:36.403Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:36.967Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:37.289Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:37.292Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T07:59:37.482Z [debug]: Flushed 1 batched presence updates
+2026-02-07T07:59:37.888Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T07:59:41.638Z [info]: User 6986f05a206a14547343e073 (DatingUser) went offline
+2026-02-07T07:59:41.640Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T07:59:41.640Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T07:59:41.641Z [debug]: Broadcasted status update for user 6986f05a206a14547343e073: offline
+2026-02-07T08:04:06.980Z [debug]: Cleaned 1 cached socket auth entries
+2026-02-07T08:21:44.996Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T08:21:45.003Z [info]:    API: 100 requests/15 minutes
+2026-02-07T08:21:45.003Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T08:21:45.004Z [info]:    Premium multiplier: 2x
+2026-02-07T08:21:45.004Z [info]:    Boost multiplier: 3x
+2026-02-07T08:21:45.004Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T08:21:45.005Z [info]:    API: 100 requests/15 minutes
+2026-02-07T08:21:45.005Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T08:21:45.005Z [info]:    Premium multiplier: 2x
+2026-02-07T08:21:45.006Z [info]:    Boost multiplier: 3x
+2026-02-07T08:21:45.006Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T08:21:45.006Z [info]:    API: 100 requests/15 minutes
+2026-02-07T08:21:45.007Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T08:21:45.007Z [info]:    Premium multiplier: 2x
+2026-02-07T08:21:45.007Z [info]:    Boost multiplier: 3x
+2026-02-07T08:21:45.007Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T08:21:45.007Z [info]:    API: 100 requests/15 minutes
+2026-02-07T08:21:45.008Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T08:21:45.008Z [info]:    Premium multiplier: 2x
+2026-02-07T08:21:45.008Z [info]:    Boost multiplier: 3x
+2026-02-07T08:21:45.008Z [warn]: Redis not available, using memory store for rate limiting
+2026-02-07T08:21:46.918Z [error]: Socket.IO instance is not valid. PresenceService requires a valid Socket.IO instance.
+2026-02-07T08:21:46.919Z [warn]: Redis not available, skipping subscription setup
+2026-02-07T08:21:46.919Z [info]: ✅ PresenceService initialized with optimizations
+2026-02-07T08:21:47.380Z [info]: 🔄 Initializing Redis connections...
+2026-02-07T08:21:47.918Z [info]: ✅ Redis Pub Client connected
+2026-02-07T08:21:47.920Z [info]: ✅ Redis Sub Client connected
+2026-02-07T08:21:47.924Z [info]: ✅ Redis connection test successful
+2026-02-07T08:21:47.931Z [warn]: Safety service not available, continuing without it:
+2026-02-07T08:21:47.933Z [info]: MessageService services initialized
+2026-02-07T08:21:47.937Z [info]: ✅ Redis Sub Client ready
+2026-02-07T09:52:09.561Z [error]: Cleanup stale presence error: connection <monitor> to 20.36.142.157:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.36.142.157:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "region": "US_EAST_2",
+          "provider": "AZURE",
+          "workloadType": "OPERATIONAL",
+          "availabilityZone": "1",
+          "diskState": "READY"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 229.3,
+        "minRoundTripTime": 175,
+        "lastUpdateTime": 442545216,
+        "lastWriteDate": {
+          "$date": "2026-02-07T09:52:05Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6984f762050be79907c5b156"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1770457925,
+              "i": 4
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 97,
+              "1": 180,
+              "2": 36,
+              "3": 19,
+              "4": 50,
+              "5": 55,
+              "6": 173,
+              "7": 86,
+              "8": 208,
+              "9": 220,
+              "10": 111,
+              "11": 129,
+              "12": 75,
+              "13": 121,
+              "14": 40,
+              "15": 244,
+              "16": 55,
+              "17": 56,
+              "18": 3,
+              "19": 171
+            },
+            "keyId": 7564130753416528000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "workloadType": "OPERATIONAL",
+          "diskState": "READY",
+          "region": "US_EAST_2",
+          "nodeType": "ELECTABLE",
+          "availabilityZone": "2",
+          "provider": "AZURE"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 230.3,
+        "minRoundTripTime": 177,
+        "lastUpdateTime": 442545032,
+        "lastWriteDate": {
+          "$date": "2026-02-07T09:52:05Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6984f7c01b0c22ae7a478f5b"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1770457925,
+              "i": 4
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 97,
+              "1": 180,
+              "2": 36,
+              "3": 19,
+              "4": 50,
+              "5": 55,
+              "6": 173,
+              "7": 86,
+              "8": 208,
+              "9": 220,
+              "10": 111,
+              "11": 129,
+              "12": 75,
+              "13": 121,
+              "14": 40,
+              "15": 244,
+              "16": 55,
+              "17": 56,
+              "18": 3,
+              "19": 171
+            },
+            "keyId": 7564130753416528000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 442541557,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-07T09:56:42.431Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:45.714Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:45.718Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:45.721Z [debug]: Presence API: GET /online
+{
+  "requestId": "4f5338554587d313",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T09:56:46.422Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T09:56:46.424Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:46.756Z [debug]: Presence API Response: GET /online 200 1036ms
+{
+  "requestId": "4f5338554587d313",
+  "statusCode": 200,
+  "duration": 1036,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T09:56:46.759Z [debug]: Presence API Response: GET /online 200 1039ms
+{
+  "requestId": "4f5338554587d313",
+  "statusCode": 200,
+  "duration": 1039,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T09:56:46.777Z [warn]: Dating user not age verified
+{
+  "userId": "6986f05a206a14547343e073",
+  "socketId": "_V0wVBTXhQd_CIPuAAAB"
+}
+2026-02-07T09:56:46.782Z [info]: Socket authenticated
+{
+  "socketId": "_V0wVBTXhQd_CIPuAAAB",
+  "userId": "6986f05a206a14547343e073",
+  "userName": "expressd",
+  "userType": "DatingUser",
+  "role": "user",
+  "ip": "127.0.0.1",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T09:56:46.807Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:46.809Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:46.810Z [debug]: Presence API: GET /online
+{
+  "requestId": "d405b4851512bf72",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T09:56:47.631Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T09:56:47.634Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T09:56:47.635Z [debug]: Broadcasted status update for user 6986f05a206a14547343e073: online
+2026-02-07T09:56:47.635Z [info]: User 6986f05a206a14547343e073 (DatingUser) came online (socket: _V0wVBTXhQd_CIPuAAAB)
+2026-02-07T09:56:48.014Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T09:56:48.017Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T09:56:48.381Z [debug]: Presence API Response: GET /online 200 1571ms
+{
+  "requestId": "d405b4851512bf72",
+  "statusCode": 200,
+  "duration": 1571,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T09:56:48.382Z [debug]: Presence API Response: GET /online 200 1572ms
+{
+  "requestId": "d405b4851512bf72",
+  "statusCode": 200,
+  "duration": 1572,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T09:57:32.270Z [debug]: Flushed 1 batched presence updates
+2026-02-07T09:58:02.262Z [debug]: Flushed 1 batched presence updates
+2026-02-07T09:58:32.266Z [debug]: Flushed 1 batched presence updates
+2026-02-07T09:59:02.282Z [debug]: Flushed 1 batched presence updates
+2026-02-07T09:59:32.293Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:00:02.300Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:00:32.318Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:01:02.342Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:01:32.350Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:02:02.062Z [debug]: Cleaned 1 cached socket auth entries
+2026-02-07T10:02:02.356Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:02:22.194Z [info]: User 6986f05a206a14547343e073 (DatingUser) went offline
+2026-02-07T10:02:22.195Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T10:02:22.196Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T10:02:22.196Z [debug]: Broadcasted status update for user 6986f05a206a14547343e073: offline
+2026-02-07T10:10:03.082Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:03.084Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:03.084Z [debug]: Presence API: GET /online
+{
+  "requestId": "4f45101122ae5b32",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:03.585Z [warn]: Dating user not age verified
+{
+  "userId": "6986f05a206a14547343e073",
+  "socketId": "--v5SE82SpIWiaLJAAAE"
+}
+2026-02-07T10:10:03.585Z [info]: Socket authenticated
+{
+  "socketId": "--v5SE82SpIWiaLJAAAE",
+  "userId": "6986f05a206a14547343e073",
+  "userName": "expressd",
+  "userType": "DatingUser",
+  "role": "user",
+  "ip": "127.0.0.1",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:03.631Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:03.632Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:03.812Z [debug]: Presence API Response: GET /online 200 728ms
+{
+  "requestId": "4f45101122ae5b32",
+  "statusCode": 200,
+  "duration": 728,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:03.813Z [debug]: Presence API Response: GET /online 200 729ms
+{
+  "requestId": "4f45101122ae5b32",
+  "statusCode": 200,
+  "duration": 729,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:03.825Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:03.830Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:03.832Z [debug]: Presence API: GET /online
+{
+  "requestId": "3af8a3ea62358060",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:03.961Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T10:10:03.962Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T10:10:03.962Z [debug]: Broadcasted status update for user 6986f05a206a14547343e073: online
+2026-02-07T10:10:03.962Z [info]: User 6986f05a206a14547343e073 (DatingUser) came online (socket: --v5SE82SpIWiaLJAAAE)
+2026-02-07T10:10:04.366Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:04.384Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:04.424Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:04.425Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:04.609Z [debug]: Presence API Response: GET /online 200 778ms
+{
+  "requestId": "3af8a3ea62358060",
+  "statusCode": 200,
+  "duration": 778,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:04.610Z [debug]: Presence API Response: GET /online 200 779ms
+{
+  "requestId": "3af8a3ea62358060",
+  "statusCode": 200,
+  "duration": 779,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:04.920Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:04.933Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:05.139Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:05.327Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:05.716Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:05.916Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:06.321Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:06.322Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:06.323Z [debug]: Presence API: GET /online
+{
+  "requestId": "d0af2eb3ebdb82fe",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:06.867Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:06.868Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:07.050Z [debug]: Presence API Response: GET /online 200 727ms
+{
+  "requestId": "d0af2eb3ebdb82fe",
+  "statusCode": 200,
+  "duration": 727,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:07.051Z [debug]: Presence API Response: GET /online 200 727ms
+{
+  "requestId": "d0af2eb3ebdb82fe",
+  "statusCode": 200,
+  "duration": 727,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:07.064Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:07.072Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:07.078Z [debug]: Presence API: GET /online
+{
+  "requestId": "e753f340344a410f",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:07.955Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:07.964Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:08.148Z [debug]: Presence API Response: GET /online 200 1071ms
+{
+  "requestId": "e753f340344a410f",
+  "statusCode": 200,
+  "duration": 1071,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:08.149Z [debug]: Presence API Response: GET /online 200 1072ms
+{
+  "requestId": "e753f340344a410f",
+  "statusCode": 200,
+  "duration": 1072,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:09.680Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:09.680Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:09.681Z [debug]: Presence API: GET /online
+{
+  "requestId": "2e121d41b68c6a39",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:10.237Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:10.238Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:10.446Z [debug]: Presence API Response: GET /online 200 765ms
+{
+  "requestId": "2e121d41b68c6a39",
+  "statusCode": 200,
+  "duration": 765,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:10.462Z [debug]: Presence API Response: GET /online 200 781ms
+{
+  "requestId": "2e121d41b68c6a39",
+  "statusCode": 200,
+  "duration": 781,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:10.516Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:10.520Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:10.521Z [debug]: Presence API: GET /online
+{
+  "requestId": "033ae440683cd70b",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:11.077Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:11.080Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:11.270Z [debug]: Presence API Response: GET /online 200 749ms
+{
+  "requestId": "033ae440683cd70b",
+  "statusCode": 200,
+  "duration": 749,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:11.271Z [debug]: Presence API Response: GET /online 200 750ms
+{
+  "requestId": "033ae440683cd70b",
+  "statusCode": 200,
+  "duration": 750,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:15.700Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:15.701Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:15.701Z [debug]: Presence API: GET /online
+{
+  "requestId": "7815d894dadfb550",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:16.233Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:16.234Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:16.417Z [debug]: Presence API Response: GET /online 200 716ms
+{
+  "requestId": "7815d894dadfb550",
+  "statusCode": 200,
+  "duration": 716,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:16.418Z [debug]: Presence API Response: GET /online 200 717ms
+{
+  "requestId": "7815d894dadfb550",
+  "statusCode": 200,
+  "duration": 717,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:16.424Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:16.425Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:16.425Z [debug]: Presence API: GET /online
+{
+  "requestId": "83fbd7b869cf13df",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:16.959Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:16.960Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:17.144Z [debug]: Presence API Response: GET /online 200 719ms
+{
+  "requestId": "83fbd7b869cf13df",
+  "statusCode": 200,
+  "duration": 719,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:17.145Z [debug]: Presence API Response: GET /online 200 720ms
+{
+  "requestId": "83fbd7b869cf13df",
+  "statusCode": 200,
+  "duration": 720,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:45.002Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.010Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.024Z [error]: Authentication error:
+2026-02-07T10:10:45.039Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.043Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.047Z [error]: Authentication error:
+2026-02-07T10:10:45.057Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.057Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.263Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:45.280Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:46.358Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:46.359Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:46.359Z [debug]: Presence API: GET /online
+{
+  "requestId": "16eedabf35240cad",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:10:46.927Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:10:46.929Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:10:47.109Z [debug]: Presence API Response: GET /online 200 750ms
+{
+  "requestId": "16eedabf35240cad",
+  "statusCode": 200,
+  "duration": 750,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:47.110Z [debug]: Presence API Response: GET /online 200 750ms
+{
+  "requestId": "16eedabf35240cad",
+  "statusCode": 200,
+  "duration": 750,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:10:52.025Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:02.471Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:11:15.540Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:16.665Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:16.666Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:16.666Z [debug]: Presence API: GET /online
+{
+  "requestId": "84bc87b7e62284e0",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:11:17.203Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:17.204Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:17.394Z [debug]: Presence API Response: GET /online 200 728ms
+{
+  "requestId": "84bc87b7e62284e0",
+  "statusCode": 200,
+  "duration": 728,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:11:17.402Z [debug]: Presence API Response: GET /online 200 736ms
+{
+  "requestId": "84bc87b7e62284e0",
+  "statusCode": 200,
+  "duration": 736,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:11:17.852Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:17.853Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:17.853Z [debug]: Presence API: GET /online
+{
+  "requestId": "59ae0a0f4c46a54a",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:11:18.467Z [info]: Socket authenticated
+{
+  "socketId": "Ez5XoB-Wv0KW8PW5AAAH",
+  "userId": "6984f0b46774efdca948de71",
+  "userName": "Jeremiah Ezeh",
+  "userType": "DatingUser",
+  "role": "user",
+  "ip": "127.0.0.1",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:18.835Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T10:11:18.836Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T10:11:18.836Z [debug]: Broadcasted status update for user 6984f0b46774efdca948de71: online
+2026-02-07T10:11:18.837Z [info]: User 6984f0b46774efdca948de71 (DatingUser) came online (socket: Ez5XoB-Wv0KW8PW5AAAH)
+2026-02-07T10:11:19.037Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:19.038Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:19.232Z [debug]: Presence API Response: GET /online 200 1379ms
+{
+  "requestId": "59ae0a0f4c46a54a",
+  "statusCode": 200,
+  "duration": 1379,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:19.235Z [debug]: Presence API Response: GET /online 200 1382ms
+{
+  "requestId": "59ae0a0f4c46a54a",
+  "statusCode": 200,
+  "duration": 1382,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:19.251Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:19.252Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:19.253Z [debug]: Presence API: GET /online
+{
+  "requestId": "cd0fd50124fc2bf0",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:11:19.808Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:19.808Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:19.991Z [debug]: Presence API Response: GET /online 200 739ms
+{
+  "requestId": "cd0fd50124fc2bf0",
+  "statusCode": 200,
+  "duration": 739,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:19.992Z [debug]: Presence API Response: GET /online 200 740ms
+{
+  "requestId": "cd0fd50124fc2bf0",
+  "statusCode": 200,
+  "duration": 740,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:28.692Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:28.693Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:28.693Z [debug]: Presence API: GET /online
+{
+  "requestId": "75f6ce3e6e55b08e",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:11:29.507Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:29.507Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:29.685Z [debug]: Presence API Response: GET /online 200 992ms
+{
+  "requestId": "75f6ce3e6e55b08e",
+  "statusCode": 200,
+  "duration": 992,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:29.685Z [debug]: Presence API Response: GET /online 200 992ms
+{
+  "requestId": "75f6ce3e6e55b08e",
+  "statusCode": 200,
+  "duration": 992,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:29.689Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:29.690Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:29.690Z [debug]: Presence API: GET /online
+{
+  "requestId": "9ee7b9a77e4ed8fb",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:11:30.534Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:30.536Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:30.729Z [debug]: Presence API Response: GET /online 200 1039ms
+{
+  "requestId": "9ee7b9a77e4ed8fb",
+  "statusCode": 200,
+  "duration": 1039,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:30.732Z [debug]: Presence API Response: GET /online 200 1042ms
+{
+  "requestId": "9ee7b9a77e4ed8fb",
+  "statusCode": 200,
+  "duration": 1042,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:32.476Z [debug]: Flushed 1 batched presence updates
+2026-02-07T10:11:46.356Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:46.357Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:46.357Z [debug]: Presence API: GET /online
+{
+  "requestId": "e75b664f6d73fd54",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:11:46.359Z [error]: Authentication error:
+2026-02-07T10:11:46.359Z [debug]: Presence API Response: GET /online 401 2ms
+{
+  "requestId": "e75b664f6d73fd54",
+  "statusCode": 401,
+  "duration": 2
+}
+2026-02-07T10:11:46.360Z [debug]: Presence API Response: GET /online 401 3ms
+{
+  "requestId": "e75b664f6d73fd54",
+  "statusCode": 401,
+  "duration": 3
+}
+2026-02-07T10:11:46.679Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:46.679Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:47.290Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:47.292Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:47.293Z [debug]: Presence API: GET /online
+{
+  "requestId": "b94236bea54b90fa",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:11:47.838Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:47.839Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:47.846Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:47.846Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:47.846Z [debug]: Presence API: GET /online
+{
+  "requestId": "831c4f6485101437",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:11:48.038Z [debug]: Presence API Response: GET /online 200 745ms
+{
+  "requestId": "b94236bea54b90fa",
+  "statusCode": 200,
+  "duration": 745,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:11:48.045Z [debug]: Presence API Response: GET /online 200 752ms
+{
+  "requestId": "b94236bea54b90fa",
+  "statusCode": 200,
+  "duration": 752,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:11:48.424Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:48.425Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:48.605Z [debug]: Presence API Response: GET /online 200 759ms
+{
+  "requestId": "831c4f6485101437",
+  "statusCode": 200,
+  "duration": 759,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:48.606Z [debug]: Presence API Response: GET /online 200 760ms
+{
+  "requestId": "831c4f6485101437",
+  "statusCode": 200,
+  "duration": 760,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:48.612Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:48.613Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:48.614Z [debug]: Presence API: GET /online
+{
+  "requestId": "501df090c59bc5f0",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:11:49.157Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:11:49.158Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:11:49.341Z [debug]: Presence API Response: GET /online 200 727ms
+{
+  "requestId": "501df090c59bc5f0",
+  "statusCode": 200,
+  "duration": 727,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:11:49.342Z [debug]: Presence API Response: GET /online 200 728ms
+{
+  "requestId": "501df090c59bc5f0",
+  "statusCode": 200,
+  "duration": 728,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:00.802Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:00.803Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:00.803Z [debug]: Presence API: GET /online
+{
+  "requestId": "bd0302286ce776cf",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:12:01.348Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:01.349Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:01.526Z [debug]: Presence API Response: GET /online 200 723ms
+{
+  "requestId": "bd0302286ce776cf",
+  "statusCode": 200,
+  "duration": 723,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:01.527Z [debug]: Presence API Response: GET /online 200 724ms
+{
+  "requestId": "bd0302286ce776cf",
+  "statusCode": 200,
+  "duration": 724,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:02.664Z [debug]: Flushed 2 batched presence updates
+2026-02-07T10:12:16.703Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:16.704Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:16.705Z [debug]: Presence API: GET /online
+{
+  "requestId": "41dbfb8dc5c2571c",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:12:17.250Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:17.252Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:17.436Z [debug]: Presence API Response: GET /online 200 731ms
+{
+  "requestId": "41dbfb8dc5c2571c",
+  "statusCode": 200,
+  "duration": 731,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:12:17.437Z [debug]: Presence API Response: GET /online 200 732ms
+{
+  "requestId": "41dbfb8dc5c2571c",
+  "statusCode": 200,
+  "duration": 732,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:12:32.676Z [debug]: Flushed 2 batched presence updates
+2026-02-07T10:12:44.581Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:44.584Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:44.585Z [debug]: Presence API: GET /online
+{
+  "requestId": "6a7d5a9d0001077c",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:12:45.127Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:45.127Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:45.321Z [debug]: Presence API Response: GET /online 200 736ms
+{
+  "requestId": "6a7d5a9d0001077c",
+  "statusCode": 200,
+  "duration": 736,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:45.324Z [debug]: Presence API Response: GET /online 200 739ms
+{
+  "requestId": "6a7d5a9d0001077c",
+  "statusCode": 200,
+  "duration": 739,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:45.331Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:45.334Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:45.334Z [debug]: Presence API: GET /online
+{
+  "requestId": "0b10c751dc417fb2",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0"
+}
+2026-02-07T10:12:45.876Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:45.878Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:46.073Z [debug]: Presence API Response: GET /online 200 739ms
+{
+  "requestId": "0b10c751dc417fb2",
+  "statusCode": 200,
+  "duration": 739,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:46.075Z [debug]: Presence API Response: GET /online 200 741ms
+{
+  "requestId": "0b10c751dc417fb2",
+  "statusCode": 200,
+  "duration": 741,
+  "userId": "6984f0b46774efdca948de71"
+}
+2026-02-07T10:12:46.357Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:46.358Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:46.358Z [debug]: Presence API: GET /online
+{
+  "requestId": "9317833337bedd2e",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:12:47.201Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:47.202Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:47.385Z [debug]: Presence API Response: GET /online 200 1027ms
+{
+  "requestId": "9317833337bedd2e",
+  "statusCode": 200,
+  "duration": 1027,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:12:47.386Z [debug]: Presence API Response: GET /online 200 1028ms
+{
+  "requestId": "9317833337bedd2e",
+  "statusCode": 200,
+  "duration": 1028,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:12:48.526Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:48.527Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:49.064Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:49.263Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:49.273Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:12:49.834Z [debug]: User authenticated successfully
+{
+  "userId": "6984f0b46774efdca948de71",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:12:53.790Z [info]: User 6984f0b46774efdca948de71 (DatingUser) went offline
+2026-02-07T10:12:53.792Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T10:12:53.793Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T10:12:53.794Z [debug]: Broadcasted status update for user 6984f0b46774efdca948de71: offline
+2026-02-07T10:13:04.088Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T10:13:04.095Z [info]:    API: 100 requests/15 minutes
+2026-02-07T10:13:04.095Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T10:13:04.096Z [info]:    Premium multiplier: 2x
+2026-02-07T10:13:04.096Z [info]:    Boost multiplier: 3x
+2026-02-07T10:13:04.097Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T10:13:04.097Z [info]:    API: 100 requests/15 minutes
+2026-02-07T10:13:04.097Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T10:13:04.098Z [info]:    Premium multiplier: 2x
+2026-02-07T10:13:04.098Z [info]:    Boost multiplier: 3x
+2026-02-07T10:13:04.098Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T10:13:04.099Z [info]:    API: 100 requests/15 minutes
+2026-02-07T10:13:04.099Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T10:13:04.099Z [info]:    Premium multiplier: 2x
+2026-02-07T10:13:04.099Z [info]:    Boost multiplier: 3x
+2026-02-07T10:13:04.100Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T10:13:04.100Z [info]:    API: 100 requests/15 minutes
+2026-02-07T10:13:04.100Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T10:13:04.100Z [info]:    Premium multiplier: 2x
+2026-02-07T10:13:04.100Z [info]:    Boost multiplier: 3x
+2026-02-07T10:13:04.101Z [warn]: Redis not available, using memory store for rate limiting
+2026-02-07T10:13:07.222Z [error]: Socket.IO instance is not valid. PresenceService requires a valid Socket.IO instance.
+2026-02-07T10:13:07.223Z [warn]: Redis not available, skipping subscription setup
+2026-02-07T10:13:07.223Z [info]: ✅ PresenceService initialized with optimizations
+2026-02-07T10:13:07.749Z [info]: 🔄 Initializing Redis connections...
+2026-02-07T10:13:08.663Z [info]: ✅ Redis Pub Client connected
+2026-02-07T10:13:08.670Z [info]: ✅ Redis Sub Client connected
+2026-02-07T10:13:08.720Z [warn]: Socket auth failed: Invalid token
+{
+  "socketId": "GrrdBtL-6WQ1uj6hAAAB",
+  "ip": "127.0.0.1",
+  "error": "jwt expired"
+}
+2026-02-07T10:13:08.731Z [info]: ✅ Redis connection test successful
+2026-02-07T10:13:08.733Z [warn]: Safety service not available, continuing without it:
+2026-02-07T10:13:08.734Z [info]: MessageService services initialized
+2026-02-07T10:13:16.677Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:13:16.678Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:13:16.679Z [debug]: Presence API: GET /online
+{
+  "requestId": "5ed273f7d57ee41c",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:13:17.242Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:13:17.243Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:13:17.484Z [debug]: Presence API Response: GET /online 200 805ms
+{
+  "requestId": "5ed273f7d57ee41c",
+  "statusCode": 200,
+  "duration": 805,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:13:17.485Z [debug]: Presence API Response: GET /online 200 806ms
+{
+  "requestId": "5ed273f7d57ee41c",
+  "statusCode": 200,
+  "duration": 806,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:14:10.390Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:14:10.392Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:14:10.393Z [debug]: Presence API: GET /online
+{
+  "requestId": "ee4909bae5a5c93c",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:14:10.954Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:14:10.957Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:14:11.161Z [debug]: Presence API Response: GET /online 200 768ms
+{
+  "requestId": "ee4909bae5a5c93c",
+  "statusCode": 200,
+  "duration": 768,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:14:11.163Z [debug]: Presence API Response: GET /online 200 770ms
+{
+  "requestId": "ee4909bae5a5c93c",
+  "statusCode": 200,
+  "duration": 770,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:14:22.729Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:14:22.730Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:14:22.730Z [debug]: Presence API: GET /online
+{
+  "requestId": "a264ed04e390a82d",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:14:24.206Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:14:24.207Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:14:24.398Z [debug]: Presence API Response: GET /online 200 1668ms
+{
+  "requestId": "a264ed04e390a82d",
+  "statusCode": 200,
+  "duration": 1668,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:14:24.399Z [debug]: Presence API Response: GET /online 200 1669ms
+{
+  "requestId": "a264ed04e390a82d",
+  "statusCode": 200,
+  "duration": 1669,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:15:22.485Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:15:22.485Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:15:22.486Z [debug]: Presence API: GET /online
+{
+  "requestId": "763aae45ae75d7b8",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:15:23.031Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:15:23.033Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:15:23.215Z [debug]: Presence API Response: GET /online 200 729ms
+{
+  "requestId": "763aae45ae75d7b8",
+  "statusCode": 200,
+  "duration": 729,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:15:23.216Z [debug]: Presence API Response: GET /online 200 730ms
+{
+  "requestId": "763aae45ae75d7b8",
+  "statusCode": 200,
+  "duration": 730,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:16:22.712Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:16:22.712Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:16:22.713Z [debug]: Presence API: GET /online
+{
+  "requestId": "d5e453023c9b563f",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:16:23.256Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:16:23.256Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:16:23.442Z [debug]: Presence API Response: GET /online 200 729ms
+{
+  "requestId": "d5e453023c9b563f",
+  "statusCode": 200,
+  "duration": 729,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:16:23.442Z [debug]: Presence API Response: GET /online 200 729ms
+{
+  "requestId": "d5e453023c9b563f",
+  "statusCode": 200,
+  "duration": 729,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:17:22.396Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:17:22.397Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:17:22.398Z [debug]: Presence API: GET /online
+{
+  "requestId": "5e08a9e68fd2da36",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:17:22.956Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:17:22.956Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:17:23.144Z [debug]: Presence API Response: GET /online 200 746ms
+{
+  "requestId": "5e08a9e68fd2da36",
+  "statusCode": 200,
+  "duration": 746,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:17:23.145Z [debug]: Presence API Response: GET /online 200 746ms
+{
+  "requestId": "5e08a9e68fd2da36",
+  "statusCode": 200,
+  "duration": 746,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:18:22.703Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:18:22.705Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:18:22.705Z [debug]: Presence API: GET /online
+{
+  "requestId": "0be663694467b858",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:18:23.251Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:18:23.252Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:18:23.435Z [debug]: Presence API Response: GET /online 200 730ms
+{
+  "requestId": "0be663694467b858",
+  "statusCode": 200,
+  "duration": 730,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:18:23.436Z [debug]: Presence API Response: GET /online 200 731ms
+{
+  "requestId": "0be663694467b858",
+  "statusCode": 200,
+  "duration": 731,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:19:22.404Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:19:22.405Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:19:22.405Z [debug]: Presence API: GET /online
+{
+  "requestId": "341ac5f8f36a96c7",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:19:22.950Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:19:22.951Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:19:23.135Z [debug]: Presence API Response: GET /online 200 730ms
+{
+  "requestId": "341ac5f8f36a96c7",
+  "statusCode": 200,
+  "duration": 730,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:19:23.136Z [debug]: Presence API Response: GET /online 200 730ms
+{
+  "requestId": "341ac5f8f36a96c7",
+  "statusCode": 200,
+  "duration": 730,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:20:22.732Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:20:22.733Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:20:22.733Z [debug]: Presence API: GET /online
+{
+  "requestId": "6b62e229f1d0adbb",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:20:23.273Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:20:23.274Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:20:23.453Z [debug]: Presence API Response: GET /online 200 720ms
+{
+  "requestId": "6b62e229f1d0adbb",
+  "statusCode": 200,
+  "duration": 720,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:20:23.454Z [debug]: Presence API Response: GET /online 200 721ms
+{
+  "requestId": "6b62e229f1d0adbb",
+  "statusCode": 200,
+  "duration": 721,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:21:22.407Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:21:22.408Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:21:22.408Z [debug]: Presence API: GET /online
+{
+  "requestId": "f5afa2867f8c620a",
+  "ip": "127.0.0.1",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+}
+2026-02-07T10:21:22.953Z [debug]: User authenticated successfully
+{
+  "userId": "6986f05a206a14547343e073",
+  "userType": "DatingUser",
+  "role": "user",
+  "hasDatingProfile": true,
+  "hasProfile": true
+}
+2026-02-07T10:21:22.953Z [debug]: Rate limit skipped for whitelisted IP: 127.0.0.1
+2026-02-07T10:21:23.137Z [debug]: Presence API Response: GET /online 200 729ms
+{
+  "requestId": "f5afa2867f8c620a",
+  "statusCode": 200,
+  "duration": 729,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:21:23.138Z [debug]: Presence API Response: GET /online 200 730ms
+{
+  "requestId": "f5afa2867f8c620a",
+  "statusCode": 200,
+  "duration": 730,
+  "userId": "6986f05a206a14547343e073"
+}
+2026-02-07T10:27:07.879Z [info]: User 6986f05a206a14547343e073 (DatingUser) went offline
+2026-02-07T10:27:07.880Z [warn]: Socket.IO not initialized, cannot emit
+2026-02-07T10:27:07.880Z [warn]: Socket.IO not initialized, cannot emit to room
+2026-02-07T10:27:07.880Z [debug]: Broadcasted status update for user 6986f05a206a14547343e073: offline
+2026-02-07T10:27:07.881Z [info]: Cleaned up stale presence for user 6986f05a206a14547343e073 (DatingUser)
+2026-02-07T11:24:12.879Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 448070344,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 448070338,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 448070338,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-07T14:31:01.584Z [error]: Cleanup stale presence error: connection <monitor> to 20.36.142.157:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.36.142.157:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459274545,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459274542,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459274544,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-07T14:32:01.523Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459339237,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459339238,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459339237,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-07T14:33:01.524Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459399163,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459399166,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459399175,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-07T14:34:01.530Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459459132,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459459148,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 459459150,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-07T20:09:49.799Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T20:09:49.803Z [info]:    API: 100 requests/15 minutes
+2026-02-07T20:09:49.804Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T20:09:49.805Z [info]:    Premium multiplier: 2x
+2026-02-07T20:09:49.805Z [info]:    Boost multiplier: 3x
+2026-02-07T20:09:49.806Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T20:09:49.806Z [info]:    API: 100 requests/15 minutes
+2026-02-07T20:09:49.807Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T20:09:49.807Z [info]:    Premium multiplier: 2x
+2026-02-07T20:09:49.808Z [info]:    Boost multiplier: 3x
+2026-02-07T20:09:49.808Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T20:09:49.808Z [info]:    API: 100 requests/15 minutes
+2026-02-07T20:09:49.808Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T20:09:49.809Z [info]:    Premium multiplier: 2x
+2026-02-07T20:09:49.809Z [info]:    Boost multiplier: 3x
+2026-02-07T20:09:49.809Z [info]: 📊 Rate limit config loaded for development environment
+2026-02-07T20:09:49.810Z [info]:    API: 100 requests/15 minutes
+2026-02-07T20:09:49.810Z [info]:    Dating: 300 actions/1 minutes
+2026-02-07T20:09:49.810Z [info]:    Premium multiplier: 2x
+2026-02-07T20:09:49.810Z [info]:    Boost multiplier: 3x
+2026-02-07T20:09:49.811Z [warn]: Redis not available, using memory store for rate limiting
+2026-02-07T20:09:53.310Z [error]: Socket.IO instance is not valid. PresenceService requires a valid Socket.IO instance.
+2026-02-07T20:09:53.310Z [warn]: Redis not available, skipping subscription setup
+2026-02-07T20:09:53.310Z [info]: ✅ PresenceService initialized with optimizations
+2026-02-07T20:09:54.153Z [info]: 🔄 Initializing Redis connections...
+2026-02-07T20:09:55.952Z [info]: ✅ Redis Pub Client connected
+2026-02-07T20:09:55.954Z [info]: ✅ Redis Sub Client connected
+2026-02-07T20:09:55.966Z [info]: ✅ Redis connection test successful
+2026-02-07T20:09:55.969Z [warn]: Safety service not available, continuing without it:
+2026-02-07T20:09:55.971Z [info]: MessageService services initialized
+2026-02-07T20:09:55.973Z [info]: ✅ Redis Sub Client ready
+2026-02-08T00:47:37.387Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "workloadType": "OPERATIONAL",
+          "availabilityZone": "1",
+          "diskState": "READY",
+          "provider": "AZURE",
+          "region": "US_EAST_2"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 179.6,
+        "minRoundTripTime": 176,
+        "lastUpdateTime": 496280675,
+        "lastWriteDate": {
+          "$date": "2026-02-08T00:47:36Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6984f762050be79907c5b156"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1770511656,
+              "i": 1
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 220,
+              "1": 230,
+              "2": 135,
+              "3": 201,
+              "4": 45,
+              "5": 35,
+              "6": 177,
+              "7": 239,
+              "8": 221,
+              "9": 120,
+              "10": 123,
+              "11": 96,
+              "12": 43,
+              "13": 227,
+              "14": 180,
+              "15": 178,
+              "16": 221,
+              "17": 219,
+              "18": 130,
+              "19": 52
+            },
+            "keyId": 7564130753416528000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "availabilityZone": "2",
+          "provider": "AZURE",
+          "region": "US_EAST_2",
+          "diskState": "READY",
+          "workloadType": "OPERATIONAL",
+          "nodeType": "ELECTABLE"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 231.6,
+        "minRoundTripTime": 174,
+        "lastUpdateTime": 496280708,
+        "lastWriteDate": {
+          "$date": "2026-02-08T00:47:36Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6984f7c01b0c22ae7a478f5b"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1770511656,
+              "i": 1
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 220,
+              "1": 230,
+              "2": 135,
+              "3": 201,
+              "4": 45,
+              "5": 35,
+              "6": 177,
+              "7": 239,
+              "8": 221,
+              "9": 120,
+              "10": 123,
+              "11": 96,
+              "12": 43,
+              "13": 227,
+              "14": 180,
+              "15": 178,
+              "16": 221,
+              "17": 219,
+              "18": 130,
+              "19": 52
+            },
+            "keyId": 7564130753416528000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 496277163,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T09:42:10.041Z [error]: Cleanup stale presence error: connection <monitor> to 20.49.59.176:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.49.59.176:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at processTimers (node:internal/timers:520:9)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 528356941,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "diskState": "READY",
+          "nodeType": "ELECTABLE",
+          "availabilityZone": "2",
+          "provider": "AZURE",
+          "region": "US_EAST_2",
+          "workloadType": "OPERATIONAL"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 260.5,
+        "minRoundTripTime": 257,
+        "lastUpdateTime": 528362161,
+        "lastWriteDate": {
+          "$date": "2026-02-08T09:42:07Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6984f7c01b0c22ae7a478f5b"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1770543727,
+              "i": 8
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 181,
+              "1": 87,
+              "2": 232,
+              "3": 47,
+              "4": 205,
+              "5": 102,
+              "6": 126,
+              "7": 215,
+              "8": 235,
+              "9": 82,
+              "10": 41,
+              "11": 104,
+              "12": 90,
+              "13": 249,
+              "14": 191,
+              "15": 141,
+              "16": 217,
+              "17": 137,
+              "18": 126,
+              "19": 59
+            },
+            "keyId": 7564130753416528000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 528356958,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T16:16:40.214Z [error]: Cleanup stale presence error: Connection to ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017 interrupted due to server monitor timeout
+PoolClearedOnNetworkError: Connection to ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017 interrupted due to server monitor timeout
+    at ConnectionPool.interruptInUseConnections (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cmap\connection_pool.ts:478:28)
+    at C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cmap\connection_pool.ts:464:35
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at listOnTimeout (node:internal/timers:549:9)
+    at processTimers (node:internal/timers:523:7)
+{
+  "errorLabelSet": {},
+  "beforeHandshake": false,
+  "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T16:16:41.456Z [error]: Cleanup stale presence error: connection <monitor> to 20.49.59.176:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.49.59.176:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at processTimers (node:internal/timers:520:9)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 552041742,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 552041677,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 552037115,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T16:47:04.996Z [error]: Cleanup stale presence error: connection <monitor> to 20.49.59.176:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.49.59.176:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 553861845,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 553861844,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 553861792,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T16:51:03.925Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 554106245,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 554106244,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 554106246,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T16:52:03.932Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 554166248,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 554166248,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 554166249,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T17:47:05.571Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557466202,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557466251,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557467552,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T17:48:04.889Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557527425,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557526963,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557526959,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T17:49:05.083Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557587665,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557583667,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557583610,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T17:50:05.828Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557646593,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557647167,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557646070,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-02-08T17:51:05.185Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557706789,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557706185,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 557701832,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000075"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}

@@ -1,6 +1,6 @@
 // controllers/ProfileController.js - FIXED VERSION
 const Profile = require("@models/Profile.model"); 
-const { BaseUser, DatingUser } = require("@models/User"); // FIXED: Removed unused UserQuery
+const { BaseUser, DatingUser } = require("@models/User"); 
 const optionService = require("@services/option.service");
 const logger = require("@utils/logger");
 const { v4: uuidv4 } = require("uuid");

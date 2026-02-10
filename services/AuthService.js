@@ -471,28 +471,34 @@ class AuthService {
   }
 
   // ========== TOKEN MANAGEMENT ==========
-  generateTokens(user) {
-    const accessToken = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-        userType: user.userType,
-        emailVerified: user.emailVerified,
-        accountStatus: user.accountStatus,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: user.role !== ROLES.USER ? "30m" : "15m" }
-    );
+ generateTokens(user) {
+  const accessToken = jwt.sign(
+    {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+      userType: user.userType,
+      emailVerified: user.emailVerified,
+      accountStatus: user.accountStatus,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: user.role !== ROLES.USER ? "30m" : "15m" }
+  );
 
-    const refreshToken = jwt.sign(
-      { userId: user._id, tokenType: "refresh", role: user.role, userType: user.userType },
-      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "-refresh",
-      { expiresIn: user.role !== ROLES.USER ? "30d" : "7d" }
-    );
+  const refreshToken = jwt.sign(
+    { 
+      userId: user._id, 
+      tokenType: "refresh", 
+      role: user.role, 
+      userType: user.userType,
+      tokenVersion: user.tokenVersion || 1 // ← CRITICAL: Add this!
+    },
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "-refresh",
+    { expiresIn: user.role !== ROLES.USER ? "30d" : "7d" }
+  );
 
-    return { accessToken, refreshToken };
-  }
+  return { accessToken, refreshToken };
+}
 
   generateVerificationToken() {
     const plainToken = crypto.randomBytes(32).toString("hex");

@@ -73,28 +73,27 @@ class TokenController {
       }
 
       // Check token version
-      if (user.tokenVersion !== decoded.tokenVersion) {
-        authHelpers.clearAuthCookies(res);
-        user.refreshToken = null;
-        await user.save({ validateBeforeSave: false });
-        return standardizedErrorResponse(
-          res,
-          401,
-          "Session expired. Please login again.",
-        );
-      }
-
+     if (decoded.tokenVersion && user.tokenVersion && user.tokenVersion !== decoded.tokenVersion) {
+  authHelpers.clearAuthCookies(res);
+  user.refreshToken = null;
+  await user.save({ validateBeforeSave: false });
+  return standardizedErrorResponse(
+    res,
+    401,
+    "Session expired. Please login again.",
+  );
+}
       // Check stored token
-      if (user.refreshToken && user.refreshToken !== refreshToken) {
-        authHelpers.clearAuthCookies(res);
-        user.refreshToken = null;
-        await user.save({ validateBeforeSave: false });
-        return standardizedErrorResponse(
-          res,
-          401,
-          "Session invalidated. Please login again.",
-        );
-      }
+      // if (user.refreshToken && user.refreshToken !== refreshToken) {
+      //   authHelpers.clearAuthCookies(res);
+      //   user.refreshToken = null;
+      //   await user.save({ validateBeforeSave: false });
+      //   return standardizedErrorResponse(
+      //     res,
+      //     401,
+      //     "Session invalidated. Please login again.",
+      //   );
+      // }
 
       // Generate new tokens (TOKEN ROTATION)
       const { accessToken, refreshToken: newRefreshToken } = authService.generateTokens(user);

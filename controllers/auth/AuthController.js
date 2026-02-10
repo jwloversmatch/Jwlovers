@@ -1,7 +1,6 @@
 // controllers/AuthController.js - UPDATED for consistent user data structure
 const BaseController = require("../BaseController");
-const { BaseUser, ROLES } = require("@models/User");
-const DatingUser = require("@models/User/datingUserSchema");
+const { BaseUser, ROLES, DatingUser } = require("@models/User");
 const Profile = require("@models/Profile.model");
 const authService = require("@services/AuthService");
 const authHelpers = require("@utils/AuthHelpers");
@@ -285,110 +284,112 @@ class AuthController extends BaseController {
 
   // ========== GET CURRENT USER - UPDATED TO MATCH MIDDLEWARE STRUCTURE ==========
   async getCurrentUser(req, res) {
-    try {
-      if (!req.userId) {
-        return this.standardizedErrorResponse(res, 401, "Not authenticated");
-      }
-
-      // Use same query pattern as authmiddleware
-      const baseUser = await BaseUser.findById(req.userId)
-        .select("-password -refreshToken -passwordHistory -__v -securitySessionId -emailVerificationToken -emailVerificationExpires")
-        .lean();
-
-      if (!baseUser) {
-        return this.standardizedErrorResponse(res, 404, "User not found");
-      }
-
-      if (!baseUser.isActive ||
-          (baseUser.accountStatus && ["suspended", "banned", "deactivated"].includes(baseUser.accountStatus))) {
-        return this.standardizedErrorResponse(
-          res,
-          403,
-          `Account is ${baseUser.accountStatus || "not active"}`,
-          null,
-          {
-            accountStatus: baseUser.accountStatus,
-            requiresVerification: !baseUser.emailVerified
-          }
-        );
-      }
-
-      if (baseUser.userType === "DatingUser" && !baseUser.emailVerified) {
-        return this.standardizedErrorResponse(
-          res,
-          403,
-          "Please verify your email to access your account",
-          null,
-          {
-            requiresVerification: true,
-            accountStatus: baseUser.accountStatus
-          }
-        );
-      }
-
-      // Get dating user and profile - SAME AS AUTHMIDDLEWARE
-      let datingUser = null;
-      let profile = null;
-
-      if (baseUser.userType === 'DatingUser') {
-        datingUser = await DatingUser.findById(req.userId)
-          .populate({
-            path: 'profile',
-            select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
-          })
-          .lean();
-        
-        profile = datingUser?.profile || null;
-      }
-
-      // If no profile from datingUser, query directly by userId
-      if (!profile) {
-        profile = await Profile.findOne({ userId: req.userId })
-          .select('userName profilePicture profileCompletion age gender location hobbies verificationBadges bio')
-          .lean();
-      }
-
-      // Build user object - SAME STRUCTURE AS AUTHMIDDLEWARE
-      const user = {
-        ...baseUser,
-        hasDatingProfile: !!datingUser,
-        hasProfile: !!profile,
-        profileCompletion: profile?.profileCompletion || 0,
-        base: baseUser,
-        dating: datingUser,
-        profile: profile,
-        _id: baseUser._id,
-        id: baseUser._id.toString(),
-        role: baseUser.role,
-        userType: baseUser.userType,
-        email: baseUser.email,
-        firstName: baseUser.firstName,
-        lastName: baseUser.lastName
-      };
-
-      const accessToken = req.headers.authorization?.replace("Bearer ", "");
-
-      const responseData = {
-        user: this.enhanceUserResponse(user),
-        accessToken: accessToken || undefined,
-        requiresVerification: !user.emailVerified,
-        role: user.role,
-        userType: user.userType,
-        permissions: authHelpers.getRolePermissions(user.role),
-        features: authHelpers.getRoleFeatures(user.role),
-      };
-
-      return this.standardizedSuccessResponse(
-        res,
-        200,
-        responseData,
-        "User retrieved successfully",
-      );
-    } catch (error) {
-      this.logger.error("Get current user error:", error);
-      return this.standardizedErrorResponse(res, 500, "Failed to retrieve user information");
+  try {
+    if (!req.userId) {
+      return this.standardizedErrorResponse(res, 401, "Not authenticated");
     }
+
+    // Use same query pattern as authmiddleware
+    const baseUser = await BaseUser.findById(req.userId)
+      .select("-password -refreshToken -passwordHistory -__v -securitySessionId -emailVerificationToken -emailVerificationExpires")
+      .lean();
+
+    if (!baseUser) {
+      return this.standardizedErrorResponse(res, 404, "User not found");
+    }
+
+    // ⚠️ FIX: Remove isActive check since field doesn't exist
+    // Check accountStatus instead
+    if (baseUser.accountStatus && ["suspended", "banned", "deactivated"].includes(baseUser.accountStatus)) {
+      return this.standardizedErrorResponse(
+        res,
+        403,
+        `Account is ${baseUser.accountStatus}`,
+        null,
+        {
+          accountStatus: baseUser.accountStatus,
+          requiresVerification: !baseUser.emailVerified
+        }
+      );
+    }
+
+    // ⚠️ FIX: Also check if email is verified for dating users
+    if (baseUser.userType === "DatingUser" && !baseUser.emailVerified) {
+      return this.standardizedErrorResponse(
+        res,
+        403,
+        "Please verify your email to access your account",
+        null,
+        {
+          requiresVerification: true,
+          accountStatus: baseUser.accountStatus
+        }
+      );
+    }
+
+    // Get dating user and profile - SAME AS AUTHMIDDLEWARE
+    let datingUser = null;
+    let profile = null;
+
+    if (baseUser.userType === 'DatingUser') {
+      datingUser = await DatingUser.findById(req.userId)
+        .populate({
+          path: 'profile',
+          select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
+        })
+        .lean();
+      
+      profile = datingUser?.profile || null;
+    }
+
+    // If no profile from datingUser, query directly by userId
+    if (!profile) {
+      profile = await Profile.findOne({ userId: req.userId })
+        .select('userName profilePicture profileCompletion age gender location hobbies verificationBadges bio')
+        .lean();
+    }
+
+    // Build user object - SAME STRUCTURE AS AUTHMIDDLEWARE
+    const user = {
+      ...baseUser,
+      hasDatingProfile: !!datingUser,
+      hasProfile: !!profile,
+      profileCompletion: profile?.profileCompletion || 0,
+      base: baseUser,
+      dating: datingUser,
+      profile: profile,
+      _id: baseUser._id,
+      id: baseUser._id.toString(),
+      role: baseUser.role,
+      userType: baseUser.userType,
+      email: baseUser.email,
+      firstName: baseUser.firstName,
+      lastName: baseUser.lastName
+    };
+
+    const accessToken = req.headers.authorization?.replace("Bearer ", "");
+
+    const responseData = {
+      user: this.enhanceUserResponse(user),
+      accessToken: accessToken || undefined,
+      requiresVerification: !user.emailVerified,
+      role: user.role,
+      userType: user.userType,
+      permissions: authHelpers.getRolePermissions(user.role),
+      features: authHelpers.getRoleFeatures(user.role),
+    };
+
+    return this.standardizedSuccessResponse(
+      res,
+      200,
+      responseData,
+      "User retrieved successfully",
+    );
+  } catch (error) {
+    this.logger.error("Get current user error:", error);
+    return this.standardizedErrorResponse(res, 500, "Failed to retrieve user information");
   }
+}
 
   // ========== ERROR HANDLER ==========
   async handleError(error, req, res) {

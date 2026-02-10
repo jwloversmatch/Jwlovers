@@ -375,6 +375,298 @@ class UserController extends BaseController {
     }
   }
 
+  // ========== ADMIN ACCOUNT REACTIVATION ==========
+
+async adminGetDeactivatedUsers(req, res) {
+  try {
+    // Only admin/super_admin can access this
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return this.errorResponse(res, 403, 'Insufficient permissions');
+    }
+    
+    const { page = 1, limit = 50, search } = req.query;
+    const skip = (page - 1) * limit;
+    
+    const { BaseUser } = require('@models/User');
+    
+    // Build query for deactivated users
+    const query = {
+      accountStatus: 'deactivated'
+    };
+    
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { email: { $regex: search, $options: 'i' } },
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const [users, total] = await Promise.all([
+      BaseUser.find(query)
+        .select('firstName lastName email role userType deactivatedAt deactivatedBy accountStatus createdAt')
+        .sort({ deactivatedAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      BaseUser.countDocuments(query)
+    ]);
+    
+    // Get additional info like who deactivated the account
+    const enrichedUsers = await Promise.all(
+      users.map(async (user) => {
+        const enriched = { ...user };
+        
+        // Get deactivated by user info if available
+        if (user.deactivatedBy) {
+          const deactivatedByUser = await BaseUser.findById(user.deactivatedBy)
+            .select('firstName lastName email role')
+            .lean();
+          
+          if (deactivatedByUser) {
+            enriched.deactivatedByInfo = deactivatedByUser;
+          }
+        }
+        
+        // Get dating profile info if applicable
+        if (user.userType === 'DatingUser') {
+          const DatingUser = require('@models/User/datingUserSchema');
+          const datingUser = await DatingUser.findById(user._id)
+            .select('profile ageVerified')
+            .lean();
+          
+          if (datingUser) {
+            enriched.datingProfile = {
+              hasProfile: !!datingUser.profile,
+              ageVerified: datingUser.ageVerified || false
+            };
+          }
+        }
+        
+        return enriched;
+      })
+    );
+    
+    return this.successResponse(res, 200, {
+      users: enrichedUsers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit),
+        showing: enrichedUsers.length
+      }
+    }, 'Deactivated users retrieved');
+  } catch (error) {
+    return this.handleError(error, req, res);
+  }
+}
+
+async adminReactivateAccount(req, res) {
+  try {
+    // Only admin/super_admin can access this
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return this.errorResponse(res, 403, 'Insufficient permissions');
+    }
+    
+    const { targetUserId, reason } = req.body;
+    
+    if (!targetUserId) {
+      return this.errorResponse(res, 400, 'targetUserId is required');
+    }
+    
+    const { BaseUser } = require('@models/User');
+    const Profile = require('@models/Profile.model');
+    
+    // Find deactivated user
+    const user = await BaseUser.findOne({
+      _id: targetUserId,
+      accountStatus: 'deactivated'
+    });
+    
+    if (!user) {
+      return this.errorResponse(res, 404, 'Deactivated user not found');
+    }
+    
+    // Check permission hierarchy
+    const roleHierarchy = {
+      'user': 0,
+      'moderator': 1,
+      'admin': 2,
+      'super_admin': 3
+    };
+    
+    const adminLevel = roleHierarchy[req.user.role] || 0;
+    const targetLevel = roleHierarchy[user.role] || 0;
+    
+    // Regular admins cannot reactivate other admins
+    if (req.user.role === 'admin' && targetLevel >= 2) {
+      return this.errorResponse(res, 403, 
+        'Cannot reactivate admin accounts. Contact super admin.'
+      );
+    }
+    
+    // Reactivate the account
+    user.accountStatus = 'active';
+    user.reactivatedAt = new Date();
+    user.reactivatedBy = req.user.id;
+    user.loginAttempts = 0;
+    user.lockUntil = null;
+    
+    // Add to reactivation history
+    if (!user.reactivationHistory) {
+      user.reactivationHistory = [];
+    }
+    
+    user.reactivationHistory.push({
+      reactivatedAt: new Date(),
+      reactivatedBy: req.user.id,
+      reason: reason || 'Admin reactivation',
+      adminEmail: req.user.email
+    });
+    
+    await user.save();
+    
+    // If it's a dating user, also unpause their dating profile
+    if (user.userType === 'DatingUser') {
+      await Profile.updateOne(
+        { userId: targetUserId },
+        { 'datingProfile.isPaused': false }
+      );
+    }
+    
+    // Log the action
+    logger.info('Account reactivated by admin', {
+      adminId: req.user.id,
+      adminEmail: req.user.email,
+      targetUserId,
+      targetEmail: user.email,
+      targetRole: user.role,
+      reason: reason,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Send notification email to user
+    await this.sendReactivationNotificationEmail(user.email, {
+      adminName: req.user.firstName || 'Admin',
+      reason: reason,
+      reactivatedAt: new Date()
+    });
+    
+    return this.successResponse(res, 200, {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+      userType: user.userType,
+      accountStatus: user.accountStatus,
+      reactivatedAt: user.reactivatedAt,
+      reactivatedBy: req.user.id,
+      message: 'Account reactivated successfully'
+    }, 'Account reactivated');
+  } catch (error) {
+    return this.handleError(error, req, res);
+  }
+}
+
+async adminGetReactivationHistory(req, res) {
+  try {
+    // Only admin/super_admin can access this
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return this.errorResponse(res, 403, 'Insufficient permissions');
+    }
+    
+    const { targetUserId } = req.params;
+    
+    if (!targetUserId) {
+      return this.errorResponse(res, 400, 'targetUserId is required');
+    }
+    
+    const { BaseUser } = require('@models/User');
+    
+    const user = await BaseUser.findById(targetUserId)
+      .select('reactivationHistory accountStatus deactivatedAt deactivatedBy')
+      .lean();
+    
+    if (!user) {
+      return this.errorResponse(res, 404, 'User not found');
+    }
+    
+    // Get admin info for each reactivation
+    const enrichedHistory = await Promise.all(
+      (user.reactivationHistory || []).map(async (entry) => {
+        const admin = await BaseUser.findById(entry.reactivatedBy)
+          .select('firstName lastName email role')
+          .lean();
+        
+        return {
+          ...entry,
+          adminInfo: admin || null
+        };
+      })
+    );
+    
+    return this.successResponse(res, 200, {
+      userId: targetUserId,
+      currentStatus: user.accountStatus,
+      deactivatedAt: user.deactivatedAt,
+      deactivatedBy: user.deactivatedBy,
+      reactivationHistory: enrichedHistory,
+      totalReactivations: enrichedHistory.length
+    }, 'Reactivation history retrieved');
+  } catch (error) {
+    return this.handleError(error, req, res);
+  }
+}
+
+// ========== EMAIL HELPER METHODS ==========
+
+async sendReactivationNotificationEmail(email, data) {
+  try {
+    // Implement your email service here
+    // This is a placeholder implementation
+    const nodemailer = require('nodemailer');
+    
+    const transporter = nodemailer.createTransport({
+      // Your email configuration
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: 'Your Account Has Been Reactivated',
+      html: `
+        <h2>Account Reactivated</h2>
+        <p>Your account has been reactivated by an administrator.</p>
+        <p><strong>Details:</strong></p>
+        <ul>
+          <li>Reactivated by: ${data.adminName}</li>
+          <li>Date: ${new Date(data.reactivatedAt).toLocaleString()}</li>
+          ${data.reason ? `<li>Reason: ${data.reason}</li>` : ''}
+        </ul>
+        <p>You can now log in to your account as usual.</p>
+        <p>If you did not request this reactivation, please contact support immediately.</p>
+        <br>
+        <p>Best regards,<br>The JWLovers Team</p>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    logger.info('Reactivation notification email sent', { email });
+    
+  } catch (error) {
+    logger.error('Failed to send reactivation email:', error);
+    // Don't throw error - email failure shouldn't block reactivation
+  }
+}
+
   // ========== ERROR HANDLING ==========
 
   handleError(error, req, res) {

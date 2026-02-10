@@ -869,7 +869,7 @@ router.put("/dating/visibility",
       const { isVisible, isPaused } = req.body;
       
       // Update profile's dating profile settings
-      const profile = await Profile.findOneAndUpdate(
+      const profile = await profile.findOneAndUpdate(
         { userId: req.userId },
         { 
           $set: { 

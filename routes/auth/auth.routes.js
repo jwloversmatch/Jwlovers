@@ -513,6 +513,56 @@ router.post(
   },
 );
 
+// ========== ADMIN REACTIVATION ENDPOINTS ==========
+
+// Get list of deactivated users
+router.get(
+  "/admin/deactivated-users",
+  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
+  apiLimiter,
+  (req, res) => {
+    if (!userController || typeof userController.adminGetDeactivatedUsers !== "function") {
+      return res.status(500).json({
+        success: false,
+        error: "User controller not properly loaded",
+      });
+    }
+    return userController.adminGetDeactivatedUsers(req, res);
+  }
+);
+
+// Reactivate a deactivated account
+router.post(
+  "/admin/reactivate-account",
+  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
+  apiLimiter,
+  (req, res) => {
+    if (!userController || typeof userController.adminReactivateAccount !== "function") {
+      return res.status(500).json({
+        success: false,
+        error: "User controller not properly loaded",
+      });
+    }
+    return userController.adminReactivateAccount(req, res);
+  }
+);
+
+// Get reactivation history for a user
+router.get(
+  "/admin/reactivation-history/:targetUserId",
+  authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
+  apiLimiter,
+  (req, res) => {
+    if (!userController || typeof userController.adminGetReactivationHistory !== "function") {
+      return res.status(500).json({
+        success: false,
+        error: "User controller not properly loaded",
+      });
+    }
+    return userController.adminGetReactivationHistory(req, res);
+  }
+);
+
 // ========== 404 HANDLER ==========
 router.use((req, res) => {
   res.status(404).json({
