@@ -1,20 +1,31 @@
-// controllers/ProfileController.js - FIXED VERSION
-const Profile = require("@models/Profile.model"); 
-const { BaseUser, DatingUser } = require("@models/User"); 
+const Profile = require("@models/Profile/Profile.model");
+const { BaseUser, DatingUser } = require("@models/User");
 const optionService = require("@services/option.service");
 const logger = require("@utils/logger");
 const { v4: uuidv4 } = require("uuid");
 
-// ========== CONSTANTS & CONFIG ==========
+// ========== CONSTANTS ==========
 const CONFIG = {
-  MAX_PHOTOS: 9,
   MAX_BIO_LENGTH: 500,
   MAX_CAPTION_LENGTH: 100,
   USERNAME_MIN_LENGTH: 3,
-  USERNAME_MAX_LENGTH: 30,
+  USERNAME_MAX_LENGTH: 20,
+  DEFAULT_DISTANCE: 50,
+  MIN_AGE: 18,
+  MAX_AGE: 100
 };
 
 // ========== HELPER FUNCTIONS ==========
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return null;
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+  return age;
+};
+
 const createError = (message, code = "PROFILE_ERROR", statusCode = 400) => {
   const error = new Error(message);
   error.code = code;
@@ -22,156 +33,85 @@ const createError = (message, code = "PROFILE_ERROR", statusCode = 400) => {
   return error;
 };
 
-const handleControllerError = (error, req, res) => {
-  const requestId = req.requestId || uuidv4();
+// Deep merge utility for nested objects
+const deepMerge = (target, source) => {
+  if (!source) return target;
   
-  logger.error("Profile controller error:", {
-    requestId,
-    userId: req.user?.id || "anonymous",
-    endpoint: req.path,
-    error: error.message,
-    code: error.code,
-    statusCode: error.statusCode,
+  const output = { ...target };
+  
+  Object.keys(source).forEach(key => {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (!output[key]) output[key] = {};
+      output[key] = deepMerge(output[key], source[key]);
+    } else {
+      output[key] = source[key];
+    }
   });
-
-  const response = {
-    success: false,
-    error: error.message,
-    code: error.code || "INTERNAL_ERROR",
-    requestId,
-    timestamp: new Date().toISOString(),
-  };
-
-  if (process.env.NODE_ENV === "production" && error.statusCode === 500) {
-    response.error = "Internal server error";
-  }
-
-  res.status(error.statusCode || 500).json(response);
+  
+  return output;
 };
 
-// Calculate age from date of birth
-const calculateAge = (dateOfBirth) => {
-  if (!dateOfBirth) return null;
-  const today = new Date();
-  const birthDate = new Date(dateOfBirth);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+// Build nested update operations safely
+const buildNestedUpdateOps = (obj, basePath = '') => {
+  const ops = {};
   
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
+  Object.keys(obj).forEach(key => {
+    const path = basePath ? `${basePath}.${key}` : key;
+    const value = obj[key];
+    
+    if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+      Object.assign(ops, buildNestedUpdateOps(value, path));
+    } else {
+      ops[path] = value;
+    }
+  });
   
-  return age;
+  return ops;
 };
 
 // ========== PROFILE CONTROLLER ==========
 class ProfileController {
-  constructor() {
-    // All methods are arrow functions or properly bound
-  }
-
-  // ========== PUBLIC METHODS ==========
-  getCompleteProfile = async (req, res) => {
+  
+  // ========== GET PROFILES ==========
+  getMyProfile = async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user.id;
       
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
-      // Get base user
-      const user = await BaseUser.findById(userId);
-      
-      if (!user) {
-        throw createError("User not found", "USER_NOT_FOUND", 404);
-      }
-
-      // Get profile
-      const profile = await Profile.findOne({ userId });
-
-      if (!profile) {
-        // Return empty profile structure if not found
-        return res.json({
-          success: true,
-          data: {
-            privateInfo: {
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: {
-                address: user.email,
-                verified: user.emailVerified,
-              },
-              phoneNumber: {
-                number: user.phoneNumber,
-                verified: user.phoneVerified,
-              },
-              lastLogin: user.lastLogin,
-            },
-            publicProfile: {
-              userId: user._id,
-              userName: null,
-              profileCompletion: 0,
-              hasProfile: false,
-              message: "No profile found. Create one at /api/auth/profile"
-            }
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Get dating user if exists
-      const datingUser = await DatingUser.findById(userId);
-
-      // Get dynamic option labels for the profile
-      const [labels, verificationBadgesWithLabels] = await Promise.all([
-        this.getAllLabels(profile), // FIXED: Use controller method
-        this.getVerificationBadgesWithLabels(profile.verificationBadges),
+      const [user, profile, datingUser] = await Promise.all([
+        BaseUser.findById(userId).select('firstName lastName email phoneNumber emailVerified phoneVerified lastLogin userType userName ageVerified'),
+        Profile.findOne({ userId }),
+        DatingUser.findById(userId).select('isPremium ageVerified presence datingStats')
       ]);
 
-      const profileWithLabels = {
-        ...profile.toObject(),
-        age: calculateAge(profile.dateOfBirth), // FIXED: Calculate age
-        isVerified: this.checkIsVerified(profile), // FIXED: Check verification
-        ...labels,
-        verificationBadgesWithLabels,
-      };
-
-      res.json({
+      const response = {
         success: true,
         data: {
-          // Private info (only for owner)
-          privateInfo: {
+          user: {
+            _id: user._id,
             firstName: user.firstName,
             lastName: user.lastName,
-            email: {
-              address: user.email,
-              verified: user.emailVerified,
-            },
-            phoneNumber: {
-              number: user.phoneNumber,
-              verified: user.phoneVerified,
-            },
+            fullName: `${user.firstName} ${user.lastName}`,
+            email: { address: user.email, verified: user.emailVerified },
+            phone: { number: user.phoneNumber, verified: user.phoneVerified },
             lastLogin: user.lastLogin,
+            userType: user.userType,
+            userName: user.userName || null,
+            ageVerified: user.ageVerified || false
           },
-          // Public profile with labels
-          publicProfile: profileWithLabels,
-          // Dating-specific info if exists
-          datingInfo: datingUser ? {
-            isPremium: datingUser.isPremium,
-            ageVerified: datingUser.ageVerified,
-            hasDatingProfile: true
+          profile: profile ? this.formatOwnProfile(profile) : null,
+          dating: datingUser ? {
+            isPremium: datingUser.isPremium || false,
+            ageVerified: datingUser.ageVerified || false,
+            presence: datingUser.presence || { status: 'offline', lastSeen: null },
+            datingStats: datingUser.datingStats
           } : null
         },
-        meta: {
-          profileCompletion: profile.profileCompletion || 0,
-          lastUpdated: profile.updatedAt,
-          hasDatingProfile: !!datingUser,
-          requestId: req.requestId,
-        },
-        timestamp: new Date().toISOString(),
-      });
+        timestamp: new Date().toISOString()
+      };
+
+      res.json(response);
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
@@ -180,120 +120,106 @@ class ProfileController {
       const { userId } = req.params;
       const viewerId = req.user?.id;
 
-      // Validate userId format
       if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
         throw createError("Invalid user ID format", "INVALID_USER_ID", 400);
       }
 
-      // Get base user
-      const user = await BaseUser.findById(userId);
-      
-      if (!user) {
-        throw createError("User not found", "USER_NOT_FOUND", 404);
-      }
+      const [user, profile, datingUser] = await Promise.all([
+        BaseUser.findById(userId).select('firstName userName'),
+        Profile.findOne({ userId }),
+        DatingUser.findById(userId).select('isPremium ageVerified presence')
+      ]);
 
-      // Get profile
-      const profile = await Profile.findOne({ userId });
-
-      if (!profile) {
+      if (!user || !profile) {
         throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
 
-      // Get dating user if exists
-      const datingUser = await DatingUser.findById(userId);
-
-      // Check dating profile visibility
-      if (datingUser && profile.datingProfile?.isVisible === false) {
-        throw createError("Profile is not visible", "PROFILE_PRIVATE", 403);
+      if (!profile.settings?.isVisible && viewerId !== userId) {
+        throw createError("Profile is private", "PROFILE_PRIVATE", 403);
       }
 
-      // Increment profile views (async)
-      this.incrementProfileViews(profile._id).catch((err) =>
+      this.incrementStats(userId, 'profileViews').catch(err => 
         logger.error("Failed to increment profile views:", err)
       );
 
-      // Get labels for display
-      const [labels, verificationBadgesWithLabels] = await Promise.all([
-        this.getAllLabels(profile),
-        this.getVerificationBadgesWithLabels(profile.verificationBadges),
-      ]);
-
-      // Get dating privacy settings
-      const datingPrivacySettings = datingUser?.datingPrivacySettings || {};
-      
-      // Calculate age
-      const age = calculateAge(profile.dateOfBirth);
-      
-      // FIXED: Proper null check for showAge
-      const showAge = datingPrivacySettings.showAge !== undefined 
-        ? datingPrivacySettings.showAge 
-        : true; // Default to true if not set
-      
-      // Construct response with public data
       const publicProfile = {
-        basicInfo: {
-          userId: user._id,
-          userName: profile.userName,
-          profilePicture: profile.profilePicture,
-          bio: profile.bio,
-          age: showAge ? age : null, // FIXED: Proper condition
-          gender: profile.gender,
-          genderLabel: labels.genderLabel,
-          firstName: user.firstName,
-          lastName: user.lastName,
+        userId: profile.userId,
+        firstName: user.firstName,
+        userName: profile.basic?.userName || user.userName,
+        
+        basic: {
+          userName: profile.basic?.userName,
+          bio: profile.basic?.bio,
+          age: profile.settings?.privacy?.showAge !== false ? profile.age : null,
+          gender: profile.basic?.gender,
+          genderLabel: await this.getOptionLabel('gender', profile.basic?.gender)
         },
-        location: {
-          city: profile.location?.city,
-          country: profile.location?.country,
-          distance: datingPrivacySettings.showDistance !== false ? 
-            this.calculateDistance(viewerId, userId, profile) : null
+
+        photos: {
+          profile: profile.photos?.profile?.url || null,
+          gallery: profile.photos?.gallery?.map(p => ({
+            url: p.url,
+            caption: p.caption
+          })) || []
         },
-        background: {
-          countryOfOrigin: profile.countryOfOrigin,
-          homeLanguage: profile.homeLanguage,
-          religion: profile.religion,
-          religionLabel: labels.religionLabel,
-          education: profile.education,
-          educationLabel: labels.educationLabel,
-          occupation: profile.occupation,
-          income: profile.income,
-          incomeLabel: labels.incomeLabel,
+
+        location: profile.location ? {
+          city: profile.location.city,
+          country: profile.location.country,
+          distance: viewerId === userId ? 0 : await this.calculateDistance(viewerId, userId)
+        } : null,
+
+        faith: {
+          servingAs: profile.faith?.servingAs,
+          servingAsLabel: await this.getOptionLabel('servingAs', profile.faith?.servingAs),
+          missionary: profile.faith?.missionary?.served || false,
+          bethel: profile.faith?.bethel?.served || false,
+          pioneer: ['regular_pioneer', 'auxiliary_pioneer', 'special_pioneer'].includes(profile.faith?.servingAs)
         },
+
+        relationship: {
+          status: profile.relationship?.status,
+          statusLabel: await this.getOptionLabel('relationshipStatus', profile.relationship?.status),
+          lookingFor: profile.relationship?.lookingFor || []
+        },
+
+        career: {
+          occupation: profile.career?.work?.occupation,
+          education: profile.career?.education?.level,
+          educationLabel: await this.getOptionLabel('education', profile.career?.education?.level)
+        },
+
         lifestyle: {
-          servingAs: profile.servingAs,
-          servingAsLabel: labels.servingAsLabel,
-          relationshipStatus: profile.relationshipStatus,
-          relationshipStatusLabel: labels.relationshipStatusLabel,
-          haveChildren: profile.haveChildren,
-          haveChildrenLabel: labels.haveChildrenLabel,
-          wantsChildren: profile.wantsChildren,
-          wantsChildrenLabel: labels.wantsChildrenLabel,
-          hobbies: profile.hobbies || [],
-          languages: profile.languages || [],
+          hobbies: profile.lifestyle?.hobbies?.slice(0, 10) || [],
+          languages: profile.lifestyle?.languages?.map(l => l.language) || [],
+          exercise: profile.lifestyle?.exercise?.frequency,
+          smoking: profile.lifestyle?.smoking,
+          drinking: profile.lifestyle?.drinking,
+          pets: profile.lifestyle?.pets || []
         },
-        photos: profile.photos?.map((photo) => ({
-          url: photo.url,
-          caption: photo.caption,
-          order: photo.order,
-        })) || [],
-        preferences: {
-          lookingFor: profile.lookingFor,
-          lookingForLabel: labels.lookingForLabel,
+
+        personality: {
+          introvertExtrovert: profile.personality?.introvertExtrovert,
+          communicationStyle: profile.personality?.communicationStyle,
+          meetingAttendance: profile.personality?.meetingAttendance
         },
-        verification: {
-          isVerified: this.checkIsVerified(profile),
-          badges: verificationBadgesWithLabels,
-        },
+
+        badges: profile.badges?.map(b => b.type) || [],
+        
         stats: {
-          profileCompletion: profile.profileCompletion || 0,
-          lastActive: this.getLastActive(datingUser, datingPrivacySettings, viewerId, userId),
+          profileCompletion: profile.progress?.completion || 0,
+          lastActive: profile.stats?.lastActive || profile.updatedAt
         },
-        // Dating-specific info
-        datingInfo: datingUser ? {
-          isPremium: datingUser.isPremium,
-          isVerified: datingUser.ageVerified,
-          preferences: {
-            lookingFor: profile.lookingFor
+
+        dating: datingUser ? {
+          isPremium: datingUser.isPremium || false,
+          isVerified: datingUser.ageVerified || false,
+          presence: {
+            status: datingUser.presence?.status || 'offline',
+            lastSeen: datingUser.presence?.lastSeen,
+            isOnline: datingUser.presence?.status === 'online' && 
+                     datingUser.presence?.lastSeen && 
+                     (new Date() - datingUser.presence.lastSeen) < 5 * 60 * 1000
           }
         } : null
       };
@@ -304,194 +230,177 @@ class ProfileController {
         meta: {
           isOwner: viewerId === userId,
           isDatingProfile: !!datingUser,
-          requestId: req.requestId,
+          requestId: req.requestId
         },
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
+  // ========== CREATE PROFILE ==========
   createProfile = async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user.id;
       const profileData = req.body;
 
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
+      const [existingProfile, user] = await Promise.all([
+        Profile.findOne({ userId }),
+        BaseUser.findById(userId)
+      ]);
+
+      if (existingProfile) {
+        throw createError("Profile already exists", "PROFILE_EXISTS", 409);
       }
 
-      // Check if user exists
-      const user = await BaseUser.findById(userId);
-      
       if (!user) {
         throw createError("User not found", "USER_NOT_FOUND", 404);
       }
 
-      // Check if profile already exists
-      const existingProfile = await Profile.findOne({ userId });
-      if (existingProfile) {
-        throw createError(
-          "Profile already exists for this user",
-          "PROFILE_EXISTS",
-          409
-        );
-      }
-
-      // Check userName availability
-      if (profileData.userName) {
-        const userNameTaken = await Profile.findOne({
-          userName: { $regex: new RegExp(`^${profileData.userName}$`, "i") },
+      if (profileData.basic?.userName) {
+        const userNameTaken = await Profile.findOne({ 
+          'basic.userName': { $regex: new RegExp(`^${profileData.basic.userName}$`, 'i') }
         });
-
         if (userNameTaken) {
           throw createError("Username already taken", "USERNAME_TAKEN", 409);
         }
       }
 
-      // Apply middleware logic before creating
-      const profileToCreate = this.applyProfileMiddleware({
+      const defaults = Profile.getDefaultValues();
+      
+      // Ensure location is properly initialized
+      const mergedProfile = {
         userId,
-        ...profileData,
-        userName: profileData.userName?.toLowerCase(),
-        // Set default location if coordinates provided
-        location: profileData.location && profileData.location.coordinates ? {
+        ...deepMerge(defaults, profileData),
+        location: {
           type: 'Point',
-          coordinates: profileData.location.coordinates,
-          city: profileData.location.city,
-          country: profileData.location.country,
-          lastUpdated: new Date()
-        } : null,
-        profileViews: 0,
-        likeCount: 0,
-        matchCount: 0,
-        responseRate: 0,
-        profileCompletion: 0,
-        lastProfileUpdate: new Date()
-      }, false); // false = isUpdate
+          coordinates: [0, 0],
+          city: '',
+          country: '',
+          countryCode: '',
+          formattedAddress: '',
+          lastUpdated: new Date(),
+          ...(profileData.location || {})
+        },
+        'progress.onboardingCompleted': false
+      };
 
-      // Create profile with middleware logic applied
-      const profile = new Profile(profileToCreate);
-      
-      // Save using direct insert to avoid middleware issues
-      const mongoose = require('mongoose');
-      const ProfileModel = mongoose.model('Profile');
-      
-      const profileDataToSave = profile.toObject();
-      const now = new Date();
-      profileDataToSave.createdAt = now;
-      profileDataToSave.updatedAt = now;
-      
-      const result = await ProfileModel.collection.insertOne(
-        profileDataToSave
-      );
-      
-      profile._id = result.insertedId;
-      profile.isNew = false;
+      const profile = new Profile(mergedProfile);
+      await profile.save();
 
-      // Update user's userType to DatingUser if age >= 18
-      const age = calculateAge(profile.dateOfBirth);
-      if (age >= 18 && user.userType !== "DatingUser") {
+      if (profile.age >= 18 && user.userType !== "DatingUser") {
         user.userType = "DatingUser";
         await user.save();
       }
 
-      logger.info("Profile created", {
-        userId,
+      logger.info("Profile created", { 
+        userId, 
         profileId: profile._id,
-        userName: profile.userName,
+        hasDateOfBirth: !!profile.basic?.dateOfBirth,
+        hasUserName: !!profile.basic?.userName,
+        hasGender: !!profile.basic?.gender
       });
 
       res.status(201).json({
         success: true,
         message: "Profile created successfully",
-        data: {
-          profile: this.getPublicProfileData(profile, true), // FIXED: Use controller method
-        },
+        data: { profile: this.formatOwnProfile(profile) },
         meta: {
-          nextSteps: age >= 18 ? [
+          nextSteps: profile.age >= 18 ? [
             "Add profile picture",
-            "Complete bio", 
-            "Consider creating dating profile at /api/auth/dating-profile"
+            "Complete your bio",
+            "Add your service privileges",
+            "Set your preferences"
           ] : [
-            "Add profile picture",
-            "Complete bio"
+            "Complete your profile"
           ],
-          requestId: req.requestId,
+          requestId: req.requestId
         },
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
+  // ========== UPDATE PROFILE - FULLY FIXED with location handling ==========
   updateProfile = async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.user.id;
       const updateData = req.body;
 
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
-      // Check if profile exists
-      const existingProfile = await Profile.findOne({ userId });
-      if (!existingProfile) {
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
         throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
 
-      // Handle userName change
-      if (updateData.userName && updateData.userName !== existingProfile.userName) {
-        const userNameTaken = await Profile.findOne({
-          userName: { $regex: new RegExp(`^${updateData.userName}$`, "i") },
-          userId: { $ne: userId },
-        });
+      // Remove protected fields
+      const protectedFields = ['_id', 'userId', 'badges', 'stats', 'progress', 'createdAt', 'updatedAt'];
+      protectedFields.forEach(field => delete updateData[field]);
 
+      // Check username availability
+      if (updateData.basic?.userName && 
+          updateData.basic.userName !== profile.basic?.userName) {
+        const userNameTaken = await Profile.findOne({
+          'basic.userName': { $regex: new RegExp(`^${updateData.basic.userName}$`, 'i') },
+          userId: { $ne: userId }
+        });
         if (userNameTaken) {
           throw createError("Username already taken", "USERNAME_TAKEN", 409);
         }
       }
 
-      // Handle location update
-      if (updateData.location && updateData.location.coordinates) {
-        updateData.location = {
-          type: 'Point',
-          coordinates: updateData.location.coordinates,
-          city: updateData.location.city,
-          country: updateData.location.country,
-          timezone: updateData.location.timezone,
-          lastUpdated: new Date()
-        };
+      // ===== FIX: Build update operations with proper nested handling =====
+      const updateOps = {};
+      
+      // Handle location specially - ensure it's never null
+      if (updateData.location) {
+        // Initialize location object if it doesn't exist
+        if (!profile.location) {
+          updateOps['location'] = {
+            type: 'Point',
+            coordinates: [0, 0],
+            city: '',
+            country: '',
+            countryCode: '',
+            formattedAddress: '',
+            lastUpdated: new Date()
+          };
+        }
+        
+        // Add location updates
+        Object.keys(updateData.location).forEach(key => {
+          updateOps[`location.${key}`] = updateData.location[key];
+        });
+        
+        // Always update lastUpdated when location changes
+        updateOps['location.lastUpdated'] = new Date();
+        
+        // Remove location from updateData so we don't process it again
+        delete updateData.location;
       }
 
-      // Validate dynamic fields
-      await this.validateDynamicFields(updateData);
+      // Handle all other nested fields safely
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] && typeof updateData[key] === 'object' && !Array.isArray(updateData[key])) {
+          // Use recursive helper for deep nested objects
+          const nestedOps = buildNestedUpdateOps(updateData[key], key);
+          Object.assign(updateOps, nestedOps);
+        } else {
+          updateOps[key] = updateData[key];
+        }
+      });
 
-      // Apply middleware logic to update data
-      const updatedProfileData = this.applyProfileMiddleware(
-        { ...existingProfile.toObject(), ...updateData },
-        true // true = isUpdate
-      );
-
-      // Update profile using findOneAndUpdate
       const updatedProfile = await Profile.findOneAndUpdate(
         { userId },
-        { $set: updatedProfileData },
-        {
-          new: true,
-          runValidators: true,
-        }
+        { $set: updateOps },
+        { new: true, runValidators: true }
       );
 
-      if (!updatedProfile) {
-        throw createError("Failed to update profile", "UPDATE_FAILED", 500);
-      }
-
-      // Update user's userType if age changed and now >= 18
-      if (updateData.dateOfBirth) {
-        const age = calculateAge(updateData.dateOfBirth);
+      // Update user type if age changed to 18+
+      if (updateData.basic?.dateOfBirth) {
+        const age = calculateAge(updateData.basic.dateOfBirth);
         if (age >= 18) {
           const user = await BaseUser.findById(userId);
           if (user && user.userType !== "DatingUser") {
@@ -501,696 +410,574 @@ class ProfileController {
         }
       }
 
-      // Get labels for updated fields
-      const labels = await this.getAllLabels(updatedProfile);
-
-      logger.info("Profile updated", {
-        userId,
-        updatedFields: Object.keys(updateData),
-        requestId: req.requestId,
+      logger.info("Profile updated", { 
+        userId, 
+        fields: Object.keys(updateOps) 
       });
 
       res.json({
         success: true,
         message: "Profile updated successfully",
-        data: {
-          profile: this.getPublicProfileData(updatedProfile, true),
-          updatedFields: Object.keys(updateData),
-        },
+        data: { profile: this.formatOwnProfile(updatedProfile) },
         meta: {
-          fieldsUpdated: Object.keys(updateData).length,
-          profileCompletion: updatedProfile.profileCompletion || 0,
-          requestId: req.requestId,
+          completion: updatedProfile.progress?.completion || 0,
+          requestId: req.requestId
         },
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
-  // ========== OTHER METHODS (updated for new schema) ==========
-  getProfileOptions = async (req, res) => {
+  // ========== SECTION UPDATES - FIXED with proper nested handling ==========
+  updateBasicInfo = async (req, res) => {
     try {
-      const options = await optionService.getAllOptions();
+      const userId = req.user.id;
+      const { basic } = req.body;
 
-      res.json({
-        success: true,
-        data: options,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleControllerError(error, req, res);
-    }
-  };
-
-  getDefaultProfileValues = async (req, res) => {
-    try {
-      let defaults;
-      if (typeof Profile.getDefaultValues === "function") {
-        defaults = await Profile.getDefaultValues();
-      } else {
-        defaults = {
-          userName: null,
-          bio: "",
-          profilePicture: null,
-          photos: [],
-          dateOfBirth: null,
-          gender: null,
-          height: null,
-          location: null,
-          countryOfOrigin: null,
-          homeLanguage: null,
-          religion: null,
-          servingAs: null,
-          relationshipStatus: null,
-          lookingFor: ["dating"],
-          haveChildren: null,
-          wantsChildren: null,
-          education: null,
-          occupation: null,
-          income: null,
-          hobbies: [],
-          languages: [],
-          lifestyle: {
-            smoking: null,
-            drinking: null,
-            exercise: null
-          },
-          matchPreferences: {
-            gender: [],
-            ageRange: { min: 18, max: 100 },
-            locationRange: 50,
-            relationshipGoals: [],
-            mustHaves: [],
-            dealBreakers: []
-          },
-          datingProfile: {
-            isVisible: true,
-            isPaused: false,
-            tags: []
-          },
-          verificationBadges: [],
-          profileViews: 0,
-          likeCount: 0,
-          matchCount: 0,
-          responseRate: 0,
-          profileCompletion: 0
-        };
-      }
-
-      res.json({
-        success: true,
-        data: defaults,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleControllerError(error, req, res);
-    }
-  };
-
-  updateProfilePicture = async (req, res) => {
-    try {
-      const userId = req.user?.id;
-      const { url, isVerified } = req.body;
-
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
-      if (!url) {
-        throw createError("Profile picture URL is required", "URL_REQUIRED", 400);
-      }
-
-      const updateData = {
-        profilePicture: {
-          url,
-          verified: isVerified || false,
-          uploadedAt: new Date(),
-        }
-      };
-
-      // Apply middleware logic
       const profile = await Profile.findOne({ userId });
       if (!profile) {
         throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
 
-      const updatedData = this.applyProfileMiddleware(
-        { ...profile.toObject(), ...updateData },
-        true
-      );
+      const updateOps = buildNestedUpdateOps(basic, 'basic');
 
       const updatedProfile = await Profile.findOneAndUpdate(
         { userId },
-        { $set: updatedData },
+        { $set: updateOps },
         { new: true, runValidators: true }
       );
 
-      if (!updatedProfile) {
-        throw createError("Failed to update profile picture", "UPDATE_FAILED", 500);
-      }
-
       res.json({
         success: true,
-        message: "Profile picture updated successfully",
-        data: {
-          profilePicture: updatedProfile.profilePicture,
-          profileCompletion: updatedProfile.profileCompletion || 0,
-        },
-        timestamp: new Date().toISOString(),
+        data: { basic: updatedProfile.basic },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
-  updatePhotos = async (req, res) => {
+  updateFaithInfo = async (req, res) => {
     try {
-      const userId = req.user?.id;
-      const { photos } = req.body;
+      const userId = req.user.id;
+      const { faith } = req.body;
 
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
+
+      const updateOps = buildNestedUpdateOps(faith, 'faith');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { faith: updatedProfile.faith },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updateRelationshipInfo = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { relationship } = req.body;
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      const updateOps = buildNestedUpdateOps(relationship, 'relationship');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { relationship: updatedProfile.relationship },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updateCareerInfo = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { career } = req.body;
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      const updateOps = buildNestedUpdateOps(career, 'career');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { career: updatedProfile.career },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updateLifestyle = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { lifestyle } = req.body;
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      const updateOps = buildNestedUpdateOps(lifestyle, 'lifestyle');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { lifestyle: updatedProfile.lifestyle },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updatePersonality = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { personality } = req.body;
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      const updateOps = buildNestedUpdateOps(personality, 'personality');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { personality: updatedProfile.personality },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updatePreferences = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { preferences } = req.body;
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      const updateOps = buildNestedUpdateOps(preferences, 'preferences');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { preferences: updatedProfile.preferences },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updateSettings = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { settings } = req.body;
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      const updateOps = buildNestedUpdateOps(settings, 'settings');
+
+      const updatedProfile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateOps },
+        { new: true, runValidators: true }
+      );
+
+      res.json({
+        success: true,
+        data: { settings: updatedProfile.settings },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  // ========== PHOTO MANAGEMENT ==========
+  updateProfilePicture = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { url } = req.body;
+
+      if (!url) {
+        throw createError("Photo URL is required", "URL_REQUIRED", 400);
+      }
+
+      const profile = await Profile.findOneAndUpdate(
+        { userId },
+        {
+          $set: {
+            'photos.profile.url': url,
+            'photos.profile.uploadedAt': new Date()
+          }
+        },
+        { new: true }
+      );
+
+      res.json({
+        success: true,
+        data: { profilePicture: profile.photos.profile },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  updateGallery = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { photos } = req.body;
 
       if (!Array.isArray(photos)) {
         throw createError("Photos must be an array", "INVALID_PHOTOS", 400);
       }
 
       const validatedPhotos = photos.map((photo, index) => ({
-        url: photo.url || photo,
-        order: photo.order || index,
-        isVerified: photo.isVerified || false,
+        url: photo.url,
+        order: photo.order ?? index,
         caption: photo.caption || "",
-        uploadedAt: photo.uploadedAt || new Date(),
+        uploadedAt: new Date()
       }));
 
       const profile = await Profile.findOneAndUpdate(
         { userId },
-        { photos: validatedPhotos },
-        { new: true, runValidators: true }
+        { $set: { 'photos.gallery': validatedPhotos } },
+        { new: true }
       );
-
-      if (!profile) {
-        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
-      }
-
-      // Apply middleware to update completion
-      const updatedData = this.applyProfileMiddleware(profile.toObject(), true);
-      await Profile.findByIdAndUpdate(profile._id, { $set: updatedData });
 
       res.json({
         success: true,
-        message: "Photos updated successfully",
-        data: {
-          photos: validatedPhotos,
-          profileCompletion: updatedData.profileCompletion || 0,
-        },
-        timestamp: new Date().toISOString(),
+        data: { gallery: profile.photos.gallery },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
-  updateMatchPreferences = async (req, res) => {
+  // ========== BADGES ==========
+  addBadge = async (req, res) => {
     try {
-      const userId = req.user?.id;
-      const updateData = req.body;
-
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
-      const profile = await Profile.findOneAndUpdate(
-        { userId },
-        { matchPreferences: updateData },
-        { new: true, runValidators: true }
-      );
-
-      if (!profile) {
-        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
-      }
-
-      res.json({
-        success: true,
-        message: "Match preferences updated successfully",
-        data: {
-          matchPreferences: profile.matchPreferences,
-        },
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleControllerError(error, req, res);
-    }
-  };
-
-  addVerificationBadge = async (req, res) => {
-    try {
-      const userId = req.user?.id;
+      const userId = req.user.id;
       const { badge } = req.body;
 
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
-      if (!badge) {
-        throw createError("Badge type is required", "BADGE_REQUIRED", 400);
+      const validBadges = ["email", "phone", "photo", "identity", "premium", "baptized", "pioneer", "missionary", "bethel"];
+      
+      if (!validBadges.includes(badge)) {
+        throw createError("Invalid badge type", "INVALID_BADGE", 400);
       }
 
       const profile = await Profile.findOne({ userId });
-
-      if (!profile) {
-        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      
+      const added = profile.addBadge(badge);
+      if (!added) {
+        throw createError("Badge already exists or invalid", "BADGE_ERROR", 400);
       }
 
-      // Use our controller method
-      const success = this.addVerificationBadgeToProfile(profile, badge);
-
-      if (!success) {
-        throw createError(
-          "Invalid badge type or badge already exists",
-          "BADGE_ERROR",
-          400
-        );
-      }
-
-      // Apply middleware and save
-      const updatedData = this.applyProfileMiddleware(profile.toObject(), true);
-      await Profile.findByIdAndUpdate(profile._id, { $set: updatedData });
+      await profile.save();
 
       res.json({
         success: true,
-        message: "Verification badge added successfully",
-        data: {
-          isVerified: this.checkIsVerified(profile),
-          verificationBadges: profile.verificationBadges || [],
-        },
-        timestamp: new Date().toISOString(),
+        message: "Badge added successfully",
+        data: { badges: profile.badges },
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
-  getProfileStats = async (req, res) => {
+  // ========== STATS & PROGRESS ==========
+  getStats = async (req, res) => {
     try {
-      const userId = req.user?.id;
-
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
-      const profile = await Profile.findOne({ userId });
+      const userId = req.user.id;
+      
+      const [profile, datingUser] = await Promise.all([
+        Profile.findOne({ userId }).select('stats progress'),
+        DatingUser.findById(userId).select('datingStats')
+      ]);
 
       if (!profile) {
         throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
-
-      // Get dating stats if exists
-      const datingUser = await DatingUser.findById(userId);
-      const datingStats = datingUser?.datingStats || {};
 
       const stats = {
-        profileViews: profile.profileViews || 0,
-        likeCount: profile.likeCount || 0,
-        matchCount: profile.matchCount || 0,
-        responseRate: profile.responseRate || 0,
-        profileCompletion: profile.profileCompletion || 0,
-        lastActive: profile.updatedAt,
-        datingStats: {
-          totalLikes: datingStats.totalLikes || 0,
-          totalMatches: datingStats.totalMatches || 0,
-          totalMessagesSent: datingStats.totalMessagesSent || 0,
-          profileViews: datingStats.profileViews || 0,
-        }
+        profile: {
+          views: profile.stats?.profileViews || 0,
+          likes: profile.stats?.likes || 0,
+          matches: profile.stats?.matches || 0,
+          responseRate: profile.stats?.responseRate || 0,
+          completion: profile.progress?.completion || 0,
+          lastActive: profile.stats?.lastActive || profile.updatedAt
+        },
+        dating: datingUser?.datingStats || null
       };
 
       res.json({
         success: true,
-        data: { stats },
-        meta: {
-          period: "all_time",
-          hasDatingStats: !!datingUser,
-          requestId: req.requestId,
-        },
-        timestamp: new Date().toISOString(),
+        data: stats,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
-  getProfileCompletion = async (req, res) => {
+  getCompletion = async (req, res) => {
     try {
-      const userId = req.user?.id;
-
-      if (!userId) {
-        throw createError("User ID required", "USER_ID_REQUIRED", 401);
-      }
-
+      const userId = req.user.id;
+      
       const profile = await Profile.findOne({ userId });
-
       if (!profile) {
         throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
 
-      const completion = this.calculateProfileCompletion(profile);
-
-      // Get missing fields
-      const missingFields = this.getMissingFields(profile);
+      const completion = profile.progress?.completion || 0;
+      const missing = this.getMissingFields(profile);
 
       res.json({
         success: true,
         data: {
-          completionPercentage: completion,
-          missingFields,
-          nextSteps: missingFields.slice(0, 3),
+          percentage: completion,
+          missing: missing,
+          nextSteps: missing.slice(0, 3),
+          isComplete: completion >= 80
         },
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      handleControllerError(error, req, res);
+      this.handleError(error, req, res);
     }
   };
 
-  // ========== NEW: PROFILE MIDDLEWARE LOGIC (moved from Profile model) ==========
-  
-  /**
-   * Apply profile middleware logic (moved from Profile model pre-save)
-   * Call this before saving any profile
-   */
-  applyProfileMiddleware(profileData, isUpdate = false) {
+  // ========== OPTIONS ==========
+  getOptions = async (req, res) => {
     try {
-      const profile = { ...profileData };
+      const { category } = req.query;
       
-      // 1. Normalize username
-      if (profile.userName && isUpdate) {
-        profile.userName = profile.userName.toLowerCase();
+      let options;
+      if (category) {
+        options = await optionService.getOptionsByCategory(category);
+      } else {
+        options = await optionService.getAllOptions();
       }
-      
-      // 2. Set lastProfileUpdate if certain fields changed or this is a new profile
-      const fieldsToCheck = ['bio', 'profilePicture', 'photos', 'hobbies', 'location', 'verificationBadges'];
-      const hasModifiedFields = fieldsToCheck.some(field => 
-        profile[field] !== undefined && 
-        (isUpdate || !profile._id) // If new profile or field is being set
-      );
-      
-      if (hasModifiedFields || !profile.lastProfileUpdate) {
-        profile.lastProfileUpdate = new Date();
-      }
-      
-      // 3. Calculate profile completion
-      this.calculateProfileCompletion(profile);
-      
-      return profile;
-      
+
+      res.json({
+        success: true,
+        data: options,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      logger.error("Profile middleware error:", error);
-      throw error;
+      this.handleError(error, req, res);
+    }
+  };
+
+  // ========== PRIVATE HELPERS ==========
+  async getOptionLabel(category, value) {
+    if (!category || !value) return null;
+    try {
+      return await optionService.getOptionLabel(category, value);
+    } catch (error) {
+      logger.warn(`Failed to get label for ${category}:${value}`, error.message);
+      return value;
     }
   }
 
-  /**
-   * Calculate profile completion (from Profile model)
-   */
-  calculateProfileCompletion(profile) {
-    const requiredFields = [
-      { field: 'userName', weight: 10 },
-      { field: 'profilePicture.url', weight: 15 },
-      { field: 'bio', weight: 10, condition: (val) => val && val.length > 50 },
-      { field: 'dateOfBirth', weight: 5 },
-      { field: 'gender', weight: 5 },
-      { field: 'location.city', weight: 10 },
-      { field: 'hobbies', weight: 10, condition: (val) => val && val.length >= 3 },
-      { field: 'languages', weight: 5, condition: (val) => val && val.length >= 1 },
-      { field: 'relationshipStatus', weight: 5 },
-      { field: 'lookingFor', weight: 5, condition: (val) => val && val.length >= 1 },
-      { field: 'verificationBadges', weight: 10, condition: (val) => val && val.length >= 1 }
-    ];
-    
-    let completion = 0;
-    
-    requiredFields.forEach(({ field, weight, condition }) => {
-      const value = field.split('.').reduce((obj, key) => obj && obj[key], profile);
-      
-      if (condition) {
-        if (condition(value)) completion += weight;
-      } else if (value) {
-        completion += weight;
-      }
-    });
-    
-    // For new profiles, give a baseline
-    if (completion < 10 && !profile._id) {
-      completion = 10;
-    }
-    
-    profile.profileCompletion = Math.min(completion, 100);
-    return profile.profileCompletion;
+  async getMultiOptionLabels(category, values) {
+    if (!category || !Array.isArray(values)) return [];
+    const labels = await Promise.all(
+      values.map(v => this.getOptionLabel(category, v))
+    );
+    return labels.filter(Boolean);
   }
 
-  // ========== PRIVATE HELPER METHODS ==========
-  getAllLabels = async (profile) => {
-    const labels = {};
-    
-    const fieldMap = {
-      gender: "gender",
-      religion: "religion",
-      servingAs: "servingAs",
-      relationshipStatus: "relationshipStatus",
-      lookingFor: "lookingFor",
-      haveChildren: "haveChildren",
-      wantsChildren: "wantsChildren",
-      education: "education",
-      income: "income",
-    };
-
-    for (const [field, category] of Object.entries(fieldMap)) {
-      if (profile[field]) {
-        try {
-          const label = await optionService.getOptionLabel(category, profile[field]);
-          labels[`${field}Label`] = label;
-        } catch (error) {
-          labels[`${field}Label`] = profile[field];
-          logger.warn(`Failed to get label for ${field}:`, error.message);
-        }
-      }
-    }
-
-    return labels;
-  };
-
-  getVerificationBadgesWithLabels = (verificationBadges = []) => {
-    if (!Array.isArray(verificationBadges)) {
-      return [];
-    }
-
-    const badgeLabels = {
-      "email": "Email Verified",
-      "phone": "Phone Verified", 
-      "photo": "Photo Verified",
-      "identity": "Identity Verified",
-      "premium": "Premium Member",
-      "social": "Social Media Connected"
-    };
-    
-    return verificationBadges.map(badge => {
-      if (typeof badge === 'object' && badge.type) {
-        return {
-          type: badge.type,
-          label: badgeLabels[badge.type] || badge.type,
-          verifiedAt: badge.verifiedAt || new Date()
-        };
-      }
-      return {
-        type: badge,
-        label: badgeLabels[badge] || badge,
-        earnedAt: new Date()
-      };
-    });
-  };
-
-  // Check if profile is verified
-  checkIsVerified = (profile) => {
-    return profile.verificationBadges && profile.verificationBadges.length > 0;
-  };
-
-  // Get public profile data
-  getPublicProfileData = (profile, includeSensitive = false) => {
-    const publicProfile = {
+  formatOwnProfile(profile) {
+    return {
       id: profile._id,
       userId: profile.userId,
-      userName: profile.userName,
-      bio: profile.bio,
-      profilePicture: profile.profilePicture,
+      basic: profile.basic,
       photos: profile.photos,
-      age: calculateAge(profile.dateOfBirth),
-      gender: profile.gender,
-      location: {
-        city: profile.location?.city,
-        country: profile.location?.country
-      },
-      countryOfOrigin: profile.countryOfOrigin,
-      homeLanguage: profile.homeLanguage,
-      relationshipStatus: profile.relationshipStatus,
-      lookingFor: profile.lookingFor,
-      hobbies: profile.hobbies,
+      location: profile.location,
+      faith: profile.faith,
+      relationship: profile.relationship,
+      career: profile.career,
       lifestyle: profile.lifestyle,
-      verificationBadges: profile.verificationBadges?.map(b => 
-        typeof b === 'object' ? b.type : b
-      ) || [],
-      profileCompletion: profile.profileCompletion || 0
+      personality: profile.personality,
+      preferences: profile.preferences,
+      settings: profile.settings,
+      badges: profile.badges?.map(b => b.type) || [],
+      progress: {
+        completion: profile.progress?.completion || 0,
+        onboardingCompleted: profile.progress?.onboardingCompleted || false
+      },
+      stats: {
+        lastActive: profile.stats?.lastActive || profile.updatedAt
+      },
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt
     };
-    
-    if (includeSensitive) {
-      publicProfile.education = profile.education;
-      publicProfile.occupation = profile.occupation;
-      publicProfile.languages = profile.languages;
-      publicProfile.height = profile.height;
-      publicProfile.religion = profile.religion;
-      publicProfile.servingAs = profile.servingAs;
-    }
-    
-    return publicProfile;
-  };
+  }
 
-  validateDynamicFields = async (data) => {
-    const fieldValidations = {
-      gender: "gender",
-      religion: "religion",
-      servingAs: "servingAs",
-      relationshipStatus: "relationshipStatus",
-      lookingFor: "lookingFor",
-      haveChildren: "haveChildren",
-      wantsChildren: "wantsChildren",
-      education: "education",
-      income: "income",
-    };
+  getMissingFields(profile) {
+    const checks = [
+      { field: 'basic.userName', label: 'Username', condition: (p) => p.basic?.userName },
+      { field: 'photos.profile.url', label: 'Profile Picture', condition: (p) => p.photos?.profile?.url },
+      { field: 'basic.bio', label: 'Bio', condition: (p) => p.basic?.bio?.length >= 50 },
+      { field: 'basic.dateOfBirth', label: 'Age', condition: (p) => p.basic?.dateOfBirth },
+      { field: 'basic.gender', label: 'Gender', condition: (p) => p.basic?.gender },
+      { field: 'location.city', label: 'Location', condition: (p) => p.location?.city },
+      { field: 'faith.servingAs', label: 'Service Privilege', condition: (p) => p.faith?.servingAs },
+      { field: 'relationship.status', label: 'Relationship Status', condition: (p) => p.relationship?.status },
+      { field: 'relationship.lookingFor', label: 'Looking For', condition: (p) => p.relationship?.lookingFor?.length > 0 },
+      { field: 'lifestyle.hobbies', label: 'Hobbies', condition: (p) => p.lifestyle?.hobbies?.length >= 3 },
+      { field: 'photos.gallery', label: 'Additional Photos', condition: (p) => p.photos?.gallery?.length >= 2 },
+      { field: 'badges', label: 'Verification', condition: (p) => p.badges?.length >= 1 }
+    ];
 
-    for (const [field, category] of Object.entries(fieldValidations)) {
-      if (data[field]) {
-        try {
-          const isValid = await optionService.validateOption(category, data[field]);
-          if (!isValid) {
-            throw createError(`Invalid value for ${field}: "${data[field]}"`, "VALIDATION_ERROR", 400);
-          }
-        } catch (error) {
-          logger.warn(`Validation failed for ${field}:`, error.message);
-          // Don't throw, just log warning
-        }
-      }
-    }
-  };
+    return checks
+      .filter(check => !check.condition(profile))
+      .map(check => check.label);
+  }
 
-  incrementProfileViews = async (profileId) => {
+  async incrementStats(userId, field) {
     try {
-      await Profile.findByIdAndUpdate(profileId, {
-        $inc: { profileViews: 1 },
-      });
+      await Profile.findOneAndUpdate(
+        { userId },
+        { $inc: { [`stats.${field}`]: 1 } }
+      );
     } catch (error) {
-      logger.error("Failed to increment profile views:", error);
+      logger.error("Failed to increment stats:", error);
     }
-  };
+  }
 
-  addVerificationBadgeToProfile = (profile, badge) => {
-    const validBadges = ["email", "phone", "photo", "identity", "premium", "social"];
+  async calculateDistance(viewerId, targetUserId) {
+    // Implement distance calculation logic here
+    return null;
+  }
+
+  // ========== ERROR HANDLER ==========
+  handleError(error, req, res) {
+    const requestId = req.requestId || uuidv4();
     
-    if (!validBadges.includes(badge)) {
-      return false;
-    }
-
-    if (!profile.verificationBadges) {
-      profile.verificationBadges = [];
-    }
-
-    // Check if badge already exists
-    const exists = profile.verificationBadges.some(b => 
-      (typeof b === 'object' ? b.type : b) === badge
-    );
-    
-    if (exists) {
-      return false;
-    }
-
-    // Add badge
-    profile.verificationBadges.push({
-      type: badge,
-      verifiedAt: new Date()
+    logger.error("Profile controller error:", {
+      requestId,
+      userId: req.user?.id,
+      path: req.path,
+      error: error.message,
+      code: error.code,
+      stack: error.stack
     });
-    
-    return true;
-  };
 
-  getMissingFields = (profile) => {
-    const fieldLabels = {
-      userName: "Username",
-      profilePicture: "Profile Picture",
-      bio: "Bio",
-      photos: "Photos",
-      gender: "Gender",
-      dateOfBirth: "Date of Birth",
-      location: "Location",
-      hobbies: "Hobbies",
-      lookingFor: "Relationship Goals"
-    };
-
-    const missing = [];
-
-    for (const [field, label] of Object.entries(fieldLabels)) {
-      let isCompleted = false;
-
-      if (field === "profilePicture") {
-        isCompleted = !!(profile.profilePicture && profile.profilePicture.url);
-      } else if (field === "photos") {
-        isCompleted = profile.photos && profile.photos.length > 0;
-      } else if (field === "location") {
-        isCompleted = !!(profile.location && profile.location.city);
-      } else if (field === "hobbies") {
-        isCompleted = profile.hobbies && profile.hobbies.length > 0;
-      } else if (field === "lookingFor") {
-        isCompleted = profile.lookingFor && profile.lookingFor.length > 0;
-      } else {
-        isCompleted = !!profile[field];
-      }
-
-      if (!isCompleted) {
-        missing.push(label);
-      }
+    if (error.name === 'ValidationError') {
+      const errors = Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message,
+        value: error.errors[key].value
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        errors,
+        code: "VALIDATION_ERROR",
+        requestId,
+        timestamp: new Date().toISOString()
+      });
     }
 
-    return missing;
-  };
-
-  // NEW: Calculate distance between users
-  calculateDistance = (viewerId, targetUserId, targetProfile) => {
-    if (!viewerId || viewerId === targetUserId || !targetProfile?.location?.coordinates) {
-      return null;
-    }
-    
-    // In real implementation, get viewer's location and calculate distance
-    // This is a placeholder
-    return null;
-  };
-
-  // NEW: Get last active based on privacy settings
-  getLastActive = (datingUser, privacySettings, viewerId, targetUserId) => {
-    if (!datingUser || viewerId === targetUserId) {
-      return datingUser?.datingStats?.lastActiveDate || null;
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        success: false,
+        error: `${field} already exists`,
+        code: "DUPLICATE_ERROR",
+        requestId,
+        timestamp: new Date().toISOString()
+      });
     }
 
-    if (privacySettings.showLastActive === "everyone") {
-      return datingUser.datingStats?.lastActiveDate || null;
-    } else if (privacySettings.showLastActive === "matches") {
-      // Check if viewer is a match
-      return null; // Implement match check
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid ${error.path}: ${error.value}`,
+        code: "INVALID_ID",
+        requestId,
+        timestamp: new Date().toISOString()
+      });
     }
 
-    return null;
-  };
+    res.status(error.statusCode || 500).json({
+      success: false,
+      error: error.message || "Internal server error",
+      code: error.code || "INTERNAL_ERROR",
+      requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
 }
 
-// Export singleton instance
-const profileController = new ProfileController();
-module.exports = profileController;
+// ========== EXPORT ==========
+module.exports = new ProfileController();

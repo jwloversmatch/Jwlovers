@@ -25,6 +25,7 @@
       "formatters/*": ["formatters/*"],
       "handlers/*": ["handlers/*"],
       "emitters/*": ["emitters/*"],
+      "helpers/*": ["helpers/*"],
       "@root/*": ["*"]
     }
   },

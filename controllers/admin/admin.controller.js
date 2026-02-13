@@ -1,5 +1,5 @@
 const { BaseUser, DatingUser } = require('@models/User');
-const Profile = require('@models/Profile.model');
+const Profile = require('@models/Profile/Profile.model');
 const Option = require('@models/Option.model');
 const SecurityQuestion = require('@models/SecurityQuestion');
 const optionService = require('@services/option.service');

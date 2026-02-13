@@ -1,4 +1,4 @@
-// routes/auth.routes.js - FIXED WITH CORRECT IMPORTS AND RATE LIMITS
+// routes/auth/auth.routes.js - FIXED: Import correct controller
 const express = require("express");
 const router = express.Router();
 const {
@@ -11,10 +11,11 @@ const {
 
 const RATE_LIMIT_DISABLED = process.env.DISABLE_RATE_LIMITING === "true";
 
-const AuthController = require("@controllers/auth/AuthController");
-const authController = new AuthController();
+// ========== FIXED: Import AuthController.js (NOT AuthenticationController.js) ==========
+const AuthController = require("@controllers/auth/AuthController"); 
 const UserController = require("@controllers/user/UserController");
-const userController = new UserController(); 
+const userController = new UserController();
+const authController = new AuthController();
 
 const securityController = require("@controllers/securityquestion.controller");
 
@@ -27,7 +28,6 @@ const {
   ROLES,
 } = require("@middleware/authmiddleware");
 
-// FIX 1: Use correct profile controller path
 const profileController = require("@controllers/profile/profile.controller");
 
 const createDevelopmentLimiter = (options) => {
@@ -66,7 +66,7 @@ const createDevelopmentLimiter = (options) => {
   });
 };
 
-// Rate limits for auth routes only - COMPLETE WITH ALL DEFINITIONS
+// Rate limits for auth routes only
 const rateLimits = {
   registration: createDevelopmentLimiter({
     windowMs:
@@ -108,9 +108,8 @@ const rateLimits = {
     keyPrefix: "resend_verify",
   }),
 
-  // ====== ADDED MISSING RATE LIMIT DEFINITIONS ======
   securityQuestion: createDevelopmentLimiter({
-    windowMs: 900000, // 15 minutes
+    windowMs: 900000,
     max: 50,
     message:
       "Too many security question requests. Please wait before trying again.",
@@ -118,7 +117,7 @@ const rateLimits = {
   }),
 
   staffRegistration: createDevelopmentLimiter({
-    windowMs: 86400000, // 24 hours
+    windowMs: 86400000,
     max: 3,
     message: "Too many staff registration attempts. Please try again tomorrow.",
     keyPrefix: "staff_reg",
@@ -146,7 +145,6 @@ const rateLimits = {
     message: "Too many account deletion requests. Please wait 24 hours.",
     keyPrefix: "delete_account",
   }),
-  // ================================================
 };
 
 // ========== HEALTH CHECK (PUBLIC) ==========
@@ -246,7 +244,7 @@ router.post("/register", rateLimits.registration, (req, res) => {
           step2: "POST /api/auth/validate-answer with {questionId, answer}",
           step3: "Use returned sessionId in registration"
         },
-        note: "After registration, create profile at /api/v1/profile/create"
+        note: "After registration, create profile at /api/v1/profile"
       });
     }
   }
@@ -254,6 +252,7 @@ router.post("/register", rateLimits.registration, (req, res) => {
   req.body.role = normalizedRole;
   req.registrationType = registrationType;
   
+  // ✅ Now this works because authController is AuthController.js which HAS register method
   return authController.register(req, res);
 });
 
@@ -279,6 +278,10 @@ router.post("/logout", optionalAuth, (req, res) => {
   return authController.logout(req, res);
 });
 
+router.post("/logout-all", protect, (req, res) => {
+  return authController.logoutEverywhere(req, res);
+});
+
 router.post("/refresh-token", apiLimiter, (req, res) => {
   return authController.refreshToken(req, res);
 });
@@ -288,14 +291,8 @@ router.get("/verify-email/:token", apiLimiter, (req, res) => {
   return authController.verifyEmail(req, res);
 });
 
-router.post("/resend-verification-email", rateLimits.resendVerification, (req, res) => {
-  if (typeof authController.resendVerificationEmail === "function") {
-    return authController.resendVerificationEmail(req, res);
-  }
-  return res.status(501).json({
-    success: false,
-    error: "Resend verification email not implemented",
-  });
+router.post("/resend-verification", rateLimits.resendVerification, (req, res) => {
+  return authController.resendVerificationEmail(req, res);
 });
 
 // ========== PASSWORD MANAGEMENT ENDPOINTS (PUBLIC) ==========
@@ -317,23 +314,30 @@ router.put("/change-password", rateLimits.passwordChange, protect, (req, res) =>
   return authController.changePassword(req, res);
 });
 
-// ========== SIMPLE PROFILE CREATION REDIRECT (PROTECTED) ==========
-// NOTE: Full profile management is in /api/v1/profile routes
+// ========== PROFILE REDIRECT (PROTECTED) ==========
 router.post("/profile", protect, (req, res) => {
-  // Redirect to profile service
   return res.status(307).json({
     success: true,
-    message: "Profile creation has moved",
+    message: "Profile operations have moved to dedicated profile service",
     redirect: {
-      url: "/api/v1/profile/create",
-      method: "POST",
-      note: "Please use the dedicated profile service for all profile operations"
+      create: {
+        url: "/api/v1/profile",
+        method: "POST",
+        description: "Create a new profile"
+      },
+      get: {
+        url: "/api/v1/profile/me",
+        method: "GET",
+        description: "Get your profile"
+      },
+      update: {
+        url: "/api/v1/profile",
+        method: "PUT",
+        description: "Update your profile"
+      }
     },
-    availableEndpoints: {
-      createProfile: "POST /api/v1/profile/create",
-      getProfile: "GET /api/v1/profile/me",
-      updateProfile: "PUT /api/v1/profile/update"
-    }
+    documentation: "All profile endpoints are available under /api/v1/profile",
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -402,8 +406,7 @@ router.put("/presence", apiLimiter, (req, res) => {
   });
 });
 
-router.delete("/account", apiLimiter, protect, (req, res) => {
-  // Log the request for debugging
+router.delete("/account", rateLimits.deleteAccount, protect, (req, res) => {
   console.log('DELETE /account request:', {
     body: req.body,
     user: req.user?.id,
@@ -417,7 +420,6 @@ router.delete("/account", apiLimiter, protect, (req, res) => {
     });
   }
   
-  // If no body, prompt for password
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).json({
       success: false,
@@ -486,8 +488,6 @@ router.post(
   (req, res) => {
     if (userController && typeof userController.adminResetPassword === "function") {
       return userController.adminResetPassword(req, res);
-    } else if (authController && typeof authController.adminResetPassword === "function") {
-      return authController.adminResetPassword(req, res);
     }
     return res.status(501).json({
       success: false,
@@ -503,8 +503,6 @@ router.post(
   (req, res) => {
     if (userController && typeof userController.adminUnlockAccount === "function") {
       return userController.adminUnlockAccount(req, res);
-    } else if (authController && typeof authController.adminUnlockAccount === "function") {
-      return authController.adminUnlockAccount(req, res);
     }
     return res.status(501).json({
       success: false,
@@ -513,9 +511,6 @@ router.post(
   },
 );
 
-// ========== ADMIN REACTIVATION ENDPOINTS ==========
-
-// Get list of deactivated users
 router.get(
   "/admin/deactivated-users",
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
@@ -531,7 +526,6 @@ router.get(
   }
 );
 
-// Reactivate a deactivated account
 router.post(
   "/admin/reactivate-account",
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
@@ -547,7 +541,6 @@ router.post(
   }
 );
 
-// Get reactivation history for a user
 router.get(
   "/admin/reactivation-history/:targetUserId",
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
@@ -572,48 +565,43 @@ router.use((req, res) => {
     method: req.method,
     availableEndpoints: {
       public: [
-        "GET /api/auth/security-question",
+        "GET  /api/auth/security-question",
         "POST /api/auth/validate-answer",
         "POST /api/auth/register",
         "POST /api/auth/register/staff",
         "POST /api/auth/login",
         "POST /api/auth/logout",
+        "POST /api/auth/logout-all",
         "POST /api/auth/forgot-password",
         "POST /api/auth/reset-password",
         "POST /api/auth/refresh-token",
-        "GET /api/auth/verify-email/:token",
-        "POST /api/auth/resend-verification-email",
-        "GET /api/auth/health",
+        "GET  /api/auth/verify-email/:token",
+        "POST /api/auth/resend-verification",
+        "GET  /api/auth/health",
       ],
       protected: [
-        "GET /api/auth/me",
-        "PUT /api/auth/change-password",
-        "GET /api/auth/user/:id",
-        "GET /api/auth/users",
-        "PUT /api/auth/profile/private",
-        "GET /api/auth/settings",
-        "PUT /api/auth/settings",
-        "PUT /api/auth/presence",
+        "GET  /api/auth/me",
+        "PUT  /api/auth/change-password",
+        "GET  /api/auth/user/:id",
+        "GET  /api/auth/users",
+        "PUT  /api/auth/profile/private",
+        "GET  /api/auth/settings",
+        "PUT  /api/auth/settings",
+        "PUT  /api/auth/presence",
         "DELETE /api/auth/account",
-        "GET /api/auth/export-data",
-        "GET /api/auth/dating/profile",
-        "GET /api/auth/staff/info",
+        "GET  /api/auth/export-data",
+        "GET  /api/auth/dating/profile",
+        "GET  /api/auth/staff/info",
       ],
       admin: [
         "POST /api/auth/admin/reset-password",
         "POST /api/auth/admin/unlock-account",
+        "GET  /api/auth/admin/deactivated-users",
+        "POST /api/auth/admin/reactivate-account",
+        "GET  /api/auth/admin/reactivation-history/:targetUserId",
       ],
     },
-    profileEndpoints: "Use /api/v1/profile for all profile operations",
-    registrationInstructions: {
-      flow: [
-        "1. GET /api/auth/security-question",
-        "2. POST /api/auth/validate-answer",
-        "3. POST /api/auth/register (creates BaseUser)",
-        "4. POST /api/v1/profile/create (creates Profile)",
-        "5. Use /api/v1/profile for all profile management"
-      ]
-    },
+    profileEndpoints: "All profile operations are available at /api/v1/profile",
     timestamp: new Date().toISOString(),
   });
 });
@@ -635,7 +623,6 @@ router.use((err, req, res, next) => {
     });
   }
 
-  // Handle body parsing errors
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     return res.status(400).json({
       success: false,

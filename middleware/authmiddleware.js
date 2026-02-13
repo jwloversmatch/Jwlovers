@@ -1,7 +1,7 @@
+// middleware/authmiddleware.js - COMPLETE FIXED VERSION with NEW SCHEMA
 const jwt = require("jsonwebtoken");
 const { BaseUser, ROLES, DatingUser } = require("@models/User");
-// const DatingUser = require("@models/User/datingUserSchema");
-const Profile = require("@models/Profile.model");
+const Profile = require("@models/Profile/Profile.model");
 const logger = require("@utils/logger");
 
 // ========== DEBUG LOGGING ==========
@@ -14,32 +14,23 @@ const protect = async (req, res, next) => {
     
     let token;
     
-    // Get token from Authorization header
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
+    if (req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
-    }
-    
-    // Also check for token in cookies
-    else if (req.cookies && req.cookies.accessToken) {
+    } else if (req.cookies?.accessToken) {
       token = req.cookies.accessToken;
     }
     
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: "Not authorized to access this route. No token provided.",
+        error: "Not authorized. No token provided.",
         code: "NO_TOKEN",
         timestamp: new Date().toISOString(),
       });
     }
     
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get base user
     const baseUser = await BaseUser.findById(decoded.userId)
       .select("-password")
       .lean();
@@ -71,49 +62,145 @@ const protect = async (req, res, next) => {
       });
     }
     
-    // Get dating user and profile if exists
+    // ========== GET DATING USER WITH NEW SCHEMA ==========
     let datingUser = null;
-    let profile = null;
-    
     if (baseUser.userType === 'DatingUser') {
       datingUser = await DatingUser.findById(decoded.userId)
-        .populate({
-          path: 'profile',
-          select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
-        })
+        .select('isPremium ageVerified datingStats.lastActiveDate datingPrivacySettings')
         .lean();
-      
-      // Extract profile from populated datingUser
-      profile = datingUser?.profile || null;
     }
     
-    // If no profile from datingUser, query directly by userId
-    if (!profile) {
-      profile = await Profile.findOne({ userId: decoded.userId }).lean();
-    }
-    
-    // Combine all user data
+    // ========== GET PROFILE WITH NEW SCHEMA NESTED FIELDS ==========
+    const profile = await Profile.findOne({ userId: decoded.userId })
+      .select(
+        'basic.userName ' +
+        'basic.bio ' +
+        'basic.dateOfBirth ' +
+        'basic.gender ' +
+        'basic.height ' +
+        'photos.profile.url ' +
+        'photos.gallery ' +
+        'location.city ' +
+        'location.country ' +
+        'faith.servingAs ' +
+        'faith.baptismDate ' +
+        'faith.pioneerHours ' +
+        'faith.congregation ' +
+        'faith.missionary ' +
+        'faith.bethel ' +
+        'relationship.status ' +
+        'relationship.lookingFor ' +
+        'relationship.children ' +
+        'relationship.livingSituation ' +
+        'career.education ' +
+        'career.work ' +
+        'lifestyle.hobbies ' +
+        'lifestyle.languages ' +
+        'lifestyle.pets ' +
+        'lifestyle.diet ' +
+        'lifestyle.exercise ' +
+        'lifestyle.smoking ' +
+        'lifestyle.drinking ' +
+        'personality.introvertExtrovert ' +
+        'personality.loveLanguage ' +
+        'personality.communicationStyle ' +
+        'personality.spiritualGoals ' +
+        'personality.meetingAttendance ' +
+        'preferences.basic ' +
+        'preferences.faith ' +
+        'preferences.relationship ' +
+        'preferences.dealbreakers ' +
+        'settings.isVisible ' +
+        'settings.isPaused ' +
+        'settings.tags ' +
+        'settings.privacy ' +
+        'badges ' +
+        'stats ' +
+        'progress.completion ' +
+        'progress.onboardingCompleted ' +
+        'age'
+      )
+      .lean();
+
+    // ========== BUILD USER OBJECT WITH NEW SCHEMA PATHS ==========
     req.user = {
       ...baseUser,
-      // Add computed properties
-      hasDatingProfile: !!datingUser,
-      hasProfile: !!profile,
-      profileCompletion: profile?.profileCompletion || 0,
-      // Store separate for easy access
-      base: baseUser,
-      dating: datingUser,
-      profile: profile,
-      // Backward compatibility
       _id: baseUser._id,
       id: baseUser._id.toString(),
       role: baseUser.role,
       userType: baseUser.userType,
       email: baseUser.email,
       firstName: baseUser.firstName,
-      lastName: baseUser.lastName
+      lastName: baseUser.lastName,
+      
+      // Full profile object
+      profile: profile || null,
+      
+      // Computed properties
+      hasProfile: !!profile,
+      hasDatingProfile: !!datingUser,
+      profileCompletion: profile?.progress?.completion || 0,
+      isDatingEligible: profile?.age >= 18 || false,
+      hasCompletedOnboarding: profile?.progress?.onboardingCompleted || false,
+      
+      // ========== FLATTENED AUTH FIELDS - NEW SCHEMA ==========
+      // Basic info
+      userName: profile?.basic?.userName || null,
+      avatar: profile?.photos?.profile?.url || null,
+      bio: profile?.basic?.bio || null,
+      age: profile?.age || null,
+      gender: profile?.basic?.gender || null,
+      height: profile?.basic?.height || null,
+      
+      // Location
+      city: profile?.location?.city || null,
+      country: profile?.location?.country || null,
+      
+      // JW Faith
+      servingAs: profile?.faith?.servingAs || null,
+      isBaptized: !!profile?.faith?.baptismDate,
+      isPioneer: ['regular_pioneer', 'auxiliary_pioneer', 'special_pioneer'].includes(profile?.faith?.servingAs),
+      isMissionary: profile?.faith?.missionary?.served || false,
+      isBethelite: profile?.faith?.bethel?.served || false,
+      
+      // Relationship
+      relationshipStatus: profile?.relationship?.status || null,
+      lookingFor: profile?.relationship?.lookingFor || [],
+      
+      // Career
+      occupation: profile?.career?.work?.occupation || null,
+      education: profile?.career?.education?.level || null,
+      
+      // Lifestyle
+      hobbies: profile?.lifestyle?.hobbies || [],
+      languages: profile?.lifestyle?.languages || [],
+      
+      // Dating settings
+      isDatingVisible: profile?.settings?.isVisible ?? true,
+      isDatingPaused: profile?.settings?.isPaused ?? false,
+      showAge: profile?.settings?.privacy?.showAge ?? true,
+      showDistance: profile?.settings?.privacy?.showDistance ?? true,
+      showLastActive: profile?.settings?.privacy?.showLastActive || 'everyone',
+      showCongregation: profile?.settings?.privacy?.showCongregation || false,
+      
+      // Badges
+      badges: profile?.badges?.map(b => b.type) || [],
+      isVerified: profile?.badges?.length > 0 || false,
+      
+      // Dating user data
+      dating: datingUser || null,
+      isPremium: datingUser?.isPremium || false,
+      ageVerified: datingUser?.ageVerified || false,
+      lastActive: datingUser?.datingStats?.lastActiveDate || profile?.stats?.lastActive || null,
+      
+      // Privacy settings from dating user
+      datingPrivacy: datingUser?.datingPrivacySettings || {
+        showAge: true,
+        showDistance: true,
+        showLastActive: 'matches'
+      }
     };
     
-    // Set request metadata
     req.userId = baseUser._id.toString();
     req.userRole = baseUser.role;
     req.userType = baseUser.userType;
@@ -123,7 +210,8 @@ const protect = async (req, res, next) => {
       userType: req.userType,
       role: req.userRole,
       hasDatingProfile: !!datingUser,
-      hasProfile: !!profile
+      hasProfile: !!profile,
+      profileCompletion: profile?.progress?.completion || 0
     });
     
     next();
@@ -150,7 +238,7 @@ const protect = async (req, res, next) => {
     
     return res.status(401).json({
       success: false,
-      error: "Not authorized to access this route",
+      error: "Not authorized",
       code: "AUTH_FAILED",
       timestamp: new Date().toISOString(),
     });
@@ -162,17 +250,13 @@ const optionalAuth = async (req, res, next) => {
   try {
     let token;
     
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
+    if (req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
-    } else if (req.cookies && req.cookies.accessToken) {
+    } else if (req.cookies?.accessToken) {
       token = req.cookies.accessToken;
     }
     
     if (!token) {
-      // No token, proceed as unauthenticated user
       req.user = null;
       req.userId = null;
       req.userRole = null;
@@ -180,10 +264,8 @@ const optionalAuth = async (req, res, next) => {
       return next();
     }
     
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get base user
     const baseUser = await BaseUser.findById(decoded.userId)
       .select("-password")
       .lean();
@@ -196,38 +278,30 @@ const optionalAuth = async (req, res, next) => {
       return next();
     }
     
-    // Get dating user and profile if exists
-    let datingUser = null;
-    let profile = null;
+    // Get minimal profile data for optional auth
+    const profile = await Profile.findOne({ userId: decoded.userId })
+      .select(
+        'basic.userName ' +
+        'photos.profile.url ' +
+        'progress.completion ' +
+        'age ' +
+        'settings.isVisible'
+      )
+      .lean();
     
-    if (baseUser.userType === 'DatingUser') {
-      datingUser = await DatingUser.findById(decoded.userId)
-        .populate({
-          path: 'profile',
-          select: 'userName profilePicture profileCompletion'
-        })
-        .lean();
-      
-      // Extract profile from populated datingUser
-      profile = datingUser?.profile || null;
-    }
-    
-    // If no profile from datingUser, query directly by userId
-    if (!profile) {
-      profile = await Profile.findOne({ userId: decoded.userId })
-        .select('userName profilePicture profileCompletion')
-        .lean();
-    }
-    
-    // Set user data
     req.user = {
       ...baseUser,
-      dating: datingUser,
-      profile: profile,
       _id: baseUser._id,
       id: baseUser._id.toString(),
       role: baseUser.role,
-      userType: baseUser.userType
+      userType: baseUser.userType,
+      profile: profile || null,
+      hasProfile: !!profile,
+      userName: profile?.basic?.userName || null,
+      avatar: profile?.photos?.profile?.url || null,
+      profileCompletion: profile?.progress?.completion || 0,
+      age: profile?.age || null,
+      isDatingVisible: profile?.settings?.isVisible ?? true
     };
     
     req.userId = baseUser._id.toString();
@@ -236,7 +310,6 @@ const optionalAuth = async (req, res, next) => {
     
     next();
   } catch (error) {
-    // Invalid token, proceed as unauthenticated
     req.user = null;
     req.userId = null;
     req.userRole = null;
@@ -292,7 +365,6 @@ const requireMinimumRole = (requiredRole) => {
       });
     }
     
-    // Define role hierarchy
     const roleHierarchy = {
       'user': 0,
       'moderator': 1,
@@ -323,59 +395,6 @@ const requireMinimumRole = (requiredRole) => {
     
     next();
   };
-};
-
-// ========== SPECIFIC PERMISSION CHECKS ==========
-const canViewAdminDashboard = (req, res, next) => {
-  console.log("📊 canViewAdminDashboard middleware called");
-  
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: "Not authenticated",
-      code: "NOT_AUTHENTICATED",
-      timestamp: new Date().toISOString(),
-    });
-  }
-  
-  // Only staff can view admin dashboard
-  if (!['moderator', 'admin', 'super_admin'].includes(req.user.role)) {
-    return res.status(403).json({
-      success: false,
-      error: "Admin dashboard access restricted to staff",
-      code: "ADMIN_DASHBOARD_RESTRICTED",
-      userRole: req.user.role,
-      timestamp: new Date().toISOString(),
-    });
-  }
-  
-  next();
-};
-
-const canModerateContent = (req, res, next) => {
-  console.log("⚖️ canModerateContent middleware called");
-  
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: "Not authenticated",
-      code: "NOT_AUTHENTICATED",
-      timestamp: new Date().toISOString(),
-    });
-  }
-  
-  // Only moderators, admins, and super admins can moderate
-  if (!['moderator', 'admin', 'super_admin'].includes(req.user.role)) {
-    return res.status(403).json({
-      success: false,
-      error: "Content moderation restricted to staff",
-      code: "MODERATION_RESTRICTED",
-      userRole: req.user.role,
-      timestamp: new Date().toISOString(),
-    });
-  }
-  
-  next();
 };
 
 // ========== USER TYPE AUTHORIZATION ==========
@@ -432,14 +451,7 @@ const requireDatingProfile = async (req, res, next) => {
       });
     }
     
-    // Check if dating profile exists (could be from req.user.dating or fresh query)
-    let datingUser = req.user.dating;
-    
-    if (!datingUser) {
-      datingUser = await DatingUser.findById(req.userId);
-    }
-    
-    if (!datingUser) {
+    if (!req.user.hasDatingProfile) {
       return res.status(404).json({
         success: false,
         error: "Dating profile not found",
@@ -448,8 +460,23 @@ const requireDatingProfile = async (req, res, next) => {
       });
     }
     
-    // Store dating user data
-    req.datingUser = datingUser;
+    if (!req.user.isDatingEligible) {
+      return res.status(403).json({
+        success: false,
+        error: "You must be 18 or older to use dating features",
+        code: "AGE_RESTRICTION",
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    if (req.user.isDatingVisible === false) {
+      return res.status(403).json({
+        success: false,
+        error: "Your dating profile is hidden. Enable visibility to continue.",
+        code: "PROFILE_HIDDEN",
+        timestamp: new Date().toISOString(),
+      });
+    }
     
     next();
   } catch (error) {
@@ -476,30 +503,12 @@ const requireProfileCompletion = (minCompletion = 70) => {
         });
       }
       
-      // Try to get profile from req.user first
-      let profile = req.user.profile;
-      
-      // If not available, query by userId
-      if (!profile) {
-        profile = await Profile.findOne({ userId: req.userId })
-          .select('profileCompletion');
-      }
-      
-      if (!profile) {
-        return res.status(404).json({
-          success: false,
-          error: "Profile not found",
-          code: "PROFILE_NOT_FOUND",
-          timestamp: new Date().toISOString(),
-        });
-      }
-      
-      const completion = profile.profileCompletion || 0;
+      const completion = req.user.profileCompletion || 0;
       
       if (completion < minCompletion) {
         return res.status(403).json({
           success: false,
-          error: `Profile completion must be at least ${minCompletion}% to access this feature`,
+          error: `Profile completion must be at least ${minCompletion}%`,
           code: "INCOMPLETE_PROFILE",
           currentCompletion: completion,
           requiredCompletion: minCompletion,
@@ -521,25 +530,42 @@ const requireProfileCompletion = (minCompletion = 70) => {
   };
 };
 
-// Helper function to get missing profile fields
+// ========== HELPER: GET MISSING PROFILE FIELDS ==========
 const getMissingProfileFields = async (userId) => {
   try {
-    const profile = await Profile.findOne({ userId });
-    if (!profile) return ['profile'];
+    const profile = await Profile.findOne({ userId })
+      .select(
+        'basic.userName ' +
+        'photos.profile.url ' +
+        'basic.bio ' +
+        'basic.dateOfBirth ' +
+        'basic.gender ' +
+        'location.city ' +
+        'lifestyle.hobbies ' +
+        'faith.servingAs ' +
+        'relationship.status ' +
+        'relationship.lookingFor'
+      )
+      .lean();
+    
+    if (!profile) return ['Complete profile'];
     
     const missing = [];
     
-    // Check essential fields
-    if (!profile.userName) missing.push('username');
-    if (!profile.profilePicture?.url) missing.push('profilePicture');
-    if (!profile.bio || profile.bio.length < 10) missing.push('bio');
-    if (!profile.age) missing.push('age');
-    if (!profile.gender) missing.push('gender');
-    if (!profile.location?.city) missing.push('location');
-    if (!profile.hobbies || profile.hobbies.length === 0) missing.push('interests');
+    if (!profile.basic?.userName) missing.push('Username');
+    if (!profile.photos?.profile?.url) missing.push('Profile picture');
+    if (!profile.basic?.bio || profile.basic.bio.length < 50) missing.push('Bio (minimum 50 characters)');
+    if (!profile.basic?.dateOfBirth) missing.push('Age');
+    if (!profile.basic?.gender) missing.push('Gender');
+    if (!profile.location?.city) missing.push('Location');
+    if (!profile.lifestyle?.hobbies || profile.lifestyle.hobbies.length < 3) missing.push('At least 3 hobbies');
+    if (!profile.faith?.servingAs) missing.push('Service privilege');
+    if (!profile.relationship?.status) missing.push('Relationship status');
+    if (!profile.relationship?.lookingFor?.length) missing.push('What you\'re looking for');
     
     return missing;
   } catch (error) {
+    logger.error("Error getting missing profile fields:", error);
     return [];
   }
 };
@@ -556,21 +582,11 @@ const requireAgeVerification = async (req, res, next) => {
       });
     }
     
-    // Check if user is a DatingUser
     if (req.user.userType !== 'DatingUser') {
-      return next(); // Non-dating users don't need age verification
+      return next();
     }
     
-    // Try to get from req.user.dating first
-    let datingUser = req.user.dating;
-    
-    // If not available, query
-    if (!datingUser) {
-      datingUser = await DatingUser.findById(req.userId)
-        .select('ageVerified');
-    }
-    
-    if (!datingUser || !datingUser.ageVerified) {
+    if (!req.user.ageVerified) {
       return res.status(403).json({
         success: false,
         error: "Age verification required for dating features",
@@ -627,7 +643,6 @@ const requireOwnership = (resourcePath = 'userId') => {
         });
       }
       
-      // Extract target user ID from request
       let targetUserId;
       
       if (resourcePath === 'params.userId') {
@@ -639,16 +654,13 @@ const requireOwnership = (resourcePath = 'userId') => {
       } else if (resourcePath === 'self') {
         targetUserId = req.userId;
       } else {
-        // Try to extract from params
         targetUserId = req.params[resourcePath] || req.userId;
       }
       
-      // Allow admins to access any resource
       if (req.user.role === 'admin' || req.user.role === 'super_admin') {
         return next();
       }
       
-      // Check ownership
       if (targetUserId !== req.userId) {
         logger.warn("Ownership violation attempt", {
           userId: req.userId,
@@ -690,30 +702,11 @@ const requirePremium = async (req, res, next) => {
       });
     }
     
-    // Try to get from req.user.dating first
-    let datingUser = req.user.dating;
-    
-    // If not available, query
-    if (!datingUser) {
-      datingUser = await DatingUser.findById(req.userId)
-        .select('isPremium premiumExpiresAt');
-    }
-    
-    if (!datingUser || !datingUser.isPremium) {
+    if (!req.user.isPremium) {
       return res.status(403).json({
         success: false,
         error: "Premium subscription required",
         code: "PREMIUM_REQUIRED",
-        timestamp: new Date().toISOString(),
-      });
-    }
-    
-    // Check if premium hasn't expired
-    if (datingUser.premiumExpiresAt && datingUser.premiumExpiresAt < new Date()) {
-      return res.status(403).json({
-        success: false,
-        error: "Premium subscription has expired",
-        code: "PREMIUM_EXPIRED",
         timestamp: new Date().toISOString(),
       });
     }
@@ -730,14 +723,64 @@ const requirePremium = async (req, res, next) => {
   }
 };
 
+// ========== SPECIFIC PERMISSION CHECKS ==========
+const canViewAdminDashboard = (req, res, next) => {
+  console.log("📊 canViewAdminDashboard middleware called");
+  
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: "Not authenticated",
+      code: "NOT_AUTHENTICATED",
+      timestamp: new Date().toISOString(),
+    });
+  }
+  
+  if (!['moderator', 'admin', 'super_admin'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      error: "Admin dashboard access restricted to staff",
+      code: "ADMIN_DASHBOARD_RESTRICTED",
+      userRole: req.user.role,
+      timestamp: new Date().toISOString(),
+    });
+  }
+  
+  next();
+};
+
+const canModerateContent = (req, res, next) => {
+  console.log("⚖️ canModerateContent middleware called");
+  
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: "Not authenticated",
+      code: "NOT_AUTHENTICATED",
+      timestamp: new Date().toISOString(),
+    });
+  }
+  
+  if (!['moderator', 'admin', 'super_admin'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      error: "Content moderation restricted to staff",
+      code: "MODERATION_RESTRICTED",
+      userRole: req.user.role,
+      timestamp: new Date().toISOString(),
+    });
+  }
+  
+  next();
+};
+
 // ========== QUICK ACCESS MIDDLEWARE ==========
 const userOnly = authorize('user');
 const moderatorOnly = authorize('moderator');
 const adminOnly = authorize('admin');
 const superAdminOnly = authorize('super_admin');
-
 const datingUserOnly = authorizeUserType('DatingUser');
-const staffOnly = authorizeUserType('Staff', 'Admin', 'SuperAdmin');
+const staffOnly = authorize('moderator', 'admin', 'super_admin');
 
 // ========== EXPORTS ==========
 module.exports = {
@@ -754,9 +797,9 @@ module.exports = {
   requireEmailVerification,
   requireOwnership,
   requirePremium,
-  requireMinimumRole, // ← NEW
-  canViewAdminDashboard, // ← NEW
-  canModerateContent, // ← NEW
+  requireMinimumRole,
+  canViewAdminDashboard,
+  canModerateContent,
   
   // Quick access middleware
   userOnly,

@@ -1,10 +1,11 @@
-// services/AuthService.js - UPDATED FOR TWO-STEP REGISTRATION
+// services/AuthService.js - FINAL FIXED VERSION
+// Removed all dating preferences/settings - now only in Profile model
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const validator = require("validator");
 const { BaseUser, ROLES, DatingUser, Staff } = require("@models/User");
-const Profile = require("@models/Profile.model"); 
+const Profile = require("@models/Profile/Profile.model"); 
 const InviteCode = require("@models/InviteCode.model");
 
 class AuthService {
@@ -20,7 +21,12 @@ class AuthService {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Base user data - IMPORTANT: No profile field here!
+    // ===== GENERATE VERIFICATION TOKEN HERE =====
+    const verificationToken = this.generateVerificationToken();
+
+    // ===== BASE USER DATA - ONLY ACCOUNT FIELDS =====
+    // NO dating preferences, NO dating settings, NO dating privacy settings
+    // These now belong in Profile model
     const baseUserData = {
       email: email.toLowerCase().trim(),
       password: hashedPassword,
@@ -30,12 +36,26 @@ class AuthService {
       userType: userType || (role === ROLES.USER ? "DatingUser" : "Staff"),
       accountStatus: "pending_verification",
       emailVerified: false,
+      
+      // ===== VERIFICATION TOKEN FIELDS =====
+      emailVerificationToken: verificationToken.hashed,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000,
+      
+      // ===== SECURITY FIELDS =====
       failedLoginAttempts: 0,
       accountLockedUntil: null,
       passwordHistory: [hashedPassword],
       lastPasswordChange: new Date(),
-      presence: { status: "offline", lastSeen: new Date(), lastActive: new Date() },
       tokenVersion: 1,
+      
+      // ===== PRESENCE =====
+      presence: { 
+        status: "offline", 
+        lastSeen: new Date(), 
+        lastActive: new Date() 
+      },
+      
+      // ===== TIMESTAMPS =====
       registrationDate: new Date()
     };
 
@@ -44,7 +64,7 @@ class AuthService {
       baseUserData.phoneVerified = false;
     }
 
-    // Staff-specific fields
+    // ===== STAFF-SPECIFIC FIELDS =====
     if (userType === "Staff") {
       baseUserData.employeeId = data.employeeId || `EMP${Date.now()}`;
       baseUserData.department = data.department || "management";
@@ -55,20 +75,30 @@ class AuthService {
       
       // Staff notifications
       baseUserData.staffNotificationSettings = {
-        userReports: "assigned", systemAlerts: true, adminAnnouncements: true,
-        shiftReminders: true, caseUpdates: true, teamMessages: true,
+        userReports: "assigned", 
+        systemAlerts: true, 
+        adminAnnouncements: true,
+        shiftReminders: true, 
+        caseUpdates: true, 
+        teamMessages: true,
       };
       
       // Staff work stats
       baseUserData.workStats = {
-        casesResolved: 0, casesEscalated: 0, averageResolutionTime: 0,
-        responseTime: 0, lastActiveShift: null, totalShiftHours: 0, performanceScore: 0,
+        casesResolved: 0, 
+        casesEscalated: 0, 
+        averageResolutionTime: 0,
+        responseTime: 0, 
+        lastActiveShift: null, 
+        totalShiftHours: 0, 
+        performanceScore: 0,
       };
+      
+      // Staff verification token expires sooner (12 hours)
+      baseUserData.emailVerificationExpires = Date.now() + 12 * 60 * 60 * 1000;
     }
 
-    // ===== CRITICAL CHANGE =====
-    // Remove profile field if it exists (for two-step flow)
-    // Profile will be added later
+    // ===== CRITICAL: Remove profile field if it exists =====
     if (baseUserData.profile !== undefined) {
       delete baseUserData.profile;
     }
@@ -77,17 +107,16 @@ class AuthService {
     this.logger.debug(`User data:`, {
       email: baseUserData.email,
       userType: baseUserData.userType,
-      hasProfileField: 'profile' in baseUserData
+      hasProfileField: 'profile' in baseUserData,
+      hasVerificationToken: !!baseUserData.emailVerificationToken
     });
 
-    // Create appropriate user based on type
+    // ===== CREATE APPROPRIATE USER BASED ON TYPE =====
     let user;
     try {
       if (userType === "DatingUser") {
-        // Create DatingUser WITHOUT profile initially
         const datingUser = new DatingUser(baseUserData);
         
-        // Validate before saving
         const validationError = datingUser.validateSync();
         if (validationError) {
           this.logger.error('❌ DatingUser validation failed:', validationError.errors);
@@ -99,27 +128,28 @@ class AuthService {
         this.logger.info(`✅ DatingUser created WITHOUT profile: ${user._id}`);
         
       } else if (userType === "Staff") {
-        // Create Staff user
         const staffUser = new Staff(baseUserData);
         await staffUser.save({ session });
         user = staffUser;
         this.logger.info(`✅ Staff user created: ${user._id}`);
         
       } else {
-        // Create regular BaseUser
         const baseUser = new BaseUser(baseUserData);
         await baseUser.save({ session });
         user = baseUser;
         this.logger.info(`✅ BaseUser created: ${user._id}`);
       }
       
-      return user;
+      // ===== RETURN BOTH USER AND PLAIN TOKEN =====
+      return { 
+        user, 
+        verificationToken: verificationToken.plain 
+      };
       
     } catch (error) {
       this.logger.error(`❌ Failed to create user:`, error.message);
       if (error.errors && error.errors.profile) {
         this.logger.error(`Profile validation issue:`, error.errors.profile.message);
-        // If it's a required profile error for DatingUser, provide clearer message
         if (error.errors.profile.message.includes('required') && userType === "DatingUser") {
           throw new Error('Dating user will be updated with profile in the next step');
         }
@@ -129,7 +159,8 @@ class AuthService {
   }
 
   /**
-   * Create profile for user (to be called AFTER user creation)
+   * Create profile for user - UPDATED to include dating preferences
+   * This is called AFTER user creation in the two-step flow
    */
   async createProfileForUser(profileData, session) {
     const {
@@ -139,42 +170,31 @@ class AuthService {
       gender,
       phoneNumber,
       country,
-      userType
+      userType,
+      firstName,
+      lastName,
+      email
     } = profileData;
 
     this.logger.info(`📝 Creating Profile for user ${userId}...`);
 
+    // Get default values from Profile model
+    const defaults = Profile.getDefaultValues();
+
+    // Create profile with defaults + provided data
     const profile = new Profile({
       userId,
-      userName: userName || `user_${Date.now()}`,
-      dateOfBirth,
-      gender: gender || "prefer-not-to-say",
+      ...defaults,
+      basic: {
+        ...defaults.basic,
+        userName: userName || this.generateUsernameFromEmail(email, firstName, lastName),
+        dateOfBirth,
+        gender: gender || "prefer-not-to-say"
+      },
       phoneNumber: phoneNumber || "",
       countryOfOrigin: country || "",
-      profilePicture: null,
-      bio: "",
-      hobbies: [],
-      datingProfile: {
-        isVisible: userType === "DatingUser",
-        isPaused: false
-      },
-      profileCompletion: 10,
-      location: {
-        type: 'Point',
-        coordinates: [0, 0],
-        city: '',
-        country: ''
-      },
-      matchPreferences: {
-        gender: [],
-        ageRange: { min: 18, max: 45 },
-        locationRange: 50,
-        relationshipGoals: [],
-        mustHaves: [],
-        dealBreakers: []
-      },
-      verificationBadges: [],
-      photos: []
+      'datingProfile.isVisible': userType === "DatingUser",
+      'datingProfile.isPaused': false
     });
 
     // Validate before saving
@@ -195,11 +215,23 @@ class AuthService {
   }
 
   /**
-   * Update DatingUser with profile reference (to be called AFTER profile creation)
+   * Generate username from email/firstName/lastName
+   */
+  generateUsernameFromEmail(email, firstName, lastName) {
+    const base = firstName ? 
+      `${firstName.toLowerCase()}${lastName ? lastName.toLowerCase().charAt(0) : ''}` :
+      email.split('@')[0].toLowerCase();
+    
+    const cleanBase = base.replace(/[^a-z0-9]/g, '');
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `${cleanBase}${randomNum}`;
+  }
+
+  /**
+   * Update DatingUser with profile reference
    */
   async updateDatingUserWithProfile(userId, profileId, session) {
     try {
-      // Find the DatingUser
       const datingUser = await DatingUser.findById(userId).session(session);
       
       if (!datingUser) {
@@ -208,10 +240,8 @@ class AuthService {
       
       this.logger.info(`📌 Updating DatingUser ${userId} with profile ${profileId}`);
       
-      // Update with profile reference
       datingUser.profile = profileId;
       
-      // Validate before saving
       const validationError = datingUser.validateSync();
       if (validationError) {
         this.logger.error(`❌ DatingUser validation error when adding profile:`, validationError.errors);
@@ -221,7 +251,6 @@ class AuthService {
       await datingUser.save({ session });
       
       this.logger.info(`✅ DatingUser updated with profile: ${datingUser._id} -> ${profileId}`);
-      
       return datingUser;
       
     } catch (error) {
@@ -236,7 +265,7 @@ class AuthService {
     let finalUsername = `${baseName}${Math.floor(1000 + Math.random() * 9000)}`;
 
     for (let attempts = 0; attempts < 5; attempts++) {
-      const existingProfile = await Profile.findOne({ userName: finalUsername }).session(session || null);
+      const existingProfile = await Profile.findOne({ 'basic.userName': finalUsername }).session(session || null);
       if (!existingProfile) return finalUsername;
       finalUsername = `${baseName}${Math.floor(1000 + Math.random() * 9000)}`;
     }
@@ -307,11 +336,100 @@ class AuthService {
     );
   }
 
+  // ========== EMAIL VERIFICATION ==========
+  async verifyEmail(token) {
+    try {
+      const hashedToken = this.hashToken(token);
+      
+      const user = await BaseUser.findOne({
+        emailVerificationToken: hashedToken,
+        emailVerificationExpires: { $gt: Date.now() }
+      });
+
+      if (!user) {
+        return { 
+          success: false, 
+          error: "Invalid or expired verification token" 
+        };
+      }
+
+      user.emailVerified = true;
+      user.emailVerifiedAt = new Date();
+      user.emailVerificationToken = undefined;
+      user.emailVerificationExpires = undefined;
+      
+      if (user.accountStatus === "pending_verification") {
+        user.accountStatus = "active";
+      }
+
+      await user.save({ validateBeforeSave: false });
+
+      // Add email verification badge to Profile
+      const profile = await Profile.findOne({ userId: user._id });
+      if (profile) {
+        profile.addBadge('email');
+        await profile.save({ validateBeforeSave: false });
+      }
+
+      this.logger.info(`✅ Email verified for user: ${user._id}`);
+      
+      return { 
+        success: true, 
+        user,
+        message: "Email verified successfully. You can now log in."
+      };
+    } catch (error) {
+      this.logger.error("Email verification error:", error);
+      return { 
+        success: false, 
+        error: "Failed to verify email. Please try again." 
+      };
+    }
+  }
+
+  async resendVerificationEmail(email) {
+    try {
+      const user = await BaseUser.findOne({ 
+        email: email.toLowerCase().trim(),
+        emailVerified: false,
+        accountStatus: "pending_verification"
+      });
+
+      if (!user) {
+        return { 
+          success: false, 
+          error: "User not found or already verified" 
+        };
+      }
+
+      const verificationToken = this.generateVerificationToken();
+      
+      user.emailVerificationToken = verificationToken.hashed;
+      user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+      
+      await user.save({ validateBeforeSave: false });
+
+      this.logger.info(`📧 Resent verification email to: ${user.email}`);
+      
+      return { 
+        success: true, 
+        verificationToken: verificationToken.plain,
+        user 
+      };
+    } catch (error) {
+      this.logger.error("Resend verification email error:", error);
+      return { 
+        success: false, 
+        error: "Failed to resend verification email" 
+      };
+    }
+  }
+
   // ========== AUTHENTICATION ==========
   async authenticateUser(email, password) {
     try {
       const user = await BaseUser.findOne({ email: email.toLowerCase().trim() })
-        .select("+password +refreshToken +failedLoginAttempts +accountLockedUntil +accountStatus");
+        .select("+password +refreshToken +failedLoginAttempts +accountLockedUntil +accountStatus +emailVerified +emailVerificationToken +emailVerificationExpires +presence");
 
       if (!user) {
         return { 
@@ -319,6 +437,19 @@ class AuthService {
           error: "Invalid email or password", 
           code: 401,
           additionalData: {}
+        };
+      }
+
+      // Check if email is verified
+      if (!user.emailVerified) {
+        return { 
+          success: false, 
+          error: "Please verify your email before logging in.", 
+          code: 403,
+          additionalData: { 
+            requiresVerification: true,
+            email: user.email
+          }
         };
       }
 
@@ -356,16 +487,6 @@ class AuthService {
         };
       }
 
-      // Staff email verification check
-      if ([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN].includes(user.role) && !user.emailVerified) {
-        return { 
-          success: false, 
-          error: "Staff account requires email verification. Please check your email.", 
-          code: 403,
-          additionalData: { requiresVerification: true }
-        };
-      }
-
       // Account lock check
       if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
         const message = user.role !== ROLES.USER 
@@ -396,10 +517,15 @@ class AuthService {
       user.accountLockedUntil = null;
       user.lastLogin = new Date();
       
+      // Update presence
       if (typeof user.updatePresence === "function") {
         await user.updatePresence("online");
       } else {
-        user.presence = { status: "online", lastSeen: new Date(), lastActive: new Date() };
+        user.presence = { 
+          status: "online", 
+          lastSeen: new Date(), 
+          lastActive: new Date() 
+        };
       }
 
       await user.save({ validateBeforeSave: false });
@@ -421,7 +547,7 @@ class AuthService {
       user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
 
       if (user.failedLoginAttempts >= this.MAX_FAILED_ATTEMPTS) {
-        user.accountLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Lock for 24 hours
+        user.accountLockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
         user.accountStatus = user.accountStatus || "suspended";
         await user.save({ validateBeforeSave: false });
 
@@ -471,34 +597,34 @@ class AuthService {
   }
 
   // ========== TOKEN MANAGEMENT ==========
- generateTokens(user) {
-  const accessToken = jwt.sign(
-    {
-      userId: user._id,
-      email: user.email,
-      role: user.role,
-      userType: user.userType,
-      emailVerified: user.emailVerified,
-      accountStatus: user.accountStatus,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: user.role !== ROLES.USER ? "30m" : "15m" }
-  );
+  generateTokens(user) {
+    const accessToken = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+        userType: user.userType,
+        emailVerified: user.emailVerified,
+        accountStatus: user.accountStatus,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: user.role !== ROLES.USER ? "30m" : "15m" }
+    );
 
-  const refreshToken = jwt.sign(
-    { 
-      userId: user._id, 
-      tokenType: "refresh", 
-      role: user.role, 
-      userType: user.userType,
-      tokenVersion: user.tokenVersion || 1 // ← CRITICAL: Add this!
-    },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "-refresh",
-    { expiresIn: user.role !== ROLES.USER ? "30d" : "7d" }
-  );
+    const refreshToken = jwt.sign(
+      { 
+        userId: user._id, 
+        tokenType: "refresh", 
+        role: user.role, 
+        userType: user.userType,
+        tokenVersion: user.tokenVersion || 1
+      },
+      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "-refresh",
+      { expiresIn: user.role !== ROLES.USER ? "30d" : "7d" }
+    );
 
-  return { accessToken, refreshToken };
-}
+    return { accessToken, refreshToken };
+  }
 
   generateVerificationToken() {
     const plainToken = crypto.randomBytes(32).toString("hex");
@@ -508,6 +634,40 @@ class AuthService {
 
   hashToken(token) {
     return crypto.createHash("sha256").update(token).digest("hex");
+  }
+
+  async refreshAccessToken(refreshToken) {
+    try {
+      const decoded = jwt.verify(
+        refreshToken, 
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "-refresh"
+      );
+      
+      const user = await BaseUser.findById(decoded.userId)
+        .select("+tokenVersion +refreshToken +accountStatus +emailVerified");
+      
+      if (!user) {
+        return { success: false, error: "User not found" };
+      }
+      
+      if (user.tokenVersion !== decoded.tokenVersion) {
+        return { success: false, error: "Token invalidated" };
+      }
+      
+      if (user.accountStatus !== "active" && user.accountStatus !== "pending_verification") {
+        return { success: false, error: "Account is not active" };
+      }
+      
+      const tokens = this.generateTokens(user);
+      
+      user.refreshToken = tokens.refreshToken;
+      await user.save({ validateBeforeSave: false });
+      
+      return { success: true, ...tokens };
+    } catch (error) {
+      this.logger.error("Refresh token error:", error);
+      return { success: false, error: "Invalid or expired refresh token" };
+    }
   }
 
   // ========== PASSWORD MANAGEMENT ==========
@@ -548,10 +708,18 @@ class AuthService {
   async initiatePasswordReset(email) {
     try {
       const user = await BaseUser.findOne({ email: email.toLowerCase().trim() })
-        .select("+accountLockedUntil +passwordResetToken +passwordResetExpires +role +userType");
+        .select("+accountLockedUntil +passwordResetToken +passwordResetExpires +role +userType +emailVerified +accountStatus");
 
       if (!user) {
         return { success: true, userFound: false };
+      }
+
+      if (!user.emailVerified) {
+        return { 
+          success: false, 
+          error: "Please verify your email before resetting your password.",
+          additionalData: { requiresVerification: true }
+        };
       }
 
       if (user.passwordResetExpires && user.passwordResetExpires > Date.now()) {
@@ -574,7 +742,9 @@ class AuthService {
       if (wasLocked) {
         user.accountLockedUntil = null;
         user.failedLoginAttempts = 0;
-        user.accountStatus = "active";
+        if (user.accountStatus === "suspended") {
+          user.accountStatus = "active";
+        }
       }
 
       await user.save();
@@ -593,7 +763,7 @@ class AuthService {
       const user = await BaseUser.findOne({
         passwordResetToken: hashedToken,
         passwordResetExpires: { $gt: Date.now() },
-      }).select("+passwordHistory +accountLockedUntil +role +userType");
+      }).select("+passwordHistory +accountLockedUntil +role +userType +emailVerified +accountStatus");
 
       if (!user) {
         return { 
@@ -626,7 +796,10 @@ class AuthService {
       const wasLocked = !!user.accountLockedUntil;
       user.accountLockedUntil = null;
       user.failedLoginAttempts = 0;
-      user.accountStatus = "active";
+      
+      if (user.accountStatus === "suspended" || user.accountStatus === "pending_verification") {
+        user.accountStatus = "active";
+      }
 
       await user.save();
 
@@ -634,6 +807,71 @@ class AuthService {
     } catch (error) {
       this.logger.error("Reset password error:", error);
       return { success: false, error: "Failed to reset password. Please try again." };
+    }
+  }
+
+  // ========== LOGOUT ==========
+  async logout(userId, refreshToken) {
+    try {
+      const user = await BaseUser.findById(userId);
+      
+      if (user) {
+        if (refreshToken && user.refreshToken === refreshToken) {
+          user.refreshToken = null;
+        }
+        
+        if (typeof user.updatePresence === "function") {
+          await user.updatePresence("offline");
+        } else {
+          user.presence = { 
+            status: "offline", 
+            lastSeen: new Date(), 
+            lastActive: new Date() 
+          };
+        }
+        
+        await user.save({ validateBeforeSave: false });
+      }
+      
+      return { success: true };
+    } catch (error) {
+      this.logger.error("Logout error:", error);
+      return { success: false, error: "Failed to logout" };
+    }
+  }
+
+  // ========== ACCOUNT DEACTIVATION ==========
+  async deactivateAccount(userId, password) {
+    try {
+      const user = await BaseUser.findById(userId).select("+password");
+      
+      if (!user) {
+        return { success: false, error: "User not found" };
+      }
+      
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return { success: false, error: "Invalid password" };
+      }
+      
+      user.accountStatus = "deactivated";
+      user.deactivatedAt = new Date();
+      user.refreshToken = null;
+      user.emailVerificationToken = undefined;
+      user.emailVerificationExpires = undefined;
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      
+      if (typeof user.updatePresence === "function") {
+        await user.updatePresence("offline");
+      }
+      
+      await user.save({ validateBeforeSave: false });
+      
+      return { success: true };
+    } catch (error) {
+      this.logger.error("Deactivate account error:", error);
+      return { success: false, error: "Failed to deactivate account" };
     }
   }
 }

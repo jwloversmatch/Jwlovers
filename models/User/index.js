@@ -1,23 +1,68 @@
-// models/User/index.js
 const mongoose = require("mongoose");
 const { baseUserSchema, ROLES, ROLE_HIERARCHY, ROLE_PERMISSIONS } = require("./baseUserSchema");
+
+// ========== CREATE BASE MODEL FIRST ==========
+// This MUST happen before any discriminator creation
+const BaseUser = mongoose.model('BaseUser', baseUserSchema);
+
+// ========== NOW REQUIRE DISCRIMINATOR SCHEMAS ==========
+// These schemas are now clean - no dependencies on BaseUser
 const datingUserSchema = require("./datingUserSchema");
 const staffUserSchema = require("./staffUserSchema");
 
-// Create base model
-const BaseUser = mongoose.model('BaseUser', baseUserSchema);
-
 // ========== CREATE DISCRIMINATORS ==========
-// 1. Dating User (Regular user with dating features)
 const DatingUser = BaseUser.discriminator('DatingUser', datingUserSchema);
 
-// 2. Moderator (Staff with moderation powers)
+// ========== ADD POST HOOKS HERE - BaseUser IS DEFINITELY REGISTERED ==========
+// These hooks sync ageVerified from DatingUser to BaseUser
+// IMPORTANT: These hooks are attached AFTER the discriminator is created
+datingUserSchema.post('save', async function(doc) {
+  try {
+    if (!doc || doc.ageVerified === undefined) return;
+    
+    // BaseUser is guaranteed to be registered here
+    await BaseUser.findByIdAndUpdate(
+      doc._id,
+      { 
+        $set: { 
+          ageVerified: doc.ageVerified,
+          ageVerifiedAt: doc.ageVerifiedAt || new Date()
+        } 
+      },
+      { runValidators: false }
+    );
+    
+    console.log(`✅ Synced ageVerified=${doc.ageVerified} to BaseUser ${doc._id}`);
+  } catch (error) {
+    console.error('❌ Failed to sync ageVerified to BaseUser:', error.message);
+  }
+});
+
+datingUserSchema.post('findOneAndUpdate', async function(doc) {
+  try {
+    if (!doc || doc.ageVerified === undefined) return;
+    
+    // BaseUser is guaranteed to be registered here
+    await BaseUser.findByIdAndUpdate(
+      doc._id,
+      { 
+        $set: { 
+          ageVerified: doc.ageVerified,
+          ageVerifiedAt: doc.ageVerifiedAt || new Date()
+        } 
+      },
+      { runValidators: false }
+    );
+    
+    console.log(`✅ Synced ageVerified=${doc.ageVerified} to BaseUser ${doc._id}`);
+  } catch (error) {
+    console.error('❌ Failed to sync ageVerified to BaseUser:', error.message);
+  }
+});
+
+// ========== CREATE OTHER DISCRIMINATORS ==========
 const Moderator = BaseUser.discriminator('Moderator', staffUserSchema);
-
-// 3. Admin (Full staff access)
 const Admin = BaseUser.discriminator('Admin', staffUserSchema);
-
-// 4. Super Admin (Highest level)
 const SuperAdmin = BaseUser.discriminator('SuperAdmin', staffUserSchema);
 
 // ========== FACTORY FUNCTION TO CREATE USERS ==========
@@ -40,7 +85,6 @@ class UserFactory {
   }
   
   static async createDatingUser(data) {
-    // Validate dating-specific data
     if (!data.dateOfBirth) {
       throw new Error('Date of birth is required for dating users');
     }
@@ -86,7 +130,6 @@ class UserFactory {
   }
   
   static async createSuperAdmin(data) {
-    // Super admin creation should be restricted
     const user = new SuperAdmin({
       ...data,
       role: ROLES.SUPER_ADMIN,
@@ -105,11 +148,6 @@ class UserQuery {
       userType: 'DatingUser',
       accountStatus: 'active'
     };
-    
-    // Add filters
-    if (options.ageRange) {
-      // Will need custom logic for age range with dateOfBirth
-    }
     
     if (options.location) {
       query['location.coordinates'] = {
@@ -167,19 +205,16 @@ class UserService {
   static async registerUser(registrationData) {
     const { role = ROLES.USER, ...data } = registrationData;
     
-    // Check if email already exists
     const existingUser = await UserQuery.getUserByEmail(data.email);
     if (existingUser) {
       throw new Error('Email already registered');
     }
     
-    // Create user based on role
     const user = await UserFactory.createUser({
       ...data,
       role
     });
     
-    // Send verification email
     await this.sendVerificationEmail(user);
     
     return {
@@ -200,10 +235,8 @@ class UserService {
       throw new Error('Only regular users can be promoted to moderator');
     }
     
-    // Delete old dating user document
     await DatingUser.findByIdAndDelete(userId);
     
-    // Create new moderator with same base data
     const moderator = new Moderator({
       _id: userId,
       ...user.toObject(),
@@ -225,12 +258,10 @@ class UserService {
       throw new Error('User not found');
     }
     
-    // Authorization check
     if (!user._id.equals(requestingUser._id) && !requestingUser.isAdminUser) {
       throw new Error('Unauthorized');
     }
     
-    // Return role-specific profile
     switch(user.userType) {
       case 'DatingUser':
         return user.getDatingProfile();
@@ -250,16 +281,13 @@ class UserService {
       throw new Error('User not found');
     }
     
-    // Check permissions
     if (!user._id.equals(requestingUser._id)) {
       throw new Error('Can only update your own profile');
     }
     
-    // Remove role-changing attempts
     delete updateData.role;
     delete updateData.userType;
     
-    // Update user
     Object.keys(updateData).forEach(key => {
       user[key] = updateData[key];
     });
@@ -269,7 +297,6 @@ class UserService {
   }
   
   static async sendVerificationEmail(user) {
-    // Implementation for sending verification email
     console.log(`Verification email sent to ${user.email}`);
     return true;
   }
@@ -277,20 +304,15 @@ class UserService {
 
 // Export everything
 module.exports = {
-  // Models
   BaseUser,
   DatingUser,
   Moderator,
   Admin,
   SuperAdmin,
-  
-  // Constants
   ROLES,
   ROLE_HIERARCHY,
   ROLE_PERMISSIONS,
-  
-  // Services
   UserFactory,
   UserQuery,
   UserService
-}; 
+};

@@ -119,7 +119,7 @@ class UserController extends BaseController {
       
       // Get comprehensive user data
       const { BaseUser } = require('@models/User');
-      const Profile = require('@models/Profile.model');
+      const Profile = require('@models/Profile/Profile.model');
       
       const [user, profile] = await Promise.all([
         BaseUser.findById(userId)

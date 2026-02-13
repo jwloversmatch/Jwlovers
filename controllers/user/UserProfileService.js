@@ -1,6 +1,6 @@
 // services/UserProfileService.js - FIXED VERSION
 const { BaseUser, DatingUser } = require('@models/User'); // FIXED IMPORT
-const Profile = require('@models/Profile.model'); 
+const Profile = require('@models/Profile/Profile.model'); 
 const logger = require('@utils/logger');
 
 class UserProfileService {

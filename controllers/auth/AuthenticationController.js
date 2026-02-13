@@ -1,7 +1,13 @@
-// controllers/auth/AuthenticationController.js - UPDATED for consistent user structure
-const { BaseUser, ROLES } = require("@models/User");
-const DatingUser = require("@models/User/datingUserSchema");
-const Profile = require("@models/Profile.model"); 
+// controllers/auth/AuthenticationController.js - FIXED for new schema
+const { BaseUser, ROLES, DatingUser } = require("@models/User");
+// FIX: Was `const DatingUser = require("@models/User/datingUserSchema")`.
+// That imports the raw Mongoose Schema object, not the compiled Model.
+// Schema objects have no .findById() — that is a Model method.
+// Every login attempt logged: "Could not load profile/dating data: DatingUser.findById is not a function"
+// and fell back to returning basic user data with no profile/dating enrichment.
+// The compiled Model lives in the User barrel alongside BaseUser.
+
+const Profile = require("@models/Profile/Profile.model"); 
 const authService = require("@services/AuthService");
 const authHelpers = require("@utils/AuthHelpers");
 
@@ -11,7 +17,7 @@ class AuthenticationController {
   }
 
   /**
-   * Handle user login - UPDATED to match middleware structure
+   * Handle user login - UPDATED to match new schema
    */
   async login(req, res, {
     standardizedSuccessResponse,
@@ -32,7 +38,6 @@ class AuthenticationController {
       const result = await authService.authenticateUser(email, password);
 
       if (!result.success) {
-        // Extract error message and additional data from the result
         const errorMessage = result.error || "Authentication failed";
         const additionalData = result.additionalData || {};
         
@@ -40,8 +45,8 @@ class AuthenticationController {
           res, 
           result.code || 401, 
           errorMessage,
-          null, // fieldErrors is null
-          additionalData // pass additional data
+          null,
+          additionalData
         );
       }
 
@@ -61,18 +66,19 @@ class AuthenticationController {
         );
       }
 
-      // UPDATED: Populate profile and dating data using same pattern as middleware
+      // ===== FETCH PROFILE AND DATING DATA WITH NEW SCHEMA PATHS =====
       const userId = result.user._id.toString();
       let datingUser = null;
       let profile = null;
 
       try {
-        // Get dating user and profile - SAME AS AUTHMIDDLEWARE
+        // Get dating user with minimal fields (account-level only)
         if (result.user.userType === 'DatingUser') {
           datingUser = await DatingUser.findById(userId)
+            .select('isPremium ageVerified presence datingStats.lastActiveDate')
             .populate({
               path: 'profile',
-              select: 'userName profilePicture profileCompletion age gender location hobbies verificationBadges bio lookingFor'
+              select: 'basic.userName basic.age basic.gender photos.profile.url progress.completion faith.servingAs settings.isVisible relationship.lookingFor lifestyle.hobbies badges'
             })
             .lean();
           
@@ -83,21 +89,37 @@ class AuthenticationController {
         // If no profile from datingUser, query directly by userId
         if (!profile) {
           profile = await Profile.findOne({ userId: userId })
-            .select('userName profilePicture profileCompletion age gender location hobbies verificationBadges bio')
+            .select('basic.userName basic.age basic.gender photos.profile.url progress.completion faith.servingAs settings.isVisible relationship.lookingFor lifestyle.hobbies badges')
             .lean();
         }
 
-        // Build enhanced user object - SAME STRUCTURE AS MIDDLEWARE
+        // ===== BUILD ENHANCED USER OBJECT WITH NEW SCHEMA PATHS =====
         const enhancedUser = {
           ...result.user.toObject(),
-          // Add computed properties
+          
+          // Profile data - using new schema paths
+          userName: profile?.basic?.userName || null,
+          avatar: profile?.photos?.profile?.url || null,
+          age: profile?.age || null,
+          servingAs: profile?.faith?.servingAs || null,
+          isDatingVisible: profile?.settings?.isVisible ?? true,
+          profileCompletion: profile?.progress?.completion || 0,
+          hasCompletedOnboarding: profile?.progress?.onboardingCompleted || false,
+          lookingFor: profile?.relationship?.lookingFor || [],
+          hobbies: profile?.lifestyle?.hobbies || [],
+          verificationBadges: profile?.badges?.map(b => b.type) || [],
+          
+          // Dating data
+          isPremium: datingUser?.isPremium || false,
+          ageVerified: datingUser?.ageVerified || false,
+          lastActive: datingUser?.datingStats?.lastActiveDate || null,
+          presence: datingUser?.presence || { status: 'offline', lastSeen: null },
+          
+          // Flags
           hasDatingProfile: !!datingUser,
           hasProfile: !!profile,
-          profileCompletion: profile?.profileCompletion || 0,
-          // Store separate for easy access
-          base: result.user.toObject(),
-          dating: datingUser,
-          profile: profile,
+          isDatingEligible: (profile?.age || 0) >= 18,
+          
           // Backward compatibility
           _id: result.user._id,
           id: result.user._id.toString(),
@@ -105,7 +127,8 @@ class AuthenticationController {
           userType: result.user.userType,
           email: result.user.email,
           firstName: result.user.firstName,
-          lastName: result.user.lastName
+          lastName: result.user.lastName,
+          fullName: `${result.user.firstName} ${result.user.lastName}`
         };
 
         // Replace result.user with enhanced version
@@ -113,7 +136,7 @@ class AuthenticationController {
 
       } catch (profileError) {
         this.logger.warn("Could not load profile/dating data:", profileError.message);
-        // Continue without profile data - user object remains as is
+        // Continue with basic user data
       }
 
       // Log security event
@@ -126,10 +149,10 @@ class AuthenticationController {
         securityLevel: result.user.role !== ROLES.USER ? "elevated" : "standard",
       });
 
-      // Generate auth response (will use enhanceUserResponse which now understands the structure)
+      // Generate auth response
       const authResponseData = generateAuthResponseData(result.user, true);
 
-      // Update user session (need to get actual BaseUser instance for save)
+      // Update user session
       const userInstance = await BaseUser.findById(userId);
       if (userInstance) {
         userInstance.refreshToken = authResponseData.refreshToken;
@@ -179,9 +202,9 @@ class AuthenticationController {
             await user.updatePresence("offline");
           } else {
             user.presence = {
-              ...user.presence,
               status: "offline",
               lastSeen: new Date(),
+              lastActive: new Date()
             };
           }
 
@@ -213,7 +236,6 @@ class AuthenticationController {
       authHelpers.clearAuthCookies(res);
       this.logger.error("Logout error:", error);
 
-      // Still return success for logout
       return standardizedSuccessResponse(
         res,
         200,
@@ -232,25 +254,28 @@ class AuthenticationController {
   async logoutEverywhere(req, res, { standardizedSuccessResponse, standardizedErrorResponse }) {
     try {
       if (!req.userId) {
-        return standardizedErrorResponse(
-          res,
-          401,
-          "Not authenticated"
-        );
+        return standardizedErrorResponse(res, 401, "Not authenticated");
       }
 
       const user = await BaseUser.findById(req.userId);
       if (!user) {
-        return standardizedErrorResponse(
-          res,
-          404,
-          "User not found"
-        );
+        return standardizedErrorResponse(res, 404, "User not found");
       }
 
       // Increment token version to invalidate all tokens
       user.tokenVersion = (user.tokenVersion || 1) + 1;
       user.refreshToken = null;
+      
+      if (typeof user.updatePresence === "function") {
+        await user.updatePresence("offline");
+      } else {
+        user.presence = {
+          status: "offline",
+          lastSeen: new Date(),
+          lastActive: new Date()
+        };
+      }
+      
       await user.save({ validateBeforeSave: false });
 
       authHelpers.clearAuthCookies(res);

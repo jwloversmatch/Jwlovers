@@ -1,87 +1,36 @@
-// models/User/datingUserSchema.js - FIXED VERSION
+// models/User/datingUserSchema.js - FINAL FIXED VERSION
+// ONLY account-level data, NO profile/preferences data
 const mongoose = require("mongoose");
 
 const datingUserSchema = new mongoose.Schema({
   // ========== REFERENCES ==========
-  // This schema extends BaseUser, so it has the same _id
   profile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profile',
-    required: false,  
+    required: false,
     unique: true
   },
-  
+
   // ========== DATING SPECIFIC VERIFICATION ==========
   ageVerified: {
     type: Boolean,
     default: false,
   },
-  
+
   ageVerifiedAt: Date,
-  
-  // ========== DATING PREFERENCES ==========
-  // Extends Profile.matchPreferences with dating-specific options
-  datingPreferences: {
-    ageRange: {
-      min: { type: Number, min: 18, max: 100, default: 18 },
-      max: { type: Number, min: 18, max: 100, default: 100 }
-    },
-    distance: {
-      type: Number,
-      min: 1,
-      max: 100,
-      default: 50
-    },
-    notificationRadius: {
-      type: Number,
-      min: 1,
-      max: 100,
-      default: 10
-    },
-    dealBreakers: [String],
-    preferredMeetingTypes: [{
+
+  // ========== PRESENCE & ONLINE STATUS ==========
+  // NO isOnline field - derived from status + lastSeen
+  presence: {
+    status: {
       type: String,
-      enum: ["coffee", "dinner", "drinks", "activity", "virtual", "group"]
-    }],
-    activityLevel: {
-      type: String,
-      enum: ["low", "moderate", "high", "very_high"],
-      default: "moderate"
-    }
+      enum: ['online', 'away', 'busy', 'offline'],
+      default: 'offline'
+    },
+    lastSeen: { type: Date, default: Date.now },
+    lastActive: { type: Date, default: Date.now }
   },
-  
-  // ========== DATING SPECIFIC SETTINGS ==========
-  datingNotificationSettings: {
-    newMatches: { type: Boolean, default: true },
-    newLikes: { type: Boolean, default: true },
-    superLikes: { type: Boolean, default: true },
-    profileViews: { type: Boolean, default: true },
-    safetyAlerts: { type: Boolean, default: true },
-    promotionOffers: { type: Boolean, default: false },
-    matchSuggestions: { type: Boolean, default: true },
-    eventInvitations: { type: Boolean, default: true }
-  },
-  
-  datingPrivacySettings: {
-    showAge: { type: Boolean, default: true },
-    showDistance: { type: Boolean, default: true },
-    showInterests: { type: Boolean, default: true },
-    showLastActive: { 
-      type: String,
-      enum: ["everyone", "matches", "nobody"],
-      default: "matches"
-    },
-    allowMessagesFrom: {
-      type: String,
-      enum: ["everyone", "matches", "friends", "nobody"],
-      default: "everyone"
-    },
-    hideProfileFrom: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'DatingUser'
-    }]
-  },
-  
+
   // ========== DATING STATISTICS ==========
   datingStats: {
     totalLikes: { type: Number, default: 0 },
@@ -91,34 +40,34 @@ const datingUserSchema = new mongoose.Schema({
     totalMessagesReceived: { type: Number, default: 0 },
     profileViews: { type: Number, default: 0 },
     lastActiveDate: { type: Date, default: Date.now },
-    averageResponseTime: { type: Number, default: 0 }, // in minutes
-    matchRate: { type: Number, default: 0, min: 0, max: 100 }, // percentage
+    averageResponseTime: { type: Number, default: 0 },
+    matchRate: { type: Number, default: 0, min: 0, max: 100 },
     streakDays: { type: Number, default: 0 }
   },
-  
-  // ========== DATING SPECIFIC FLAGS ==========
+
+  // ========== DATING ACCOUNT FEATURES ==========
   isPremium: {
     type: Boolean,
     default: false
   },
-  
+
   premiumExpiresAt: {
     type: Date,
     default: null
   },
-  
+
   premiumFeatures: [{
     type: String,
     enum: ["unlimited_likes", "see_who_liked_you", "boost_profile", "incognito_mode", "travel_mode", "advanced_filters"]
   }],
-  
+
   incognitoMode: {
     type: Boolean,
     default: false
   },
-  
+
   incognitoModeExpiresAt: Date,
-  
+
   travelMode: {
     enabled: { type: Boolean, default: false },
     location: {
@@ -134,27 +83,26 @@ const datingUserSchema = new mongoose.Schema({
     expiresAt: Date,
     isVisible: { type: Boolean, default: true }
   },
-  
+
   // ========== MATCHING ALGORITHM DATA ==========
   matchScore: {
     type: Number,
-    default: 50,  // FIXED: Added default value
+    default: 50,
     min: 0,
     max: 100
   },
-  
+
   lastMatchRefresh: {
     type: Date,
-    default: Date.now  // FIXED: Added default
+    default: Date.now
   },
-  
+
   compatibilityScores: {
-    // Store compatibility with users who liked/viewed this user
     type: Map,
     of: Number,
     default: {}
   },
-  
+
   // ========== DATING SECURITY ==========
   reportedCount: { type: Number, default: 0 },
   warningCount: { type: Number, default: 0 },
@@ -162,9 +110,9 @@ const datingUserSchema = new mongoose.Schema({
   shadowBanExpiresAt: Date,
   lastSafetyCheck: {
     type: Date,
-    default: Date.now  // FIXED: Added default
+    default: Date.now
   },
-  
+
   // ========== DATING ACTIVITY ==========
   dailyActivity: [{
     date: { type: Date, default: Date.now },
@@ -173,13 +121,13 @@ const datingUserSchema = new mongoose.Schema({
     matchesMade: { type: Number, default: 0 },
     messagesSent: { type: Number, default: 0 }
   }],
-  
+
   // ========== DATING QUEUE & SWIPING ==========
   seenProfiles: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profile'
   }],
-  
+
   likedProfiles: [{
     profile: {
       type: mongoose.Schema.Types.ObjectId,
@@ -188,7 +136,7 @@ const datingUserSchema = new mongoose.Schema({
     likedAt: { type: Date, default: Date.now },
     isSuperLike: { type: Boolean, default: false }
   }],
-  
+
   // ========== BOOST SETTINGS ==========
   boost: {
     isActive: { type: Boolean, default: false },
@@ -213,30 +161,43 @@ datingUserSchema.index({ incognitoMode: 1 });
 datingUserSchema.index({ 'travelMode.enabled': 1 });
 datingUserSchema.index({ isShadowBanned: 1 });
 datingUserSchema.index({ 'boost.isActive': 1, 'boost.expiresAt': 1 });
+datingUserSchema.index({ 'presence.status': 1, 'presence.lastActive': -1 });
 
 // ========== VIRTUAL PROPERTIES ==========
+// ONLINE STATUS - DERIVED FROM PRESENCE STATUS + LAST SEEN
+datingUserSchema.virtual("isOnline").get(function () {
+  return this.presence?.status === 'online' && 
+         this.presence?.lastSeen && 
+         (new Date() - this.presence.lastSeen) < 5 * 60 * 1000; // 5 minutes
+});
+
+// AGE - POPULATED FROM PROFILE
 datingUserSchema.virtual("age").get(function () {
   if (!this.profile || !this.populated('profile')) return null;
   return this.profile.age;
 });
 
+// COMPLETE DATING PROFILE
 datingUserSchema.virtual("hasCompleteDatingProfile").get(function () {
   if (!this.profile || !this.populated('profile')) return false;
-  return this.profile.profileCompletion >= 70 && this.ageVerified;
+  return this.profile.progress?.completion >= 70 && this.ageVerified;
 });
 
+// VERIFIED USER
 datingUserSchema.virtual("isVerifiedUser").get(function () {
   if (!this.profile || !this.populated('profile')) return false;
-  const badges = this.profile.verificationBadges.map(b => b.type);
+  const badges = this.profile.badges?.map(b => b.type) || [];
   return badges.includes('phone') && badges.includes('email');
 });
 
+// TRAVEL MODE ACTIVE
 datingUserSchema.virtual("isCurrentlyTraveling").get(function () {
   return this.travelMode?.enabled && 
          this.travelMode.expiresAt && 
          new Date(this.travelMode.expiresAt) > new Date();
 });
 
+// BOOST ACTIVE
 datingUserSchema.virtual("isBoostActive").get(function () {
   return this.boost?.isActive && 
          this.boost.expiresAt && 
@@ -244,108 +205,129 @@ datingUserSchema.virtual("isBoostActive").get(function () {
 });
 
 // ========== INSTANCE METHODS ==========
+/**
+ * GET DATING PROFILE FOR VIEWING
+ * This is the PUBLIC facing dating profile
+ * Preferences and private settings are only shown to self
+ */
 datingUserSchema.methods.getDatingProfile = async function (viewerId = null) {
   await this.populate({
     path: 'profile',
-    select: 'userName bio profilePicture photos age gender location city country hobbies verificationBadges profileCompletion'
+    select: 'basic.userName basic.bio photos.profile.url photos.gallery basic.age basic.gender location.city location.country lifestyle.hobbies badges progress.completion relationship.lookingFor settings.tags datingPreferences datingPrivacySettings'
   });
-  
+
   const isSelf = viewerId && viewerId.toString() === this._id.toString();
   const profile = this.profile;
-  
+
+  // ===== PUBLIC PROFILE DATA =====
   const datingProfile = {
     id: this._id,
     profileId: profile._id,
-    userName: profile.userName,
-    avatar: profile.profilePicture?.url,
-    age: this.datingPrivacySettings?.showAge ? profile.age : null,
-    bio: profile.bio,
-    interests: profile.hobbies || [],
-    location: this.getVisibleLocation(viewerId),
-    preferences: this.getVisiblePreferences(viewerId),
+    userName: profile.basic?.userName,
+    avatar: profile.photos?.profile?.url,
+    age: profile.datingPrivacySettings?.showAge ? profile.age : null,
+    bio: profile.basic?.bio,
+    interests: profile.lifestyle?.hobbies || [],
+    location: this.getVisibleLocation(viewerId, profile),
+    lookingFor: this.getVisibleLookingFor(viewerId, profile),
     isVerified: this.isVerifiedUser,
     isPremium: this.isPremium,
     isBoostActive: this.isBoostActive,
-    profileCompletion: profile.profileCompletion,
-    verificationBadges: profile.verificationBadges.map(b => b.type),
-    isOnline: this.isCurrentlyActive(),
-    lastSeen: this.getVisibleLastSeen(viewerId),
-    tags: profile.datingProfile?.tags || []
+    profileCompletion: profile.progress?.completion || 0,
+    verificationBadges: profile.badges?.map(b => b.type) || [],
+    tags: profile.settings?.tags || [],
+    // Presence - derived from status + lastSeen
+    presence: {
+      status: this.presence?.status || 'offline',
+      lastSeen: this.getVisibleLastSeen(viewerId),
+      isOnline: this.isOnline
+    }
   };
-  
-  // Add dating-specific data for self-viewing
+
+  // ===== SELF-ONLY PRIVATE DATA =====
   if (isSelf) {
     datingProfile.datingStats = this.datingStats;
-    datingProfile.datingNotificationSettings = this.datingNotificationSettings;
-    datingProfile.datingPrivacySettings = this.datingPrivacySettings;
-    datingProfile.datingPreferences = this.datingPreferences;
+    datingProfile.datingPreferences = profile.datingPreferences; // From Profile model
+    datingProfile.datingPrivacySettings = profile.datingPrivacySettings; // From Profile model
+    datingProfile.datingNotificationSettings = profile.datingNotificationSettings; // From Profile model
     datingProfile.ageVerified = this.ageVerified;
     datingProfile.incognitoMode = this.incognitoMode;
     datingProfile.travelMode = this.travelMode;
+    datingProfile.presence = this.presence; // Full presence data
+    datingProfile.email = this.email; // Only self sees email
+    datingProfile.phoneNumber = this.phoneNumber; // Only self sees phone
   }
-  
+
   return datingProfile;
 };
 
-datingUserSchema.methods.getVisibleLocation = function(viewerId = null) {
-  if (!this.profile || !this.profile.location) return null;
-  
+/**
+ * GET VISIBLE LOCATION BASED ON PRIVACY SETTINGS
+ */
+datingUserSchema.methods.getVisibleLocation = function(viewerId = null, profile) {
+  if (!profile || !profile.location) return null;
+
   const isSelf = viewerId && viewerId.toString() === this._id.toString();
-  
-  if (isSelf || this.datingPrivacySettings?.showDistance) {
+
+  if (isSelf || profile.datingPrivacySettings?.showDistance) {
     return {
-      city: this.profile.location.city,
-      country: this.profile.location.country,
+      city: profile.location.city,
+      country: profile.location.country,
       distance: this.calculateDistance(viewerId)
     };
   }
-  
-  // For others with privacy restrictions
+
   return {
-    city: this.profile.location.city,
-    country: this.profile.location.country
+    city: profile.location.city,
+    country: profile.location.country
   };
 };
 
-datingUserSchema.methods.getVisiblePreferences = function(viewerId = null) {
+/**
+ * GET VISIBLE LOOKING FOR (NOT FULL PREFERENCES)
+ */
+datingUserSchema.methods.getVisibleLookingFor = function(viewerId = null, profile) {
   const isSelf = viewerId && viewerId.toString() === this._id.toString();
-  
+
   if (isSelf) {
-    return {
-      ageRange: this.datingPreferences.ageRange,
-      distance: this.datingPreferences.distance,
-      lookingFor: this.profile.lookingFor
-    };
+    return profile.relationship?.lookingFor || [];
   }
-  
-  // For others, only show what they're looking for
-  return {
-    lookingFor: this.profile.lookingFor || ["dating"]
-  };
+
+  // Public view - only show lookingFor, not full preferences
+  return profile.relationship?.lookingFor || ["dating"];
 };
 
+/**
+ * GET VISIBLE LAST SEEN BASED ON PRIVACY SETTINGS
+ */
 datingUserSchema.methods.getVisibleLastSeen = function(viewerId = null) {
   const isSelf = viewerId && viewerId.toString() === this._id.toString();
-  
+
   if (isSelf) {
-    return this.datingStats?.lastActiveDate;
+    return this.presence?.lastSeen || this.datingStats?.lastActiveDate;
   }
+
+  // Need to populate profile to check privacy settings
+  if (!this.populated('profile')) {
+    return null;
+  }
+
+  const privacySettings = this.profile?.datingPrivacySettings;
   
-  // Check privacy settings
-  if (this.datingPrivacySettings?.showLastActive === 'everyone') {
-    return this.datingStats?.lastActiveDate;
-  } else if (this.datingPrivacySettings?.showLastActive === 'matches') {
-    // Check if viewerId is a match
+  if (privacySettings?.showLastActive === 'everyone') {
+    return this.presence?.lastSeen || this.datingStats?.lastActiveDate;
+  } else if (privacySettings?.showLastActive === 'matches') {
     const isMatch = this.isMatch(viewerId);
-    return isMatch ? this.datingStats?.lastActiveDate : null;
+    return isMatch ? (this.presence?.lastSeen || this.datingStats?.lastActiveDate) : null;
   }
-  
+
   return null;
 };
 
+/**
+ * CHECK IF USER IS A MATCH WITH ANOTHER USER
+ */
 datingUserSchema.methods.isMatch = async function(otherUserId) {
-  // Implementation depends on your Match model
-  // This is a placeholder
   const Match = mongoose.model('Match');
   const match = await Match.findOne({
     $or: [
@@ -354,52 +336,68 @@ datingUserSchema.methods.isMatch = async function(otherUserId) {
     ],
     status: 'matched'
   });
-  
+
   return !!match;
 };
 
+/**
+ * CALCULATE DISTANCE (PLACEHOLDER)
+ */
 datingUserSchema.methods.calculateDistance = function(viewerId) {
-  // If viewer is the same user or viewer location not available
   if (!viewerId || viewerId.toString() === this._id.toString()) {
     return 0;
   }
-  
-  // This would require fetching viewer's location
-  // Placeholder implementation
   return null;
 };
 
-datingUserSchema.methods.isWithinPreferences = function(targetProfile) {
-  const targetAge = targetProfile.age;
-  const myAgeRange = this.datingPreferences?.ageRange || { min: 18, max: 100 };
+/**
+ * CHECK IF USER IS WITHIN PREFERENCES OF ANOTHER USER
+ * Uses datingPreferences from Profile model
+ */
+datingUserSchema.methods.isWithinPreferences = async function(targetUserId) {
+  // Need to populate profile to get preferences
+  if (!this.populated('profile')) {
+    await this.populate('profile');
+  }
+
+  const targetUser = await mongoose.model('DatingUser').findById(targetUserId).populate('profile');
   
-  // Check age
-  if (targetAge < myAgeRange.min || targetAge > myAgeRange.max) {
+  if (!targetUser || !targetUser.profile) return false;
+
+  const myPreferences = this.profile?.datingPreferences;
+  const targetProfile = targetUser.profile;
+  const targetAge = targetProfile.age;
+
+  // Age range check
+  if (targetAge < myPreferences?.ageRange?.min || targetAge > myPreferences?.ageRange?.max) {
     return false;
   }
-  
-  // Check gender preferences from profile
-  const myGenderPrefs = this.profile?.matchPreferences?.gender || [];
+
+  // Gender preference check
+  const myGenderPrefs = this.profile?.preferences?.basic?.gender || [];
   if (myGenderPrefs.length > 0 && !myGenderPrefs.includes('any')) {
-    if (!myGenderPrefs.includes(targetProfile.gender)) {
+    if (!myGenderPrefs.includes(targetProfile.basic?.gender)) {
       return false;
     }
   }
-  
-  // Check lookingFor compatibility
-  const myLookingFor = this.profile?.lookingFor || [];
-  const theirLookingFor = targetProfile.lookingFor || [];
-  
+
+  // Looking for match check
+  const myLookingFor = this.profile?.relationship?.lookingFor || [];
+  const theirLookingFor = targetProfile.relationship?.lookingFor || [];
+
   if (myLookingFor.length > 0 && theirLookingFor.length > 0) {
     const hasCommonGoal = myLookingFor.some(goal => theirLookingFor.includes(goal));
     if (!hasCommonGoal) {
       return false;
     }
   }
-  
+
   return true;
 };
 
+/**
+ * ACTIVATE TRAVEL MODE
+ */
 datingUserSchema.methods.activateTravelMode = async function(locationData, durationHours = 72) {
   this.travelMode = {
     enabled: true,
@@ -413,10 +411,13 @@ datingUserSchema.methods.activateTravelMode = async function(locationData, durat
     expiresAt: new Date(Date.now() + (durationHours * 60 * 60 * 1000)),
     isVisible: true
   };
-  
+
   return await this.save({ validateBeforeSave: false });
 };
 
+/**
+ * ACTIVATE BOOST
+ */
 datingUserSchema.methods.activateBoost = async function(boostType = "regular", durationHours = 1) {
   this.boost = {
     isActive: true,
@@ -425,15 +426,17 @@ datingUserSchema.methods.activateBoost = async function(boostType = "regular", d
     boostType: boostType,
     multiplier: boostType === "super" ? 3 : boostType === "mega" ? 5 : 2
   };
-  
+
   return await this.save({ validateBeforeSave: false });
 };
 
+/**
+ * UPDATE DATING STATISTICS
+ */
 datingUserSchema.methods.updateDatingStats = async function(updates) {
   Object.keys(updates).forEach(key => {
     if (this.datingStats[key] !== undefined) {
       if (key === 'averageResponseTime') {
-        // Calculate new average
         const currentAvg = this.datingStats[key];
         const newValue = updates[key];
         const totalResponses = this.datingStats.totalMessagesReceived || 1;
@@ -447,82 +450,111 @@ datingUserSchema.methods.updateDatingStats = async function(updates) {
       }
     }
   });
-  
+
   this.datingStats.lastActiveDate = new Date();
+  this.presence.lastActive = new Date();
+  this.presence.lastSeen = new Date();
+
   return await this.save({ validateBeforeSave: false });
 };
 
+/**
+ * UPDATE PRESENCE STATUS
+ */
+datingUserSchema.methods.updatePresence = async function(status = 'online') {
+  this.presence = {
+    status,
+    lastSeen: new Date(),
+    lastActive: new Date()
+  };
+  this.datingStats.lastActiveDate = new Date();
+
+  return await this.save({ validateBeforeSave: false });
+};
+
+/**
+ * CHECK IF USER IS CURRENTLY ACTIVE
+ */
 datingUserSchema.methods.isCurrentlyActive = function() {
-  const lastActive = this.datingStats?.lastActiveDate;
+  const lastActive = this.presence?.lastActive || this.datingStats?.lastActiveDate;
   if (!lastActive) return false;
-  
+
   const now = new Date();
   const minutesSinceLastActive = (now - lastActive) / (1000 * 60);
-  
-  return minutesSinceLastActive < 5; // Considered online if active within last 5 minutes
+
+  return minutesSinceLastActive < 5 && this.presence?.status === 'online';
 };
 
 // ========== STATIC METHODS ==========
+/**
+ * FIND COMPATIBLE USERS FOR DATING
+ */
 datingUserSchema.statics.findCompatibleUsers = async function(userId, options = {}) {
   const currentUser = await this.findById(userId).populate('profile');
-  
+
   if (!currentUser || !currentUser.profile) {
     throw new Error('User or profile not found');
   }
-  
+
+  const myPreferences = currentUser.profile.datingPreferences;
+  const myLocation = currentUser.profile.location;
+
   const query = {
     _id: { $ne: userId },
-    'profile.datingProfile.isVisible': true,
-    'profile.datingProfile.isPaused': false,
+    'profile.settings.isVisible': true,
+    'profile.settings.isPaused': false,
     isShadowBanned: false,
-    'profile.profileCompletion': { $gte: options.minCompletion || 60 }
+    'profile.progress.completion': { $gte: options.minCompletion || 60 }
   };
-  
+
   // Age range filter
   const today = new Date();
-  const minBirthDate = new Date(today.getFullYear() - currentUser.datingPreferences.ageRange.max - 1, today.getMonth(), today.getDate());
-  const maxBirthDate = new Date(today.getFullYear() - currentUser.datingPreferences.ageRange.min, today.getMonth(), today.getDate());
-  
-  query['profile.dateOfBirth'] = { $gte: minBirthDate, $lte: maxBirthDate };
-  
-  // Gender preference
-  const genderPrefs = currentUser.profile.matchPreferences?.gender || [];
+  const minBirthDate = new Date(today.getFullYear() - myPreferences.ageRange.max - 1, today.getMonth(), today.getDate());
+  const maxBirthDate = new Date(today.getFullYear() - myPreferences.ageRange.min, today.getMonth(), today.getDate());
+
+  query['profile.basic.dateOfBirth'] = { $gte: minBirthDate, $lte: maxBirthDate };
+
+  // Gender preference filter
+  const genderPrefs = currentUser.profile.preferences?.basic?.gender || [];
   if (genderPrefs.length > 0 && !genderPrefs.includes('any')) {
-    query['profile.gender'] = { $in: genderPrefs };
+    query['profile.basic.gender'] = { $in: genderPrefs };
   }
-  
-  // Location filter
-  if (currentUser.profile.location?.coordinates && currentUser.datingPreferences.distance) {
+
+  // Distance filter
+  if (myLocation?.coordinates && myPreferences.distance) {
     query['profile.location.coordinates'] = {
       $near: {
         $geometry: {
           type: "Point",
-          coordinates: currentUser.profile.location.coordinates
+          coordinates: myLocation.coordinates
         },
-        $maxDistance: currentUser.datingPreferences.distance * 1000 // Convert km to meters
+        $maxDistance: myPreferences.distance * 1000
       }
     };
   }
-  
-  // Exclude already seen/liked profiles
+
+  // Exclude seen profiles
   if (currentUser.seenProfiles && currentUser.seenProfiles.length > 0) {
     query['profile._id'] = { $nin: currentUser.seenProfiles };
   }
-  
+
   return this.find(query)
     .populate({
       path: 'profile',
-      select: 'userName profilePicture bio age gender location.city location.country hobbies verificationBadges profileCompletion lookingFor'
+      select: 'basic.userName basic.bio photos.profile.url basic.age basic.gender location.city location.country lifestyle.hobbies badges progress.completion relationship.lookingFor datingPreferences'
     })
     .limit(options.limit || 20)
     .skip(options.skip || 0)
-    .sort({ 
+    .sort({
       matchScore: -1,
       isPremium: -1,
-      'profile.profileCompletion': -1 
+      'profile.progress.completion': -1
     });
 };
 
+/**
+ * FIND NEARBY ACTIVE USERS
+ */
 datingUserSchema.statics.findNearbyActiveUsers = function(coordinates, radiusKm = 50, options = {}) {
   const query = {
     'profile.location.coordinates': {
@@ -534,69 +566,71 @@ datingUserSchema.statics.findNearbyActiveUsers = function(coordinates, radiusKm 
         $maxDistance: radiusKm * 1000
       }
     },
-    'profile.datingProfile.isVisible': true,
+    'profile.settings.isVisible': true,
     isShadowBanned: false,
-    'datingStats.lastActiveDate': {
+    'presence.lastActive': {
       $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Active in last 7 days
     }
   };
-  
+
   if (options.minAge || options.maxAge) {
     const today = new Date();
     const conditions = {};
-    
+
     if (options.minAge) {
       const maxBirthDate = new Date(today.getFullYear() - options.minAge, today.getMonth(), today.getDate());
       conditions.$lte = maxBirthDate;
     }
-    
+
     if (options.maxAge) {
       const minBirthDate = new Date(today.getFullYear() - options.maxAge - 1, today.getMonth(), today.getDate());
       conditions.$gte = minBirthDate;
     }
-    
-    query['profile.dateOfBirth'] = conditions;
+
+    query['profile.basic.dateOfBirth'] = conditions;
   }
-  
+
   return this.find(query)
     .populate({
       path: 'profile',
-      select: 'userName profilePicture age gender location.city hobbies'
+      select: 'basic.userName photos.profile.url basic.age basic.gender location.city lifestyle.hobbies'
     })
     .limit(options.limit || 50)
-    .sort({ 'datingStats.lastActiveDate': -1 });
+    .sort({ 'presence.lastActive': -1 });
 };
 
 // ========== MIDDLEWARE ==========
-datingUserSchema.pre('save', function(next) {
+datingUserSchema.pre('save', function() {
   try {
-    // Update last active date on certain changes
-    if (this.isModified('datingStats') || 
-        this.isModified('travelMode') || 
-        this.isModified('incognitoMode')) {
+    // Update lastActiveDate when relevant fields change
+    if (this.isModified('datingStats') ||
+        this.isModified('travelMode') ||
+        this.isModified('incognitoMode') ||
+        this.isModified('presence')) {
       this.datingStats.lastActiveDate = new Date();
     }
-    
-    // Ensure travel mode has expiration
+
+    // Set default travelMode expiry
     if (this.travelMode?.enabled && !this.travelMode.expiresAt) {
       this.travelMode.expiresAt = new Date(Date.now() + (72 * 60 * 60 * 1000));
     }
-    
-    // Ensure boost has expiration
+
+    // Set default boost expiry
     if (this.boost?.isActive && !this.boost.expiresAt) {
       this.boost.expiresAt = new Date(Date.now() + (60 * 60 * 1000));
     }
-    
-    // Only call next if it's a function
-    if (typeof next === 'function') {
-      next();
+
+    // Initialize presence if not set
+    if (!this.presence) {
+      this.presence = {
+        status: 'offline',
+        lastSeen: new Date(),
+        lastActive: new Date()
+      };
     }
+
   } catch (error) {
-    if (typeof next === 'function') {
-      next(error);
-    } else {
-      throw error;
-    }
+    throw error;
   }
 });
 

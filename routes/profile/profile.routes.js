@@ -6,215 +6,122 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// FIX 1: Updated controller import path
-const profileController = require("@controllers/profile/profile.controller"); 
-const { protect, authorize, requireDatingProfile, requireProfileCompletion } = require("@middleware/authmiddleware");
+// ============ CONTROLLER IMPORTS ============
+const profileController = require("@controllers/profile/profile.controller");
+const { protect, authorize, requireDatingProfile } = require("@middleware/authmiddleware");
+const { apiLimiter, createDynamicRateLimiter, rateLimitInfoMiddleware } = require("@middleware/rateLimit");
 
-// Import enhanced rate limiter middleware
-const {
-  apiLimiter,
-  createDynamicRateLimiter,
-  rateLimitInfoMiddleware
-} = require("@middleware/rateLimit");
-
-// ============ FILE UPLOAD CONFIGURATION ============
+// ============ FILE UPLOAD CONFIG ============
 const UPLOAD_CONFIG = {
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'],
-  UPLOAD_DIR: 'uploads/profile/',
+  ALLOWED_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  UPLOAD_DIR: 'uploads/profiles/',
   TEMP_DIR: 'uploads/temp/'
 };
 
-// Ensure upload directories exist
+// Ensure directories exist
 [UPLOAD_CONFIG.UPLOAD_DIR, UPLOAD_CONFIG.TEMP_DIR].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// Configure multer storage
+// Multer config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOAD_CONFIG.TEMP_DIR);
-  },
+  destination: (req, file, cb) => cb(null, UPLOAD_CONFIG.TEMP_DIR),
   filename: (req, file, cb) => {
     const userId = req.user?.id || 'anonymous';
     const timestamp = Date.now();
-    const random = Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${userId}-${timestamp}-${random}${ext}`);
+    cb(null, `${userId}-${timestamp}${ext}`);
   }
 });
 
-// File filter
 const fileFilter = (req, file, cb) => {
   if (UPLOAD_CONFIG.ALLOWED_TYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, and GIF images are allowed.'));
+    cb(new Error('Invalid file type. Only JPEG, PNG, and WebP images are allowed.'));
   }
 };
 
-// Create multer instance
 const upload = multer({
   storage,
   fileFilter,
-  limits: {
-    fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE
-  }
+  limits: { fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE }
 });
 
-// ============ CUSTOM PROFILE RATE LIMITERS ============
-const profileUpdateLimiter = createDynamicRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  keyGenerator: (req) => `profile:update:user:${req.user?.id}`,
-  message: 'Too many profile updates. Please wait before making more changes.',
-  skip: (req) => req.method === 'GET'
-});
-
-const profilePhotoLimiter = createDynamicRateLimiter({
-  windowMs: 60 * 60 * 1000,
-  max: 10,
-  keyGenerator: (req) => `profile:photos:user:${req.user?.id}`,
-  message: 'Too many photo updates. Please wait before uploading more photos.'
-});
-
-const publicProfileViewLimiter = createDynamicRateLimiter({
-  windowMs: 60 * 1000,
-  max: 60,
-  keyGenerator: (req) => {
-    const targetId = req.params?.userId || req.query?.userId;
-    return `profile:view:${req.ip}:${targetId || 'list'}`;
-  },
-  message: 'Too many profile views. Please slow down.'
-});
-
-const profileCreationLimiter = createDynamicRateLimiter({
-  windowMs: 24 * 60 * 60 * 1000,
-  max: 3,
-  keyGenerator: (req) => `profile:create:user:${req.user?.id}`,
-  message: 'Too many profile creations. Please wait 24 hours before creating another profile.'
-});
-
-const verificationLimiter = createDynamicRateLimiter({
-  windowMs: 7 * 24 * 60 * 60 * 1000,
-  max: 3,
-  keyGenerator: (req) => `profile:verify:user:${req.user?.id}`,
-  message: 'Too many verification requests. You can only request verification 3 times per week.'
-});
-
-const completionCheckLimiter = createDynamicRateLimiter({
-  windowMs: 5 * 60 * 1000,
-  max: 30,
-  keyGenerator: (req) => `profile:completion:user:${req.user?.id}`,
-  message: 'Too many profile completion checks. Please cache the result.'
-});
-
-const profileDeletionLimiter = createDynamicRateLimiter({
-  windowMs: 24 * 60 * 60 * 1000,
-  max: 1,
-  keyGenerator: (req) => `profile:delete:user:${req.user?.id}`,
-  message: 'You can only delete your profile once per day. Please confirm this action.'
-});
-
-const profileExportLimiter = createDynamicRateLimiter({
-  windowMs: 24 * 60 * 60 * 1000,
-  max: 3,
-  keyGenerator: (req) => `profile:export:user:${req.user?.id}`,
-  message: 'Too many profile export requests. Please wait 24 hours.'
-});
+// ============ RATE LIMITERS ============
+const limiters = {
+  general: apiLimiter,
+  update: createDynamicRateLimiter({ windowMs: 15 * 60 * 1000, max: 30, keyGenerator: (req) => `profile:update:${req.user?.id}` }),
+  photos: createDynamicRateLimiter({ windowMs: 60 * 60 * 1000, max: 15, keyGenerator: (req) => `profile:photos:${req.user?.id}` }),
+  view: createDynamicRateLimiter({ windowMs: 60 * 1000, max: 100, keyGenerator: (req) => `profile:view:${req.ip}` }),
+  create: createDynamicRateLimiter({ windowMs: 24 * 60 * 60 * 1000, max: 1, keyGenerator: (req) => `profile:create:${req.user?.id}` }),
+  badge: createDynamicRateLimiter({ windowMs: 7 * 24 * 60 * 60 * 1000, max: 5, keyGenerator: (req) => `profile:badge:${req.user?.id}` }),
+  search: createDynamicRateLimiter({ windowMs: 60 * 1000, max: 30, keyGenerator: (req) => `profile:search:${req.ip}` })
+};
 
 // ============ HELPER FUNCTIONS ============
-const validateRequest = (validations) => {
+const validate = (validations) => {
   return async (req, res, next) => {
-    await Promise.all(validations.map(validation => validation.run(req)));
-    
+    await Promise.all(validations.map(v => v.run(req)));
     const errors = validationResult(req);
-    if (errors.isEmpty()) {
-      return next();
-    }
-    
-    const errorMessages = errors.array().map(err => ({
-      field: err.path,
-      message: err.msg,
-      value: err.value
-    }));
+    if (errors.isEmpty()) return next();
     
     return res.status(400).json({
       success: false,
       error: 'Validation failed',
-      errors: errorMessages,
+      errors: errors.array().map(e => ({ field: e.path, message: e.msg, value: e.value })),
       code: 'VALIDATION_ERROR',
       timestamp: new Date().toISOString()
     });
   };
 };
 
-const sanitizeInput = (req, res, next) => {
-  // Basic XSS protection for string fields
-  const sanitizeString = (str) => {
-    if (typeof str !== 'string') return str;
-    return str
-      .replace(/[<>]/g, '') // Remove < and >
-      .trim();
-  };
-  
-  // Recursively sanitize object
-  const sanitizeObject = (obj) => {
+const sanitize = (req, res, next) => {
+  const clean = (obj) => {
     if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(clean);
     
-    if (Array.isArray(obj)) {
-      return obj.map(item => sanitizeObject(item));
-    }
-    
-    const sanitized = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string') {
-        sanitized[key] = sanitizeString(value);
-      } else if (typeof value === 'object') {
-        sanitized[key] = sanitizeObject(value);
+    return Object.keys(obj).reduce((acc, key) => {
+      const val = obj[key];
+      if (typeof val === 'string') {
+        acc[key] = val.replace(/[<>]/g, '').trim();
+      } else if (typeof val === 'object') {
+        acc[key] = clean(val);
       } else {
-        sanitized[key] = value;
+        acc[key] = val;
       }
-    }
-    return sanitized;
+      return acc;
+    }, {});
   };
   
-  if (req.body) {
-    req.body = sanitizeObject(req.body);
-  }
-  
+  if (req.body) req.body = clean(req.body);
   next();
 };
 
-const cacheControl = (duration) => {
-  return (req, res, next) => {
-    res.set('Cache-Control', `public, max-age=${duration}, stale-while-revalidate=300`);
-    next();
-  };
+const cache = (seconds) => (req, res, next) => {
+  res.set('Cache-Control', `public, max-age=${seconds}`);
+  next();
 };
 
-// ============ MIDDLEWARE ORDER ============
-// Security headers
-router.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
-
-// Request timing
+// ============ REQUEST TRACKING ============
 router.use((req, res, next) => {
   req.startTime = Date.now();
   req.requestId = req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   next();
 });
 
+// Security headers
+router.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 // Rate limiting
 router.use(rateLimitInfoMiddleware);
-router.use(apiLimiter);
+router.use(limiters.general);
 
 // ============ PUBLIC ROUTES ============
 router.get("/health", (req, res) => {
@@ -223,802 +130,369 @@ router.get("/health", (req, res) => {
     service: 'profile-api',
     version: '1.0.0',
     status: 'operational',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      public: ['/options', '/defaults', '/public/:userId', '/search', '/health'],
-      protected: ['/create', '/me', '/update', '/upload', '/photos', '/match-preferences', '/verification', '/stats', '/completion', '/export', '/delete'],
-      dating: ['/dating/profile', '/dating/visibility', '/dating/settings']
-    }
+    timestamp: new Date().toISOString()
   });
 });
 
-// Static data with caching
-router.get("/options",
-  cacheControl(86400), // 24 hours
-  createDynamicRateLimiter({
-    windowMs: 60 * 1000,
-    max: 100,
-    message: 'Too many options requests. Please cache the results.'
-  }),
-  profileController.getProfileOptions
-);
-
-router.get("/defaults",
-  cacheControl(86400), // 24 hours
-  createDynamicRateLimiter({
-    windowMs: 60 * 1000,
-    max: 100,
-    message: 'Too many defaults requests. Please cache the results.'
-  }),
-  profileController.getDefaultProfileValues
-);
+// Static data - cached 24h
+router.get("/options", cache(86400), limiters.search, profileController.getOptions);
 
 // Public profile view
 router.get("/public/:userId",
-  publicProfileViewLimiter,
-  validateRequest([
-    param('userId')
-      .isMongoId()
-      .withMessage('Valid user ID is required')
-  ]),
+  limiters.view,
+  validate([param('userId').isMongoId().withMessage('Valid user ID required')]),
   profileController.getPublicProfile
-);
-
-// Profile search (public)
-router.get("/search",
-  createDynamicRateLimiter({
-    windowMs: 30 * 1000,
-    max: 60,
-    message: 'Too many search requests. Please slow down.'
-  }),
-  validateRequest([
-    query('q').optional().isString().trim().isLength({ max: 100 }),
-    query('gender').optional().isIn(['male', 'female', 'non-binary', 'other']),
-    query('minAge').optional().isInt({ min: 18, max: 100 }).toInt(),
-    query('maxAge').optional().isInt({ min: 18, max: 100 }).toInt(),
-    query('location').optional().isString().trim().isLength({ max: 100 }),
-    query('religion').optional().isString().trim(),
-    query('page').optional().isInt({ min: 1 }).toInt().default(1),
-    query('limit').optional().isInt({ min: 1, max: 50 }).toInt().default(20),
-    query('sort').optional().isIn(['recent', 'popular', 'distance', 'match']),
-    query('online').optional().isBoolean().toBoolean()
-  ]),
-  async (req, res) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          results: [],
-          pagination: {
-            page: req.query.page || 1,
-            limit: req.query.limit || 20,
-            total: 0,
-            pages: 0
-          },
-          filters: req.query
-        },
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Search failed',
-        code: 'SEARCH_ERROR',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    }
-  }
 );
 
 // ============ PROTECTED ROUTES ============
 router.use(protect);
 
-// Get own complete profile
+// ===== GET PROFILE =====
 router.get("/me",
-  createDynamicRateLimiter({
-    windowMs: 10 * 1000,
-    max: 20,
-    message: 'Too many profile requests. Please cache your profile data.'
-  }),
-  cacheControl(60), // 1 minute cache for personal profile
-  profileController.getCompleteProfile
+  createDynamicRateLimiter({ windowMs: 10 * 1000, max: 20 }),
+  cache(60),
+  profileController.getMyProfile
 );
 
-// Profile creation
-router.post("/create",
-  profileCreationLimiter,
-  sanitizeInput,
-  validateRequest([
-    body('userName')
-      .isString()
-      .trim()
-      .isLength({ min: 3, max: 30 })
-      .matches(/^[a-zA-Z0-9_.]+$/)
-      .withMessage('Username must be 3-30 alphanumeric characters (letters, numbers, underscore, period)'),
-    body('bio')
+// ===== CREATE PROFILE =====
+router.post("/",
+  limiters.create,
+  sanitize,
+  validate([
+    body('basic.userName')
       .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 500 })
-      .withMessage('Bio must be less than 500 characters'),
-    body('dateOfBirth')
+      .isString().trim()
+      .isLength({ min: 3, max: 20 })
+      .matches(/^[a-zA-Z0-9_-]+$/)
+      .withMessage('Username: 3-20 letters, numbers, underscore, hyphen'),
+    
+    body('basic.bio')
+      .optional()
+      .isString().trim()
+      .isLength({ max: 500 }),
+    
+    body('basic.dateOfBirth')
       .optional()
       .isISO8601()
-      .withMessage('Valid date of birth is required (YYYY-MM-DD)'),
-    body('age')
+      .withMessage('Valid date required (YYYY-MM-DD)'),
+    
+    body('basic.gender')
       .optional()
-      .isInt({ min: 13, max: 100 })
-      .withMessage('Age must be between 13 and 100'),
-    body('gender')
+      .isIn(['male', 'female', 'non-binary', 'other', 'prefer-not-to-say']),
+    
+    body('basic.height')
       .optional()
-      .isString()
-      .isIn(['male', 'female', 'non-binary', 'other'])
-      .withMessage('Valid gender is required'),
-    // FIX 2: Updated field names to match controller
-    body('location')
-      .optional()
-      .isObject()
-      .withMessage('Location must be an object'),
-    body('location.coordinates')
-      .optional()
-      .isArray()
-      .withMessage('Coordinates must be an array'),
-    body('location.coordinates.*')
-      .optional()
-      .isFloat()
-      .withMessage('Coordinates must be numbers'),
+      .isInt({ min: 100, max: 250 }),
+    
     body('location.city')
       .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 100 })
-      .withMessage('City must be less than 100 characters'),
+      .isString().trim()
+      .isLength({ max: 100 }),
+    
     body('location.country')
       .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 100 })
-      .withMessage('Country must be less than 100 characters'),
-    // FIX 3: Added validation for new schema fields
+      .isString().trim()
+      .isLength({ max: 100 }),
+    
     body('countryOfOrigin')
       .optional()
-      .isString()
-      .trim()
+      .isString().trim()
       .isLength({ max: 100 }),
+    
     body('homeLanguage')
       .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 50 }),
-    body('religion')
-      .optional()
-      .isString()
-      .trim(),
-    body('servingAs')
-      .optional()
-      .isString()
-      .trim(),
-    body('relationshipStatus')
-      .optional()
-      .isString()
-      .trim(),
-    body('lookingFor')
-      .optional()
-      .isArray()
-      .withMessage('Looking for must be an array'),
-    body('lookingFor.*')
-      .isIn(['male', 'female', 'non-binary', 'other', 'dating', 'relationship', 'marriage', 'friendship'])
-      .withMessage('Valid looking for option required'),
-    body('haveChildren')
-      .optional()
-      .isString()
-      .trim(),
-    body('wantsChildren')
-      .optional()
-      .isString()
-      .trim(),
-    body('education')
-      .optional()
-      .isString()
-      .trim(),
-    body('occupation')
-      .optional()
-      .isString()
-      .trim(),
-    body('income')
-      .optional()
-      .isString()
-      .trim(),
-    body('hobbies')
-      .optional()
-      .isArray(),
-    body('languages')
-      .optional()
-      .isArray()
+      .isString().trim()
+      .isLength({ max: 50 })
   ]),
   profileController.createProfile
 );
 
-// Update profile
-router.put("/update",
-  profileUpdateLimiter,
-  sanitizeInput,
-  validateRequest([
-    body('userName')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ min: 3, max: 30 })
-      .matches(/^[a-zA-Z0-9_.]+$/),
-    body('bio')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 500 }),
-    body('dateOfBirth')
-      .optional()
-      .isISO8601(),
-    body('age')
-      .optional()
-      .isInt({ min: 13, max: 100 }),
-    body('gender')
-      .optional()
-      .isString()
-      .isIn(['male', 'female', 'non-binary', 'other']),
-    // FIX 4: Updated field names
-    body('location')
-      .optional()
-      .isObject(),
-    body('location.coordinates')
-      .optional()
-      .isArray(),
-    body('location.coordinates.*')
-      .optional()
-      .isFloat(),
-    body('location.city')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 100 }),
-    body('location.country')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 100 }),
-    // FIX 5: Added validation for new schema fields
-    body('countryOfOrigin')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 100 }),
-    body('homeLanguage')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 50 }),
-    body('religion')
-      .optional()
-      .isString()
-      .trim(),
-    body('servingAs')
-      .optional()
-      .isString()
-      .trim(),
-    body('relationshipStatus')
-      .optional()
-      .isString()
-      .trim(),
-    body('lookingFor')
-      .optional()
-      .isArray(),
-    body('lookingFor.*')
-      .isIn(['male', 'female', 'non-binary', 'other', 'dating', 'relationship', 'marriage', 'friendship']),
-    body('haveChildren')
-      .optional()
-      .isString()
-      .trim(),
-    body('wantsChildren')
-      .optional()
-      .isString()
-      .trim(),
-    body('education')
-      .optional()
-      .isString()
-      .trim(),
-    body('occupation')
-      .optional()
-      .isString()
-      .trim(),
-    body('income')
-      .optional()
-      .isString()
-      .trim(),
-    body('hobbies')
-      .optional()
-      .isArray(),
-    body('hobbies.*')
-      .isString()
-      .trim()
-      .isLength({ max: 50 }),
-    body('languages')
-      .optional()
-      .isArray(),
-    body('languages.*')
-      .isString()
-      .trim()
-      .isLength({ max: 50 }),
-    body('datingProfile')
-      .optional()
-      .isObject(),
-    body('datingProfile.isVisible')
-      .optional()
-      .isBoolean(),
-    body('datingProfile.isPaused')
-      .optional()
-      .isBoolean(),
-    body('height')
-      .optional()
-      .isInt({ min: 100, max: 250 }),
-    body('interests')
-      .optional()
-      .isArray(),
-    body('interests.*')
-      .isString()
-      .trim()
-      .isLength({ max: 50 })
-  ]),
+// ===== UPDATE FULL PROFILE =====
+router.put("/",
+  limiters.update,
+  sanitize,
   profileController.updateProfile
 );
 
-// Upload profile picture
-router.post("/upload",
-  profilePhotoLimiter,
-  upload.single('photo'),
-  validateRequest([
-    body('isPrimary').optional().isBoolean(),
-    body('caption').optional().isString().trim().isLength({ max: 100 })
+// ===== SECTION UPDATES =====
+router.put("/basic",
+  limiters.update,
+  sanitize,
+  validate([
+    body('basic.userName').optional().isString().trim().isLength({ min: 3, max: 20 }),
+    body('basic.bio').optional().isString().trim().isLength({ max: 500 }),
+    body('basic.dateOfBirth').optional().isISO8601(),
+    body('basic.gender').optional().isIn(['male', 'female', 'non-binary', 'other', 'prefer-not-to-say']),
+    body('basic.height').optional().isInt({ min: 100, max: 250 })
   ]),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          code: 'NO_FILE',
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId
-        });
-      }
-      
-      const fileInfo = {
-        originalName: req.file.originalname,
-        fileName: req.file.filename,
-        path: req.file.path,
-        size: req.file.size,
-        mimetype: req.file.mimetype,
-        uploadedAt: new Date()
-      };
-      
-      // Note: This should call a service to process and update the profile
-      res.json({
-        success: true,
-        data: {
-          file: fileInfo,
-          message: 'File uploaded successfully. Processing...'
-        },
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    } catch (error) {
-      // Clean up uploaded file on error
-      if (req.file && req.file.path) {
-        fs.unlink(req.file.path, () => {});
-      }
-      
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Upload failed',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    }
-  }
+  profileController.updateBasicInfo
 );
 
-// Update profile picture via URL
-router.put("/profile-picture",
-  profilePhotoLimiter,
-  validateRequest([
-    body('url')
-      .isURL()
-      .withMessage('Valid photo URL is required'),
-    body('isVerified')
-      .optional()
-      .isBoolean()
-      .withMessage('isVerified must be a boolean')
+router.put("/faith",
+  limiters.update,
+  sanitize,
+  validate([
+    body('faith.baptismDate').optional().isISO8601(),
+    body('faith.servingAs').optional().isIn(['elder', 'ministerial_servant', 'regular_pioneer', 'auxiliary_pioneer', 'special_pioneer', 'regular_publisher', 'other', null]),
+    body('faith.pioneerHours').optional().isIn(['30', '50', '70', '100', null]),
+    body('faith.congregation.name').optional().isString().trim().isLength({ max: 100 }),
+    body('faith.congregation.circuit').optional().isString().trim().isLength({ max: 50 }),
+    body('faith.congregation.language').optional().isString().trim().isLength({ max: 50 }),
+    body('faith.missionary.served').optional().isBoolean(),
+    body('faith.bethel.served').optional().isBoolean()
+  ]),
+  profileController.updateFaithInfo
+);
+
+router.put("/relationship",
+  limiters.update,
+  sanitize,
+  validate([
+    body('relationship.status').optional().isIn(['single', 'dating', 'engaged', 'married', 'divorced', 'widowed', 'separated', null]),
+    body('relationship.lookingFor').optional().isArray(),
+    body('relationship.lookingFor.*').optional().isIn(['friendship', 'pen_pals', 'dating', 'serious_relationship', 'marriage']),
+    body('relationship.children.have').optional().isIn(['yes', 'no', 'prefer_not_to_say', null]),
+    body('relationship.children.want').optional().isIn(['yes', 'no', 'maybe', 'open_to_adoption', 'prefer_not_to_say', null]),
+    body('relationship.livingSituation').optional().isIn(['alone', 'with_family', 'with_roommates', 'with_children', 'other', null])
+  ]),
+  profileController.updateRelationshipInfo
+);
+
+router.put("/career",
+  limiters.update,
+  sanitize,
+  validate([
+    body('career.education.level').optional().isIn(['high_school', 'some_college', 'associates', 'bachelors', 'masters', 'phd', 'trade_school', 'other', null]),
+    body('career.education.field').optional().isString().trim().isLength({ max: 100 }),
+    body('career.work.occupation').optional().isString().trim().isLength({ max: 100 }),
+    body('career.work.industry').optional().isString().trim().isLength({ max: 100 }),
+    body('career.work.schedule').optional().isIn(['9to5', 'flexible', 'nights', 'weekends', 'shift_work', 'stay_at_home', 'retired', 'student', null]),
+    body('career.work.income').optional().isIn(['under_30k', '30k_60k', '60k_100k', '100k_150k', '150k_plus', 'prefer_not_to_say', null])
+  ]),
+  profileController.updateCareerInfo
+);
+
+router.put("/lifestyle",
+  limiters.update,
+  sanitize,
+  validate([
+    body('lifestyle.hobbies').optional().isArray(),
+    body('lifestyle.hobbies.*').optional().isString().trim().isLength({ max: 50 }),
+    
+    body('lifestyle.languages').optional().isArray(),
+    body('lifestyle.languages.*.language').optional().isString().trim().isLength({ max: 50 }),
+    body('lifestyle.languages.*.proficiency').optional().isIn(['basic', 'conversational', 'fluent', 'native']),
+    
+    body('lifestyle.pets').optional().isArray(),
+    body('lifestyle.pets.*').optional().isIn(['dog', 'cat', 'bird', 'fish', 'reptile', 'small_furry', 'horse', 'other', 'none']),
+    
+    body('lifestyle.diet').optional().isIn(['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'kosher', 'halal', 'other', null]),
+    body('lifestyle.exercise.frequency').optional().isIn(['never', 'occasionally', '1-2_times_week', '3-4_times_week', 'daily', null]),
+    body('lifestyle.exercise.activities').optional().isArray(),
+    body('lifestyle.smoking').optional().isIn(['never', 'socially', 'occasionally', 'regularly', 'trying_to_quit', null]),
+    body('lifestyle.drinking').optional().isIn(['never', 'socially', 'occasionally', 'regularly', null])
+  ]),
+  profileController.updateLifestyle
+);
+
+router.put("/personality",
+  limiters.update,
+  sanitize,
+  validate([
+    body('personality.introvertExtrovert').optional().isIn(['introvert', 'ambivert', 'extrovert', null]),
+    body('personality.loveLanguage').optional().isArray(),
+    body('personality.loveLanguage.*').optional().isIn(['words_of_affirmation', 'acts_of_service', 'receiving_gifts', 'quality_time', 'physical_touch']),
+    body('personality.communicationStyle').optional().isIn(['texter', 'caller', 'video_chat', 'mixed', null]),
+    body('personality.spiritualGoals').optional().isArray(),
+    body('personality.meetingAttendance').optional().isIn(['every_meeting', 'most_meetings', 'occasionally', 'currently_inactive', null])
+  ]),
+  profileController.updatePersonality
+);
+
+router.put("/preferences",
+  limiters.update,
+  sanitize,
+  validate([
+    body('preferences.basic.gender').optional().isArray(),
+    body('preferences.basic.gender.*').optional().isIn(['male', 'female', 'any']),
+    body('preferences.basic.ageRange.min').optional().isInt({ min: 18, max: 100 }),
+    body('preferences.basic.ageRange.max').optional().isInt({ min: 18, max: 100 }),
+    body('preferences.basic.distance').optional().isInt({ min: 1, max: 500 }),
+    
+    body('preferences.faith.mustBeJW').optional().isBoolean(),
+    body('preferences.faith.servingAs').optional().isArray(),
+    body('preferences.faith.pioneerPreferred').optional().isBoolean(),
+    body('preferences.faith.missionaryPreferred').optional().isBoolean(),
+    body('preferences.faith.bethelPreferred').optional().isBoolean(),
+    
+    body('preferences.relationship.goals').optional().isArray(),
+    body('preferences.relationship.goals.*').optional().isIn(['friendship', 'pen_pals', 'dating', 'serious_relationship', 'marriage']),
+    body('preferences.relationship.children.accept').optional().isBoolean(),
+    
+    body('preferences.dealbreakers.mustHaves').optional().isArray(),
+    body('preferences.dealbreakers.dealBreakers').optional().isArray()
+  ]),
+  profileController.updatePreferences
+);
+
+router.put("/settings",
+  limiters.update,
+  sanitize,
+  validate([
+    body('settings.isVisible').optional().isBoolean(),
+    body('settings.isPaused').optional().isBoolean(),
+    body('settings.tags').optional().isArray(),
+    body('settings.tags.*').optional().isString().trim().isLength({ max: 30 }),
+    body('settings.privacy.showAge').optional().isBoolean(),
+    body('settings.privacy.showDistance').optional().isBoolean(),
+    body('settings.privacy.showLastActive').optional().isIn(['everyone', 'matches', 'nobody']),
+    body('settings.privacy.showCongregation').optional().isBoolean()
+  ]),
+  profileController.updateSettings
+);
+
+// ===== PHOTO MANAGEMENT =====
+router.put("/photos/profile",
+  limiters.photos,
+  sanitize,
+  validate([
+    body('url').isURL().withMessage('Valid photo URL required')
   ]),
   profileController.updateProfilePicture
 );
 
-// Update photos
-router.put("/photos",
-  profilePhotoLimiter,
-  sanitizeInput,
-  validateRequest([
-    body('photos')
-      .isArray()
-      .withMessage('Photos must be an array')
-      .isLength({ min: 1, max: 9 }) // Updated to match controller MAX_PHOTOS
-      .withMessage('You can upload between 1 and 9 photos'),
-    body('photos.*.url')
-      .isURL()
-      .withMessage('Valid photo URL is required'),
-    body('photos.*.caption')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 100 })
-      .withMessage('Caption must be less than 100 characters'),
-    body('photos.*.order')
-      .optional()
-      .isInt({ min: 0, max: 8 })
-      .withMessage('Order must be between 0 and 8'),
-    body('photos.*.isVerified')
-      .optional()
-      .isBoolean()
-      .withMessage('isVerified must be a boolean')
+router.put("/photos/gallery",
+  limiters.photos,
+  sanitize,
+  validate([
+    body('photos').isArray().isLength({ min: 1, max: 9 }),
+    body('photos.*.url').isURL(),
+    body('photos.*.caption').optional().isString().trim().isLength({ max: 100 }),
+    body('photos.*.order').optional().isInt({ min: 0, max: 8 })
   ]),
-  profileController.updatePhotos
+  profileController.updateGallery
 );
 
-// Update match preferences
-router.put("/match-preferences",
-  profileUpdateLimiter,
-  sanitizeInput,
-  validateRequest([
-    body('matchPreferences')
-      .optional()
-      .isObject()
-      .withMessage('Match preferences must be an object'),
-    body('matchPreferences.gender')
-      .optional()
-      .isArray()
-      .withMessage('Gender preference must be an array'),
-    body('matchPreferences.gender.*')
-      .isIn(['male', 'female', 'non-binary', 'other'])
-      .withMessage('Valid gender option required'),
-    body('matchPreferences.ageRange')
-      .optional()
-      .isObject()
-      .withMessage('Age range must be an object'),
-    body('matchPreferences.ageRange.min')
-      .optional()
-      .isInt({ min: 18, max: 100 })
-      .withMessage('Minimum age must be 18-100'),
-    body('matchPreferences.ageRange.max')
-      .optional()
-      .isInt({ min: 18, max: 100 })
-      .withMessage('Maximum age must be 18-100'),
-    body('matchPreferences.locationRange')
-      .optional()
-      .isInt({ min: 1, max: 10000 })
-      .withMessage('Location range must be 1-10000 km'),
-    body('matchPreferences.relationshipGoals')
-      .optional()
-      .isArray()
-      .withMessage('Relationship goals must be an array'),
-    body('matchPreferences.mustHaves')
-      .optional()
-      .isArray()
-      .withMessage('Must haves must be an array'),
-    body('matchPreferences.dealBreakers')
-      .optional()
-      .isArray()
-      .withMessage('Deal breakers must be an array')
-  ]),
-  profileController.updateMatchPreferences
+// Upload endpoint for direct file upload
+router.post("/photos/upload",
+  limiters.photos,
+  upload.single('photo'),
+  async (req, res) => {
+    try {
+      if (!req.file) throw new Error('No file uploaded');
+      
+      // In production, upload to cloud storage and get URL
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`;
+      
+      // Move from temp to permanent
+      fs.renameSync(req.file.path, `uploads/profiles/${req.file.filename}`);
+      
+      res.json({
+        success: true,
+        data: { url: fileUrl, filename: req.file.filename },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      if (req.file?.path) fs.unlink(req.file.path, () => {});
+      res.status(400).json({
+        success: false,
+        error: error.message,
+        code: 'UPLOAD_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
 );
 
-// Add verification badge
-router.post("/verification",
-  verificationLimiter,
-  validateRequest([
-    body('badge')
-      .isIn(['email', 'phone', 'photo', 'identity', 'premium', 'social'])
-      .withMessage('Valid badge type is required')
+// ===== BADGES =====
+router.post("/badges",
+  limiters.badge,
+  validate([
+    body('badge').isIn(['email', 'phone', 'photo', 'identity', 'premium', 'baptized', 'pioneer', 'missionary', 'bethel'])
   ]),
-  profileController.addVerificationBadge
+  profileController.addBadge
 );
 
-// Get profile stats
+// ===== STATS & PROGRESS =====
 router.get("/stats",
-  createDynamicRateLimiter({
-    windowMs: 60 * 1000,
-    max: 30,
-    message: 'Too many stats requests. Please cache the results.'
-  }),
-  profileController.getProfileStats
+  createDynamicRateLimiter({ windowMs: 60 * 1000, max: 30 }),
+  profileController.getStats
 );
 
-// Get profile completion
 router.get("/completion",
-  completionCheckLimiter,
-  profileController.getProfileCompletion
+  createDynamicRateLimiter({ windowMs: 5 * 60 * 1000, max: 20 }),
+  profileController.getCompletion
 );
 
-// Export profile data (GDPR compliance)
-router.get("/export",
-  profileExportLimiter,
-  async (req, res) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          message: 'Profile export requested. You will receive an email with your data within 24 hours.',
-          requestId: `export_${Date.now()}`,
-          estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          format: 'JSON'
-        },
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Export failed',
-        code: 'EXPORT_ERROR',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    }
-  }
-);
-
-// Delete profile
-router.delete("/delete",
-  profileDeletionLimiter,
-  validateRequest([
-    body('confirmation')
-      .equals('DELETE MY PROFILE')
-      .withMessage('Confirmation text is required'),
-    body('reason')
-      .optional()
-      .isString()
-      .trim()
-      .isLength({ max: 500 })
-      .withMessage('Reason must be less than 500 characters')
-  ]),
-  async (req, res) => {
-    try {
-      res.json({
-        success: true,
-        data: {
-          message: 'Profile deletion requested. Your data will be permanently deleted within 30 days.',
-          confirmationId: `del_${Date.now()}`,
-          scheduledFor: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          note: 'You can cancel this request within 24 hours.'
-        },
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Deletion request failed',
-        code: 'DELETION_ERROR',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    }
-  }
-);
-
-// ============ DATING PROFILE ROUTES ============
-// FIX 6: Added dating profile routes
+// ===== DATING PROFILE ROUTES =====
 router.use("/dating", requireDatingProfile);
 
-// Get dating profile
 router.get("/dating/profile",
-  createDynamicRateLimiter({
-    windowMs: 10 * 1000,
-    max: 20,
-    message: 'Too many dating profile requests.'
-  }),
+  createDynamicRateLimiter({ windowMs: 10 * 1000, max: 20 }),
   async (req, res) => {
     try {
-      // Call dating user's getDatingProfile method
-      const datingProfile = await req.datingUser.getDatingProfile(req.userId);
-      
-      res.json({
-        success: true,
-        data: datingProfile,
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get dating profile',
-        code: 'DATING_PROFILE_ERROR',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
-    }
-  }
-);
-
-// Update dating profile visibility
-router.put("/dating/visibility",
-  profileUpdateLimiter,
-  validateRequest([
-    body('isVisible')
-      .optional()
-      .isBoolean()
-      .withMessage('isVisible must be a boolean'),
-    body('isPaused')
-      .optional()
-      .isBoolean()
-      .withMessage('isPaused must be a boolean')
-  ]),
-  async (req, res) => {
-    try {
-      const { isVisible, isPaused } = req.body;
-      
-      // Update profile's dating profile settings
-      const profile = await profile.findOneAndUpdate(
-        { userId: req.userId },
-        { 
-          $set: { 
-            'datingProfile.isVisible': isVisible,
-            'datingProfile.isPaused': isPaused 
-          }
-        },
-        { new: true }
-      );
+      const profile = await Profile.findOne({ userId: req.user.id })
+        .select('settings.preferences.faith badges stats.lastActive');
       
       res.json({
         success: true,
         data: {
-          isVisible: profile.datingProfile.isVisible,
-          isPaused: profile.datingProfile.isPaused
+          isVisible: profile?.settings?.isVisible ?? true,
+          isPaused: profile?.settings?.isPaused ?? false,
+          preferences: profile?.preferences?.faith ?? {},
+          badges: profile?.badges ?? [],
+          lastActive: profile?.stats?.lastActive ?? new Date()
         },
-        message: 'Dating profile visibility updated',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update visibility',
-        code: 'VISIBILITY_UPDATE_ERROR',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-      });
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 );
 
-// Rate limit status
-router.get("/rate-limit/status",
-  createDynamicRateLimiter({
-    windowMs: 30 * 1000,
-    max: 10,
-    message: 'Too many rate limit status requests.'
-  }),
-  (req, res) => {
-    const response = {
-      success: true,
-      service: 'profile-api',
-      version: '1.0.0',
-      user: req.user ? {
-        id: req.user.id,
-        hasProfile: !!req.user.profile,
-        role: req.user.role,
-        userType: req.user.userType,
-        hasDatingProfile: !!req.user.dating
-      } : null,
-      rateLimiting: {
-        enabled: true,
-        limits: {
-          general: { limit: 100, window: "15 minutes" },
-          updates: { limit: 20, window: "15 minutes" },
-          photos: { limit: 10, window: "1 hour" },
-          views: { limit: 60, window: "1 minute" },
-          creation: { limit: 3, window: "24 hours" },
-          verification: { limit: 3, window: "7 days" },
-          completion: { limit: 30, window: "5 minutes" },
-          deletion: { limit: 1, window: "24 hours" },
-          export: { limit: 3, window: "24 hours" }
-        }
-      },
-      performance: {
-        cacheEnabled: true,
-        compression: true,
-        cdn: process.env.NODE_ENV === 'production'
-      },
-      security: {
-        fileUploads: true,
-        xssProtection: true,
-        rateLimiting: true,
-        validation: true
-      },
-      currentRequest: {
-        id: req.requestId,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-        duration: req.startTime ? `${Date.now() - req.startTime}ms` : 'N/A'
-      }
-    };
-
-    res.json(response);
-  }
+// ===== LEGACY/COMPATIBILITY =====
+router.get("/:userId",
+  limiters.view,
+  validate([param('userId').isMongoId()]),
+  profileController.getPublicProfile
 );
 
-// ============ ADMIN ROUTES ============
-router.use("/admin", authorize('admin'));
-
-// Admin endpoints would go here
-router.get("/admin/profiles",
-  createDynamicRateLimiter({
-    windowMs: 60 * 1000,
-    max: 60,
-    keyGenerator: (req) => `admin:profiles:${req.user?.id}`
-  }),
-  async (req, res) => {
-    // Admin profile listing
+// ===== RATE LIMIT STATUS =====
+router.get("/debug/rate-limits",
+  createDynamicRateLimiter({ windowMs: 30 * 1000, max: 5 }),
+  (req, res) => {
     res.json({
       success: true,
-      data: [],
-      meta: {
-        total: 0,
-        page: 1,
-        limit: 20
+      user: req.user?.id,
+      limits: {
+        update: '30 per 15m',
+        photos: '15 per hour',
+        create: '1 per day',
+        badge: '5 per week',
+        search: '30 per minute',
+        view: '100 per minute'
       },
-      timestamp: new Date().toISOString(),
       requestId: req.requestId
     });
   }
 );
 
-// ============ BACKWARD COMPATIBILITY ============
-router.get("/:userId",
-  publicProfileViewLimiter,
-  validateRequest([
-    param('userId')
-      .isMongoId()
-      .withMessage('Valid user ID is required')
-  ]),
-  profileController.getPublicProfile
-);
-
-// ============ ERROR HANDLING ============
+// ============ ERROR HANDLERS ============
 router.use((err, req, res, next) => {
-  const duration = req.startTime ? Date.now() - req.startTime : 0;
-  
   console.error('Profile route error:', {
-    requestId: req.requestId,
     path: req.path,
-    method: req.method,
     userId: req.user?.id,
-    ip: req.ip,
-    duration: `${duration}ms`,
     error: err.message,
-    code: err.code,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    code: err.code
   });
 
-  // Multer file upload error
+  // Multer errors
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({
       success: false,
       error: 'File too large. Maximum size is 10MB.',
       code: 'FILE_TOO_LARGE',
-      maxSize: '10MB',
-      requestId: req.requestId,
       timestamp: new Date().toISOString()
     });
   }
@@ -1028,163 +502,31 @@ router.use((err, req, res, next) => {
       success: false,
       error: err.message,
       code: 'INVALID_FILE_TYPE',
-      allowedTypes: UPLOAD_CONFIG.ALLOWED_TYPES,
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Rate limiting error
-  if (err.name === 'RateLimitError') {
-    return res.status(429).json({
-      success: false,
-      error: err.message,
-      code: 'RATE_LIMIT_EXCEEDED',
-      retryAfter: Math.ceil(err.msBeforeNext / 1000),
-      recommendation: 'Consider caching data or reducing request frequency',
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Validation error
-  if (err.name === 'ValidationError' || err.errors) {
-    return res.status(400).json({
-      success: false,
-      error: 'Validation failed',
-      details: err.errors || err.message,
-      code: 'VALIDATION_ERROR',
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Authentication error
-  if (err.name === 'JsonWebTokenError' || err.message?.includes('jwt') || err.message?.includes('token')) {
-    return res.status(401).json({
-      success: false,
-      error: 'Authentication failed',
-      code: 'AUTH_ERROR',
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Authorization error
-  if (err.message?.includes('not authorized') || err.message?.includes('permission')) {
-    return res.status(403).json({
-      success: false,
-      error: 'Not authorized',
-      code: 'FORBIDDEN',
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Age restriction error
-  if (err.message?.includes('18 years') || err.message?.includes('age restriction')) {
-    return res.status(403).json({
-      success: false,
-      error: 'Age restriction: Must be 18 years or older',
-      code: 'AGE_RESTRICTION',
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Profile not found
-  if (err.message?.includes('not found') || err.code === 'NOT_FOUND') {
-    return res.status(404).json({
-      success: false,
-      error: err.message || 'Resource not found',
-      code: 'NOT_FOUND',
-      requestId: req.requestId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Duplicate key error (MongoDB)
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyPattern || {})[0] || 'unknown';
-    return res.status(409).json({
-      success: false,
-      error: `${field} already exists`,
-      code: 'DUPLICATE_KEY',
-      field,
-      requestId: req.requestId,
       timestamp: new Date().toISOString()
     });
   }
 
   // Default error
-  const statusCode = err.statusCode || err.status || 500;
-  const errorMessage = process.env.NODE_ENV === 'production' && statusCode === 500
-    ? 'Internal server error'
-    : err.message;
-
-  res.status(statusCode).json({
+  res.status(err.statusCode || 500).json({
     success: false,
-    error: errorMessage,
+    error: process.env.NODE_ENV === 'production' && err.statusCode === 500 
+      ? 'Internal server error' 
+      : err.message,
     code: err.code || 'INTERNAL_ERROR',
     timestamp: new Date().toISOString(),
-    requestId: req.requestId,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    requestId: req.requestId
   });
 });
 
 // 404 handler
 router.use((req, res) => {
-  const duration = req.startTime ? Date.now() - req.startTime : 0;
-  
-  console.warn('Profile route not found:', {
-    requestId: req.requestId,
-    path: req.originalUrl,
-    method: req.method,
-    userId: req.user?.id,
-    duration: `${duration}ms`
-  });
-
   res.status(404).json({
     success: false,
     error: `Route ${req.method} ${req.originalUrl} not found`,
     code: 'ROUTE_NOT_FOUND',
     service: 'profile-api',
     version: '1.0.0',
-    requestId: req.requestId,
-    timestamp: new Date().toISOString(),
-    documentation: {
-      publicRoutes: [
-        'GET  /health - API health check',
-        'GET  /options - Profile field options',
-        'GET  /defaults - Default profile values',
-        'GET  /public/:userId - Public profile view',
-        'GET  /search - Search profiles',
-        'GET  /:userId - Legacy profile view'
-      ],
-      protectedRoutes: [
-        'POST /create - Create profile',
-        'GET  /me - Get complete profile',
-        'PUT  /update - Update profile',
-        'POST /upload - Upload photo',
-        'PUT  /profile-picture - Update profile picture',
-        'PUT  /photos - Update photos',
-        'PUT  /match-preferences - Update match preferences',
-        'POST /verification - Request verification',
-        'GET  /stats - Get profile stats',
-        'GET  /completion - Get profile completion',
-        'GET  /export - Export profile data',
-        'DELETE /delete - Delete profile',
-        'GET  /rate-limit/status - Rate limit status'
-      ],
-      datingRoutes: [
-        'GET  /dating/profile - Get dating profile',
-        'PUT  /dating/visibility - Update dating profile visibility'
-      ],
-      authentication: {
-        method: 'Bearer token',
-        header: 'Authorization: Bearer <token>'
-      }
-    }
+    timestamp: new Date().toISOString()
   });
 });
 
