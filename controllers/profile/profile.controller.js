@@ -116,128 +116,156 @@ class ProfileController {
   };
 
   getPublicProfile = async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const viewerId = req.user?.id;
+  try {
+    const { userId } = req.params;
+    const viewerId = req.user?.id;
 
-      if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
-        throw createError("Invalid user ID format", "INVALID_USER_ID", 400);
-      }
-
-      const [user, profile, datingUser] = await Promise.all([
-        BaseUser.findById(userId).select('firstName userName'),
-        Profile.findOne({ userId }),
-        DatingUser.findById(userId).select('isPremium ageVerified presence')
-      ]);
-
-      if (!user || !profile) {
-        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
-      }
-
-      if (!profile.settings?.isVisible && viewerId !== userId) {
-        throw createError("Profile is private", "PROFILE_PRIVATE", 403);
-      }
-
-      this.incrementStats(userId, 'profileViews').catch(err => 
-        logger.error("Failed to increment profile views:", err)
-      );
-
-      const publicProfile = {
-        userId: profile.userId,
-        firstName: user.firstName,
-        userName: profile.basic?.userName || user.userName,
-        
-        basic: {
-          userName: profile.basic?.userName,
-          bio: profile.basic?.bio,
-          age: profile.settings?.privacy?.showAge !== false ? profile.age : null,
-          gender: profile.basic?.gender,
-          genderLabel: await this.getOptionLabel('gender', profile.basic?.gender)
-        },
-
-        photos: {
-          profile: profile.photos?.profile?.url || null,
-          gallery: profile.photos?.gallery?.map(p => ({
-            url: p.url,
-            caption: p.caption
-          })) || []
-        },
-
-        location: profile.location ? {
-          city: profile.location.city,
-          country: profile.location.country,
-          distance: viewerId === userId ? 0 : await this.calculateDistance(viewerId, userId)
-        } : null,
-
-        faith: {
-          servingAs: profile.faith?.servingAs,
-          servingAsLabel: await this.getOptionLabel('servingAs', profile.faith?.servingAs),
-          missionary: profile.faith?.missionary?.served || false,
-          bethel: profile.faith?.bethel?.served || false,
-          pioneer: ['regular_pioneer', 'auxiliary_pioneer', 'special_pioneer'].includes(profile.faith?.servingAs)
-        },
-
-        relationship: {
-          status: profile.relationship?.status,
-          statusLabel: await this.getOptionLabel('relationshipStatus', profile.relationship?.status),
-          lookingFor: profile.relationship?.lookingFor || []
-        },
-
-        career: {
-          occupation: profile.career?.work?.occupation,
-          education: profile.career?.education?.level,
-          educationLabel: await this.getOptionLabel('education', profile.career?.education?.level)
-        },
-
-        lifestyle: {
-          hobbies: profile.lifestyle?.hobbies?.slice(0, 10) || [],
-          languages: profile.lifestyle?.languages?.map(l => l.language) || [],
-          exercise: profile.lifestyle?.exercise?.frequency,
-          smoking: profile.lifestyle?.smoking,
-          drinking: profile.lifestyle?.drinking,
-          pets: profile.lifestyle?.pets || []
-        },
-
-        personality: {
-          introvertExtrovert: profile.personality?.introvertExtrovert,
-          communicationStyle: profile.personality?.communicationStyle,
-          meetingAttendance: profile.personality?.meetingAttendance
-        },
-
-        badges: profile.badges?.map(b => b.type) || [],
-        
-        stats: {
-          profileCompletion: profile.progress?.completion || 0,
-          lastActive: profile.stats?.lastActive || profile.updatedAt
-        },
-
-        dating: datingUser ? {
-          isPremium: datingUser.isPremium || false,
-          isVerified: datingUser.ageVerified || false,
-          presence: {
-            status: datingUser.presence?.status || 'offline',
-            lastSeen: datingUser.presence?.lastSeen,
-            isOnline: datingUser.presence?.status === 'online' && 
-                     datingUser.presence?.lastSeen && 
-                     (new Date() - datingUser.presence.lastSeen) < 5 * 60 * 1000
-          }
-        } : null
-      };
-
-      res.json({
-        success: true,
-        data: publicProfile,
-        meta: {
-          isOwner: viewerId === userId,
-          isDatingProfile: !!datingUser,
-          requestId: req.requestId
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      this.handleError(error, req, res);
+    if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+      throw createError("Invalid user ID format", "INVALID_USER_ID", 400);
     }
-  };
+
+    const [user, profile, datingUser] = await Promise.all([
+      BaseUser.findById(userId).select('firstName userName'),
+      Profile.findOne({ userId }),
+      DatingUser.findById(userId).select('isPremium ageVerified presence')
+    ]);
+
+    if (!user || !profile) {
+      throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+    }
+
+    if (!profile.settings?.isVisible && viewerId !== userId) {
+      throw createError("Profile is private", "PROFILE_PRIVATE", 403);
+    }
+
+    this.incrementStats(userId, 'profileViews').catch(err => 
+      logger.error("Failed to increment profile views:", err)
+    );
+
+    const publicProfile = {
+      userId: profile.userId,
+      firstName: user.firstName,
+      userName: profile.basic?.userName || user.userName,
+      
+      basic: {
+        userName: profile.basic?.userName,
+        bio: profile.basic?.bio,
+        age: profile.settings?.privacy?.showAge !== false ? profile.age : null,
+        gender: profile.basic?.gender,
+        genderLabel: await this.getOptionLabel('gender', profile.basic?.gender)
+      },
+
+      photos: {
+        profile: profile.photos?.profile?.url || null,
+        gallery: profile.photos?.gallery?.map(p => ({
+          url: p.url,
+          caption: p.caption
+        })) || []
+      },
+
+      location: profile.location ? {
+        city: profile.location.city,
+        country: profile.location.country,
+        distance: viewerId === userId ? 0 : await this.calculateDistance(viewerId, userId)
+      } : null,
+
+      faith: {
+        servingAs: profile.faith?.servingAs,
+        servingAsLabel: await this.getOptionLabel('servingAs', profile.faith?.servingAs),
+        missionary: profile.faith?.missionary?.served || false,
+        bethel: profile.faith?.bethel?.served || false,
+        pioneer: ['regular_pioneer', 'auxiliary_pioneer', 'special_pioneer'].includes(profile.faith?.servingAs)
+      },
+
+      relationship: {
+        status: profile.relationship?.status,
+        statusLabel: await this.getOptionLabel('relationshipStatus', profile.relationship?.status),
+        lookingFor: profile.relationship?.lookingFor || []
+      },
+
+      career: {
+        occupation: profile.career?.work?.occupation,
+        education: profile.career?.education?.level,
+        educationLabel: await this.getOptionLabel('education', profile.career?.education?.level)
+      },
+
+      lifestyle: {
+        hobbies: profile.lifestyle?.hobbies?.slice(0, 10) || [],
+        languages: profile.lifestyle?.languages?.map(l => l.language) || [],
+        exercise: profile.lifestyle?.exercise?.frequency,
+        smoking: profile.lifestyle?.smoking,
+        drinking: profile.lifestyle?.drinking,
+        pets: profile.lifestyle?.pets || []
+      },
+
+      personality: {
+        introvertExtrovert: profile.personality?.introvertExtrovert,
+        communicationStyle: profile.personality?.communicationStyle,
+        meetingAttendance: profile.personality?.meetingAttendance
+      },
+
+      // Preferences are intentionally public — visitors can see what a
+      // profile owner is looking for before deciding to connect.
+      preferences: {
+        basic: {
+          gender:   profile.preferences?.basic?.gender   || [],
+          ageRange: profile.preferences?.basic?.ageRange || { min: 18, max: 45 },
+          distance: profile.preferences?.basic?.distance ?? 50,
+        },
+        faith: {
+          mustBeJW:            profile.preferences?.faith?.mustBeJW            ?? true,
+          servingAs:           profile.preferences?.faith?.servingAs           || [],
+          pioneerPreferred:    profile.preferences?.faith?.pioneerPreferred    ?? false,
+          missionaryPreferred: profile.preferences?.faith?.missionaryPreferred ?? false,
+          bethelPreferred:     profile.preferences?.faith?.bethelPreferred     ?? false,
+        },
+        relationship: {
+          goals: profile.preferences?.relationship?.goals || [],
+          children: {
+            accept:   profile.preferences?.relationship?.children?.accept   ?? true,
+            wantMore: profile.preferences?.relationship?.children?.wantMore ?? null,
+          },
+        },
+        dealbreakers: {
+          mustHaves:    profile.preferences?.dealbreakers?.mustHaves    || [],
+          dealBreakers: profile.preferences?.dealbreakers?.dealBreakers || [],
+        },
+      },
+
+      badges: profile.badges?.map(b => b.type) || [],
+      
+      stats: {
+        profileCompletion: profile.progress?.completion || 0,
+        lastActive: profile.stats?.lastActive || profile.updatedAt
+      },
+
+      dating: datingUser ? {
+        isPremium: datingUser.isPremium || false,
+        isVerified: datingUser.ageVerified || false,
+        presence: {
+          status: datingUser.presence?.status || 'offline',
+          lastSeen: datingUser.presence?.lastSeen,
+          isOnline: datingUser.presence?.status === 'online' && 
+                   datingUser.presence?.lastSeen && 
+                   (new Date() - datingUser.presence.lastSeen) < 5 * 60 * 1000
+        }
+      } : null
+    };
+
+    res.json({
+      success: true,
+      data: publicProfile,
+      meta: {
+        isOwner: viewerId === userId,
+        isDatingProfile: !!datingUser,
+        requestId: req.requestId
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    this.handleError(error, req, res);
+  }
+};
 
   // ========== CREATE PROFILE ==========
   createProfile = async (req, res) => {

@@ -161,7 +161,7 @@ matchSchema.virtual('isNew').get(function() {
 });
 
 // Pre-save middleware to ensure users array is populated
-matchSchema.pre('save', function(next) {
+matchSchema.pre('save', function() {
   if (!this.users || this.users.length === 0) {
     this.users = [this.user1, this.user2];
   }
@@ -171,7 +171,6 @@ matchSchema.pre('save', function(next) {
     mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id
   );
   
-  next();
 });
 
 // Static methods for better querying

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { BaseUser, DatingUser} = require('@models/User');
 // const DatingUser = require('@models/User/datingUserSchema');
-const Profile = require('@models/Profile.model');
+const Profile = require('@models/Profile/Profile.model');
 const logger = require('@utils/logger');
 
 class SocketAuthMiddleware {

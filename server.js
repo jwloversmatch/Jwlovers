@@ -50,6 +50,26 @@ const startServer = async () => {
     // Export services to Express app
     serviceInitializer.exportToApp(app);
 
+    // ── PRESENCE REAL-TIME INJECTION ──────────────────────────────────────
+    // presenceController is a module-level singleton (no io at require-time).
+    // WebSocketService is now fully initialised, so we inject io here.
+    // emitPresenceChange() in the controller guards with `if (!this.io) return`
+    // so if injection fails nothing crashes — events are just silently skipped.
+    try {
+      const presenceController = require("@controllers/presence.controller");
+      const io = services.webSocketService?.getIo?.();
+      if (io) {
+        presenceController.setIo(io);
+        logger.info("✅ Socket.io injected into PresenceController");
+      } else {
+        logger.warn("⚠️  WebSocket IO not available — presence events will not be emitted in real-time");
+      }
+    } catch (injectionError) {
+      logger.error("❌ Failed to inject Socket.io into PresenceController:", injectionError.message);
+      // Non-fatal — server continues, real-time presence events just won't fire
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // Apply global rate limiting
     if (config.rateLimiting.enabled) {
       app.use("/api/", apiLimiter);
@@ -155,7 +175,7 @@ const startServer = async () => {
           webSocketService: services.webSocketService
         }
       },
-    ];
+    ]; 
 
     const loadedRoutes = routeLoader.loadAllRoutes(routeDefinitions);
 
@@ -232,8 +252,7 @@ const startServer = async () => {
             const connections = io.engine?.clientsCount || 0;
             logger.debug(`📊 WebSocket connections: ${connections}`);
             
-            // Log memory usage periodically
-            if (connections > 0 || Math.random() < 0.1) { // 10% chance or if connections exist
+            if (connections > 0 || Math.random() < 0.1) {
               const memoryUsage = process.memoryUsage();
               logger.debug(`💾 Memory: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB used`);
             }
@@ -241,7 +260,7 @@ const startServer = async () => {
         } catch (error) {
           // Silently ignore monitoring errors
         }
-      }, 60000); // Log every minute
+      }, 60000);
     }
 
     // Start listening
@@ -257,7 +276,6 @@ const startServer = async () => {
       } else {
         logger.error("❌ Server error:", error);
         
-        // Attempt to log additional information
         if (services.webSocketService) {
           try {
             const io = services.webSocketService.getIo();
@@ -275,7 +293,6 @@ const startServer = async () => {
 
     server.on("close", () => {
       logger.info("Server closed");
-      // Cleanup any remaining intervals
       clearAllIntervals();
     });
 
@@ -283,7 +300,6 @@ const startServer = async () => {
     logger.error("❌ Failed to start server:", error);
     logger.error("Stack trace:", error.stack);
     
-    // Attempt graceful shutdown on startup failure
     try {
       const services = app.get('services') || {};
       if (services.webSocketService?.cleanup) {
@@ -291,7 +307,6 @@ const startServer = async () => {
         logger.info("✅ WebSocket service cleaned up after startup failure");
       }
       
-      // Cleanup Redis
       if (services.redisService) {
         try {
           if (services.redisService.getClient) {
@@ -303,7 +318,6 @@ const startServer = async () => {
         }
       }
       
-      // Cleanup Database
       if (services.databaseService?.close) {
         try {
           await services.databaseService.close();
@@ -400,13 +414,10 @@ const gracefulShutdown = async (signal) => {
   server.close(async () => {
     logger.info("✅ HTTP server closed");
 
-    // Clear all intervals
     clearAllIntervals();
 
-    // Get all services from app
     const services = app.get('services') || {};
     
-    // Cleanup WebSocketService
     if (services.webSocketService?.cleanup) {
       try {
         await services.webSocketService.cleanup();
@@ -416,7 +427,6 @@ const gracefulShutdown = async (signal) => {
       }
     }
 
-    // Cleanup PresenceService
     if (services.presenceService?.cleanup) {
       try {
         await services.presenceService.cleanup();
@@ -426,7 +436,6 @@ const gracefulShutdown = async (signal) => {
       }
     }
 
-    // Cleanup Controller Bridge
     if (services.controllerBridge?.cleanup) {
       try {
         await services.controllerBridge.cleanup();
@@ -436,7 +445,6 @@ const gracefulShutdown = async (signal) => {
       }
     }
 
-    // Cleanup Redis connections
     try {
       const redisService = services.redisService || app.get("RedisService");
       if (redisService) {
@@ -458,7 +466,6 @@ const gracefulShutdown = async (signal) => {
       logger.error("⚠️ Error closing Redis:", error.message);
     }
 
-    // Cleanup Database connections
     try {
       const databaseService = services.databaseService || app.get("DatabaseService");
       if (databaseService?.close) {
@@ -469,7 +476,6 @@ const gracefulShutdown = async (signal) => {
       logger.error("⚠️ Error closing MongoDB:", error.message);
     }
 
-    // Cleanup WebSocketEmitter
     try {
       const WebSocketEmitter = require("./emitters/WebSocketEmitter");
       if (WebSocketEmitter.cleanup) {
@@ -480,7 +486,6 @@ const gracefulShutdown = async (signal) => {
       // Ignore if WebSocketEmitter doesn't exist
     }
 
-    // Cleanup global references
     const globalRefs = [
       'redisClient', 'redis', 'io', 'getSocketIO', 
       'getWebSocketService', 'presenceService', 'getPresenceService'
@@ -497,15 +502,10 @@ const gracefulShutdown = async (signal) => {
     process.exit(0);
   });
 
-  // Force shutdown after timeout
   const forceShutdownTimeout = config.limits.shutdownTimeout || 10000;
   setTimeout(() => {
     logger.error(`❌ Forced shutdown after ${forceShutdownTimeout}ms timeout`);
-    
-    // Emergency cleanup
     clearAllIntervals();
-    
-    // Force exit
     process.exit(1);
   }, forceShutdownTimeout);
 };
