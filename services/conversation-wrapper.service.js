@@ -44,7 +44,7 @@ class ConversationServiceWrapper {
       
       // Import models
       const Conversation = require("@models/Conversation");
-      const User = require("@models/User/User.model");
+      const {BaseUser} = require("@models/User");
       
       // Try to find existing conversation
       const conversation = await Conversation.findOne({
@@ -99,7 +99,7 @@ class ConversationServiceWrapper {
       this.logger.debug(`Creating new conversation between ${userId1} and ${userId2}`);
       
       // Get other user details
-      const otherUser = await User.findById(userId2).select('firstName lastName userName fullName email avatar');
+      const otherUser = await BaseUser.findById(userId2).select('firstName lastName userName fullName email avatar');
       if (!otherUser) {
         throw new Error(`User ${userId2} not found`);
       }
@@ -165,9 +165,9 @@ class ConversationServiceWrapper {
       
       // Fallback implementation
       const Conversation = require("@models/Conversation");
-      const User = require("@models/User/User.model");
+      const {BaseUser} = require("@models/User");
       
-      const matchingUsers = await User.find({
+      const matchingUsers = await BaseUser.find({
         $or: [
           { firstName: { $regex: query, $options: 'i' } },
           { lastName: { $regex: query, $options: 'i' } },

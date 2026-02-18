@@ -10,12 +10,12 @@ const messageSchema = new mongoose.Schema({
   },
   senderId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     required: true
   },
   receiverId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     required: true
   },
   
@@ -79,7 +79,7 @@ const messageSchema = new mongoose.Schema({
   readAt: Date,
   readBy: [{ 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User',
+    ref: 'BaseUser',
   }],
   failedReason: String,
   
@@ -126,18 +126,18 @@ const messageSchema = new mongoose.Schema({
     }],
     reviewedBy: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+      ref: 'BaseUser' 
     },
     reviewedAt: Date,
     autoModerated: Boolean,
     moderationNote: String
   },
   
-  // User reports
+  // BaseUser reports
   reports: [{
     userId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+      ref: 'BaseUser' 
     },
     reason: {
       type: String,
@@ -160,7 +160,7 @@ const messageSchema = new mongoose.Schema({
   // Soft delete
   deletedFor: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
   }],
   permanentlyDeleted: {
     type: Boolean,
@@ -173,14 +173,14 @@ const messageSchema = new mongoose.Schema({
   editHistory: [{
     content: String,
     editedAt: Date,
-    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'BaseUser' }
   }],
   
   // Reactions
   reactions: [{
     userId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+      ref: 'BaseUser' 
     },
     emoji: String,
     timestamp: { 
@@ -192,11 +192,11 @@ const messageSchema = new mongoose.Schema({
   // Privacy controls
   hiddenForUsers: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'BaseUser'
   }],
   visibleOnlyTo: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'BaseUser'
   }],
   
   // Analytics metadata (safe, encrypted data only)
@@ -218,174 +218,74 @@ const messageSchema = new mongoose.Schema({
   collation: { locale: 'en', strength: 2 }
 });
 
-// ========== COMPOUND INDEXES FOR PERFORMANCE ==========
+// ========== INDEXES (COMMENTED OUT) ==========
+// (Keep as is - all commented out)
 
-// For fetching conversation messages
-// messageSchema.index({ 
-//   conversationId: 1, 
-//   createdAt: -1 
-// }, { 
-//   name: 'conversation_messages_idx' 
-// });
+// ========== PRE-SAVE MIDDLEWARE - FIXED: NO next() ==========
 
-// messageSchema.index({ 
-//   conversationId: 1, 
-//   'metadata.conversationPosition': 1 
-// }, { 
-//   name: 'conversation_position_idx' 
-// });
-
-// For user-specific queries
-// messageSchema.index({ 
-//   senderId: 1, 
-//   createdAt: -1 
-// }, { 
-//   name: 'user_sent_messages_idx',
-//   partialFilterExpression: { 
-//     permanentlyDeleted: false,
-//     'moderation.status': { $in: ['pending', 'approved'] }
-//   }
-// });
-
-// messageSchema.index({ 
-//   receiverId: 1, 
-//   createdAt: -1 
-// }, { 
-//   name: 'user_received_messages_idx',
-//   partialFilterExpression: { 
-//     permanentlyDeleted: false,
-//     'moderation.status': { $in: ['pending', 'approved'] }
-//   }
-// });
-
-// For moderation queue
-// messageSchema.index({ 
-//   'moderation.status': 1,
-//   createdAt: 1 
-// }, { 
-//   name: 'moderation_queue_idx',
-//   partialFilterExpression: { 
-//     'moderation.status': 'pending',
-//     type: { $in: ['text', 'image', 'video'] }
-//   }
-// });
-
-// For safety scoring
-// messageSchema.index({ 
-//   'moderation.score': -1,
-//   createdAt: -1 
-// }, { 
-//   name: 'safety_score_idx',
-//   partialFilterExpression: { 
-//     'moderation.score': { $gt: 0.5 }
-//   }
-// });
-
-// For duplicate detection (short TTL)
-// messageSchema.index({ 
-//   contentHash: 1,
-//   createdAt: 1 
-// }, { 
-//   name: 'duplicate_detection_idx',
-//   expireAfterSeconds: 300, // 5 minutes
-//   partialFilterExpression: { 
-//     source: { $in: ['socket', 'http'] }
-//   }
-// });
-
-// For read receipts
-// messageSchema.index({ 
-//   conversationId: 1,
-//   readBy: 1 
-// }, { 
-//   name: 'read_status_idx',
-//   sparse: true
-// });
-
-// For cleanup of old failed messages
-// messageSchema.index({ 
-//   createdAt: 1 
-// }, { 
-//   name: 'cleanup_idx',
-//   expireAfterSeconds: 30 * 24 * 60 * 60, // 30 days
-//   partialFilterExpression: { 
-//     status: 'failed',
-//     permanentlyDeleted: true
-//   }
-// });
-
-// ========== PRE-SAVE MIDDLEWARE ==========
-
-messageSchema.pre('save', async function(next) {
+messageSchema.pre('save', async function() {
   // Only for new documents
   if (this.isNew) {
-    try {
-      // Generate conversationId if not set (fallback)
-      if (!this.conversationId && this.senderId && this.receiverId) {
-        // This should ideally come from Conversation service
-        // For now, create a deterministic ID
-        const participants = [this.senderId, this.receiverId]
-          .map(id => id.toString())
-          .sort();
-        this.conversationId = new mongoose.Types.ObjectId(); // Placeholder
-      }
-      
-      // Generate content hash for deduplication (SHA-256)
-      if (this.content) {
-        this.contentHash = crypto
-          .createHash('sha256')
-          .update(this.content)
-          .digest('hex')
-          .substring(0, 32);
-      }
-      
-      // Set metadata
-      if (!this.metadata) {
-        this.metadata = {};
-      }
-      
-      this.metadata.encryptedLength = this.content ? this.content.length : 0;
-      this.metadata.charCount = this.content ? this.content.length : 0;
-      
-      // Set conversation position (incrementing)
-      if (this.conversationId) {
-        const lastMessage = await mongoose.models.Message.findOne(
-          { conversationId: this.conversationId },
-          { 'metadata.conversationPosition': 1 }
-        )
-        .sort({ 'metadata.conversationPosition': -1 })
-        .lean();
-        
-        this.metadata.conversationPosition = (lastMessage?.metadata?.conversationPosition || 0) + 1;
-      }
-      
-      // Check if this is first message between users
-      const existingMessages = await mongoose.models.Message.countDocuments({
-        $or: [
-          { senderId: this.senderId, receiverId: this.receiverId },
-          { senderId: this.receiverId, receiverId: this.senderId }
-        ]
-      });
-      
-      this.metadata.isFirstMessage = existingMessages === 0;
-      
-      // Generate timestamp hash for ordering without exposing exact time
-      this.metadata.timestampHash = crypto
-        .createHash('md5')
-        .update(Date.now().toString() + this._id.toString())
-        .digest('hex')
-        .substring(0, 16);
-      
-      next();
-    } catch (error) {
-      next(error);
+    // Generate conversationId if not set (fallback)
+    if (!this.conversationId && this.senderId && this.receiverId) {
+      // This should ideally come from Conversation service
+      // For now, create a deterministic ID
+      const participants = [this.senderId, this.receiverId]
+        .map(id => id.toString())
+        .sort();
+      this.conversationId = new mongoose.Types.ObjectId(); // Placeholder
     }
-  } else {
-    next();
+    
+    // Generate content hash for deduplication (SHA-256)
+    if (this.content) {
+      this.contentHash = crypto
+        .createHash('sha256')
+        .update(this.content)
+        .digest('hex')
+        .substring(0, 32);
+    }
+    
+    // Set metadata
+    if (!this.metadata) {
+      this.metadata = {};
+    }
+    
+    this.metadata.encryptedLength = this.content ? this.content.length : 0;
+    this.metadata.charCount = this.content ? this.content.length : 0;
+    
+    // Set conversation position (incrementing)
+    if (this.conversationId) {
+      const lastMessage = await mongoose.models.Message.findOne(
+        { conversationId: this.conversationId },
+        { 'metadata.conversationPosition': 1 }
+      )
+      .sort({ 'metadata.conversationPosition': -1 })
+      .lean();
+      
+      this.metadata.conversationPosition = (lastMessage?.metadata?.conversationPosition || 0) + 1;
+    }
+    
+    // Check if this is first message between users
+    const existingMessages = await mongoose.models.Message.countDocuments({
+      $or: [
+        { senderId: this.senderId, receiverId: this.receiverId },
+        { senderId: this.receiverId, receiverId: this.senderId }
+      ]
+    });
+    
+    this.metadata.isFirstMessage = existingMessages === 0;
+    
+    // Generate timestamp hash for ordering without exposing exact time
+    this.metadata.timestampHash = crypto
+      .createHash('md5')
+      .update(Date.now().toString() + this._id.toString())
+      .digest('hex')
+      .substring(0, 16);
   }
 });
 
 // ========== INSTANCE METHODS ==========
+// (Keep as is)
 
 // Check if message is encrypted (based on version)
 messageSchema.methods.isEncrypted = function() {
@@ -453,6 +353,7 @@ messageSchema.methods.canUserView = function(userId) {
 };
 
 // ========== STATIC METHODS ==========
+// (Keep as is)
 
 // Find messages for a conversation with safety checks
 messageSchema.statics.findSafeMessages = function(conversationId, userId, options = {}) {
@@ -572,6 +473,7 @@ messageSchema.statics.cleanupOldMessages = async function(days = 90) {
 };
 
 // ========== VIRTUAL FIELDS ==========
+// (Keep as is)
 
 messageSchema.virtual('isRead').get(function() {
   return this.status === 'read' || this.readAt != null;
@@ -591,6 +493,7 @@ messageSchema.virtual('isSafe').get(function() {
 });
 
 // ========== QUERY HELPERS ==========
+// (Keep as is)
 
 messageSchema.query.byConversation = function(conversationId) {
   return this.where({ conversationId });
@@ -618,13 +521,15 @@ messageSchema.query.safeForUser = function(userId) {
   });
 };
 
-// ========== POST-SAVE HOOKS ==========
+// ========== POST-SAVE HOOKS - FIXED: NO next() ==========
+// (These don't need next() either - they're just for side effects)
 
 messageSchema.post('save', function(doc) {
   // Emit event for real-time updates
   // This would be handled by your Socket.io or event system
   // For example:
   // require('../events/messageEvents').emit('message:saved', doc);
+  // NO next() CALL HERE!
 });
 
 messageSchema.post('findOneAndUpdate', function(doc) {
@@ -632,6 +537,7 @@ messageSchema.post('findOneAndUpdate', function(doc) {
     // Emit update event
     // require('../events/messageEvents').emit('message:updated', doc);
   }
+  // NO next() CALL HERE!
 });
 
 module.exports = mongoose.model('Message', messageSchema);

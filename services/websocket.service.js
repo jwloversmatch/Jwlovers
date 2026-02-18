@@ -1,5 +1,7 @@
 const socketIo = require('socket.io');
 const logger = require('@utils/logger');
+const MessageService = require('@controllers/chat/MessageService');
+const messageFormatter = require('@formatters/MessageFormatter'); // ← ADDED FOR DECRYPTION
 
 class WebSocketService {
   constructor(config, services, socketSchemas, logger, redisService) {
@@ -11,6 +13,7 @@ class WebSocketService {
     this.io = null;
     this.presenceService = null;
     this.socketAuth = null;
+    this.encryptionService = null; // ← ADDED FOR DECRYPTION
     
     this.typingDebounce = new Map();
     this.heartbeatTimeouts = new Map();
@@ -19,7 +22,6 @@ class WebSocketService {
     this.rateLimitConfig = {
       'message:send':      { max: 30,  windowMs: 60000 },
       'typing:start':      { max: 60,  windowMs: 60000 },
-      // FIXED: was 'presence:heartbeat' — frontend emits 'heartbeat'
       'heartbeat':         { max: 120, windowMs: 60000 },
       'join_conversation': { max: 30,  windowMs: 60000 },
     };
@@ -156,7 +158,6 @@ class WebSocketService {
         }).catch(err => this.logger.error('Error in userConnected:', err));
       }
 
-      // ── Emit user:online on connect ────────────────────────────────────────
       this.io.emit('user:online', {
         userId,
         userName:  userInfo.userName,
@@ -172,13 +173,9 @@ class WebSocketService {
       });
 
       this.logger.info(`[WS] 📡 user:online emitted for userId=${userId} userName="${userInfo.userName}"`);
-      // ──────────────────────────────────────────────────────────────────────
       
       this.setupHeartbeat(socketId, userId);
 
-      // ── FIXED 1: 'heartbeat' (was 'presence:heartbeat') ───────────────────
-      // Frontend emits: socket.emit('heartbeat', { userId, timestamp, source }, callback)
-      // Backend must ack with: { success: true, latency } so frontend can measure RTT
       socket.on('heartbeat', (data, callback) => {
         if (!this.checkRateLimit(socket, 'heartbeat')) return;
         
@@ -189,12 +186,10 @@ class WebSocketService {
 
         const latency = data?.timestamp ? Date.now() - data.timestamp : 0;
 
-        // Ack back to the sender (socket-client.ts uses callback form)
         if (typeof callback === 'function') {
           callback({ success: true, latency });
         }
 
-        // Also emit the named event for listeners using socket.on('heartbeat:ack')
         socket.emit('heartbeat:ack', {
           timestamp: data?.timestamp ?? Date.now(),
           latency,
@@ -202,7 +197,6 @@ class WebSocketService {
         });
       });
 
-      // Keep old 'presence:heartbeat' as alias so nothing breaks if old client connects
       socket.on('presence:heartbeat', () => {
         this.resetHeartbeat(socketId, userId);
         if (this.presenceService?.refreshUserHeartbeat) {
@@ -210,12 +204,7 @@ class WebSocketService {
         }
         socket.emit('heartbeat:ack', { timestamp: Date.now(), latency: 0, success: true });
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 2: 'join_conversation' (was 'join:chat') ────────────────────
-      // Frontend emits: socket.emit('join_conversation', conversationId, callback)
-      // Backend must ack with: { success: true }
-      // Backend must emit: 'joined_conversation' { conversationId, room, timestamp }
       socket.on('join_conversation', (conversationId, callback) => {
         if (!this.checkRateLimit(socket, 'join_conversation')) return;
 
@@ -229,19 +218,16 @@ class WebSocketService {
 
         this.logger.debug(`User ${userId} joined conversation ${conversationId}`);
 
-        // Ack to the caller
         if (typeof callback === 'function') {
           callback({ success: true });
         }
 
-        // Notify the joiner (socket-client listens for this)
         socket.emit('joined_conversation', {
           conversationId,
           room,
           timestamp: new Date().toISOString(),
         });
 
-        // Notify others in the room
         socket.to(room).emit('user:joined', {
           userId,
           userName:  userInfo.userName,
@@ -250,7 +236,6 @@ class WebSocketService {
         });
       });
 
-      // Keep old 'join:chat' as alias
       socket.on('join:chat', (data) => {
         if (!this.checkRateLimit(socket, 'join_conversation')) return;
         const { chatId } = data || {};
@@ -263,9 +248,7 @@ class WebSocketService {
           timestamp: new Date().toISOString(),
         });
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 3: 'leave_conversation' (was 'leave:chat') ─────────────────
       socket.on('leave_conversation', (conversationId, callback) => {
         if (!conversationId) {
           if (typeof callback === 'function') callback({ success: false });
@@ -284,7 +267,6 @@ class WebSocketService {
         });
       });
 
-      // Keep old alias
       socket.on('leave:chat', (data) => {
         const { chatId } = data || {};
         if (chatId) {
@@ -296,11 +278,7 @@ class WebSocketService {
           });
         }
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 4: typing — emit 'user:typing' with isTyping flag ──────────
-      // Frontend emits: typing:start / typing:stop with { conversationId, receiverId }
-      // Frontend listens: 'user:typing' with { userId, userName, conversationId, isTyping, timestamp }
       socket.on('typing:start', (data) => {
         if (!this.checkRateLimit(socket, 'typing:start')) return;
 
@@ -313,8 +291,6 @@ class WebSocketService {
         this.typingDebounce.set(typingKey, true);
         setTimeout(() => this.typingDebounce.delete(typingKey), 1000);
 
-        // FIXED: emit 'user:typing' (not 'typing:start') with isTyping:true
-        // to conversation room (not chat: room)
         const payload = {
           userId,
           userName:       userInfo.userName,
@@ -325,7 +301,6 @@ class WebSocketService {
 
         socket.to(`conversation:${conversationId}`).emit('user:typing', payload);
 
-        // Also direct to receiver if specified
         if (receiverId) {
           socket.to(`user:${receiverId}`).emit('user:typing', payload);
         }
@@ -351,12 +326,8 @@ class WebSocketService {
           socket.to(`user:${receiverId}`).emit('user:typing', payload);
         }
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 5: 'message:send' — must send ack + emit 'new_message' ──────
-      // Frontend emits: socket.emit('message:send', payload, callback)
-      // Frontend expects ack: { success, messageId, data }
-      // Frontend listens:     'new_message' (not 'message:received')
+      // ── 🔥 FIXED: Send message with DECRYPTION ────────────────────────────
       socket.on('message:send', async (data, callback) => {
         if (!this.checkRateLimit(socket, 'message:send')) return;
 
@@ -380,6 +351,7 @@ class WebSocketService {
           let message = null;
 
           if (this.services.chatService) {
+            // Call chatService (returns ENCRYPTED message from DB)
             message = await this.services.chatService.sendMessage({
               senderId:        userId,
               receiverId,
@@ -390,7 +362,7 @@ class WebSocketService {
               metadata:        data.metadata || {},
             });
           } else {
-            // No chat service — build a minimal message object
+            // Fallback if no chat service
             message = {
               _id:            clientMessageId || `${Date.now()}`,
               senderId:       userId,
@@ -404,23 +376,62 @@ class WebSocketService {
             };
           }
 
+          // 🔥 CRITICAL FIX: DECRYPT the message before emitting
+          let decryptedMessage = message;
+          
+          // Create a mock req object for messageFormatter
+          const mockReq = {
+            app: {
+              get: (key) => {
+                if (key === 'EncryptionService') {
+                  return this.encryptionService || null;
+                }
+                return null;
+              }
+            }
+          };
+
+          try {
+            // Decrypt the message content
+            if (messageFormatter && messageFormatter.formatSocketMessage) {
+              decryptedMessage = messageFormatter.formatSocketMessage(
+                mockReq,
+                message,
+                userId
+              );
+              this.logger.debug('✅ Message decrypted for socket emission', {
+                messageId: message._id,
+                originalLength: message.content?.length || 0,
+                decryptedLength: decryptedMessage.content?.length || 0
+              });
+            }
+          } catch (decryptError) {
+            this.logger.error('❌ Failed to decrypt message for socket:', decryptError);
+            // If decryption fails, show error indicator
+            decryptedMessage.content = '🔒 [Encrypted message - decryption failed]';
+          }
+
           const fullMessage = {
-            ...message,
+            ...decryptedMessage,  // ← NOW CONTAINS PLAINTEXT!
             senderName:   userInfo.userName,
             senderAvatar: userInfo.avatar,
           };
 
-          // FIXED: emit 'new_message' (not 'message:received')
-          // Send to conversation room
+          // 🔴 Broadcast DECRYPTED message to conversation room
           if (conversationId) {
+            this.logger.info(`📡 Broadcasting decrypted message to conversation:${conversationId}`, {
+              messageId: fullMessage._id,
+              contentPreview: fullMessage.content?.substring(0, 20)
+            });
             this.io.to(`conversation:${conversationId}`).emit('new_message', fullMessage);
           }
-          // Also send directly to receiver's personal room
+          
+          // Also broadcast to receiver's personal room
           if (receiverId) {
             this.io.to(`user:${receiverId}`).emit('new_message', fullMessage);
           }
 
-          // Ack back to sender (socket-client.ts uses callback form)
+          // Send ack to the sender
           if (typeof callback === 'function') {
             callback({
               success:   true,
@@ -429,17 +440,13 @@ class WebSocketService {
             });
           }
         } catch (error) {
-          this.logger.error('Message send error:', error);
+          this.logger.error('❌ Message send error:', error);
           if (typeof callback === 'function') {
             callback({ success: false, error: 'Failed to send message', code: 'SEND_FAILED' });
           }
         }
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 6: 'messages:viewed' (was 'message:read') ─────────────────
-      // Frontend emits: socket.emit('messages:viewed', { conversationId, messageIds, receiverId }, cb)
-      // Backend emits back: 'messages:read' { messageIds, readerId, timestamp }
       socket.on('messages:viewed', async (data, callback) => {
         const { conversationId, messageIds, receiverId } = data || {};
 
@@ -462,11 +469,9 @@ class WebSocketService {
             timestamp: new Date().toISOString(),
           };
 
-          // Emit to conversation room
           if (conversationId) {
             socket.to(`conversation:${conversationId}`).emit('messages:read', readPayload);
           }
-          // Also notify receiver directly
           if (receiverId) {
             socket.to(`user:${receiverId}`).emit('messages:read', readPayload);
           }
@@ -474,11 +479,10 @@ class WebSocketService {
           if (typeof callback === 'function') callback({ success: true });
         } catch (error) {
           this.logger.error('Messages viewed error:', error);
-          if (typeof callback === 'function') callback({ success: true }); // best-effort
+          if (typeof callback === 'function') callback({ success: true });
         }
       });
 
-      // Keep old 'message:read' alias
       socket.on('message:read', async (data) => {
         const { messageId, chatId } = data || {};
         if (!messageId || !chatId) return;
@@ -496,10 +500,7 @@ class WebSocketService {
           this.logger.error('Message read error:', error);
         }
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 7: presence:subscribe / unsubscribe ─────────────────────────
-      // Unchanged in logic, kept for completeness
       socket.on('presence:subscribe', (data) => {
         const { userIds } = data || {};
         if (!Array.isArray(userIds)) return;
@@ -511,9 +512,7 @@ class WebSocketService {
         if (!Array.isArray(userIds)) return;
         userIds.forEach(targetId => socket.leave(`presence:${targetId}`));
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── FIXED 8: 'debug:get_rooms' ────────────────────────────────────────
       socket.on('debug:get_rooms', () => {
         const rooms = Array.from(socket.rooms);
         socket.emit('debug:rooms_list', {
@@ -523,9 +522,7 @@ class WebSocketService {
           timestamp: new Date().toISOString(),
         });
       });
-      // ──────────────────────────────────────────────────────────────────────
 
-      // ── Legacy presence events (kept for backward compat) ─────────────────
       socket.on('presence:get', async (targetUserId) => {
         if (!targetUserId || !this.presenceService?.areUsersOnline) return;
         const isOnline = await this.presenceService.areUsersOnline([targetUserId]);
@@ -543,7 +540,6 @@ class WebSocketService {
         const onlineStatus = await this.presenceService.areUsersOnline(userIds);
         socket.emit('online:status:response', { statuses: onlineStatus, timestamp: new Date().toISOString() });
       });
-      // ──────────────────────────────────────────────────────────────────────
 
       socket.on('error', (error) => {
         this.logger.error(`Socket error for user ${userId}:`, error);
@@ -554,7 +550,6 @@ class WebSocketService {
         socket.disconnect(true);
       });
 
-      // ── Disconnect ────────────────────────────────────────────────────────
       socket.on('disconnect', async (reason) => {
         this.logger.info(`Socket disconnected: ${socketId} for user: ${userId}, reason: ${reason}`);
         
@@ -572,7 +567,6 @@ class WebSocketService {
             .catch(err => this.logger.error('Error in userDisconnected:', err));
         }
 
-        // Emit user:offline only when this was the user's last socket
         try {
           const remainingSockets = await this.io.in(`user:${userId}`).fetchSockets();
 
@@ -597,7 +591,6 @@ class WebSocketService {
           this.logger.error('Error emitting user:offline:', emitErr);
         }
       });
-      // ──────────────────────────────────────────────────────────────────────
     });
     
     this.logger.info('✅ WebSocket event handlers setup');
@@ -635,6 +628,12 @@ class WebSocketService {
   setPresenceService(presenceService) {
     this.presenceService = presenceService;
     this.logger.info('✅ PresenceService injected into WebSocketService');
+  }
+  
+  // ── 🔥 NEW: Inject encryption service for decryption ──────────────────────
+  setEncryptionService(encryptionService) {
+    this.encryptionService = encryptionService;
+    this.logger.info('✅ EncryptionService injected into WebSocketService');
   }
   
   getUserIdFromSocket(socketId) {

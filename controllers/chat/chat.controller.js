@@ -1,4 +1,4 @@
-// controllers/chat/ChatController.js - UPDATED FOR WEBSOCKET SERVICE
+// controllers/chat/ChatController.js - COMPLETE FIXED VERSION
 const BaseController = require("../BaseController");
 const ConversationService = require("./ConversationService");
 const MessageService = require("./MessageService");
@@ -7,10 +7,8 @@ const StatsService = require("./StatsService");
 const ReactionService = require("./ReactionService");
 const WsTokenService = require("./WsTokenService");
 
-// Import modular components
 const chatHelpers = require("@utils/ChatHelpers");
 const messageFormatter = require("@formatters/MessageFormatter");
-const messageEncryptionHandler = require("@handlers/MessageEncryptionHandler");
 const messageValidator = require("@validators/MessageValidator");
 
 const logger = require("@utils/logger") || console;
@@ -25,20 +23,16 @@ class ChatController extends BaseController {
     this.reactionService = ReactionService;
     this.wsTokenService = WsTokenService;
     
-    // Inject WebSocketService
     this.webSocketService = webSocketService;
-
     this.bindMethods();
   }
 
-  // Set WebSocketService after initialization
   setWebSocketService(webSocketService) {
     this.webSocketService = webSocketService;
     logger.info("✅ WebSocketService injected into ChatController");
   }
 
   bindMethods() {
-    // Conversation methods
     this.getConversations = this.getConversations.bind(this);
     this.createConversation = this.createConversation.bind(this);
     this.getConversation = this.getConversation.bind(this);
@@ -46,58 +40,71 @@ class ChatController extends BaseController {
     this.archiveConversation = this.archiveConversation.bind(this);
     this.muteConversation = this.muteConversation.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
-
-    // Message methods
     this.sendMessage = this.sendMessage.bind(this);
     this.markAsRead = this.markAsRead.bind(this);
     this.markMessagesAsRead = this.markMessagesAsRead.bind(this);
     this.deleteMessage = this.deleteMessage.bind(this);
     this.deleteMessagesBulk = this.deleteMessagesBulk.bind(this);
     this.editMessage = this.editMessage.bind(this);
-
-    // Search & Stats
     this.searchConversations = this.searchConversations.bind(this);
     this.searchMessages = this.searchMessages.bind(this);
     this.getUnreadCount = this.getUnreadCount.bind(this);
     this.getTotalUnreadCount = this.getTotalUnreadCount.bind(this);
     this.getStats = this.getStats.bind(this);
-
-    // Reactions
     this.addReaction = this.addReaction.bind(this);
     this.removeReaction = this.removeReaction.bind(this);
-
-    // WebSocket
     this.getWsToken = this.getWsToken.bind(this);
   }
 
-  // Helper to emit WebSocket events
-  async emitToChat(chatId, event, data) {
-    if (!this.webSocketService) {
-      logger.warn("WebSocketService not available for chat emission");
-      return false;
-    }
-
-    try {
-      this.webSocketService.sendToChat(chatId, event, data);
-      return true;
-    } catch (error) {
-      logger.error("Failed to emit to chat:", error);
-      return false;
-    }
+  emitToConversation(conversationId, event, data) {
+  if (!this.webSocketService) {
+    logger.warn(`[ChatController] ⚠️  WebSocketService not injected — cannot emit '${event}' to conversation:${conversationId}`);
+    return false;
   }
-
-  // Helper to emit to specific user
-  async emitToUser(userId, event, data) {
-    if (!this.webSocketService) {
-      logger.warn("WebSocketService not available for user emission");
+  try {
+    const io = this.webSocketService.getIo();
+    if (!io) {
+      logger.warn(`[ChatController] ⚠️  Socket.io instance not available for event '${event}'`);
       return false;
     }
+    
+    // 🔥 ADD THIS DEBUG CODE 🔥
+    const roomName = `conversation:${conversationId}`;
+    const room = io.sockets.adapter.rooms.get(roomName);
+    const socketCount = room ? room.size : 0;
+    
+    console.log(`🔍 ROOM CHECK: ${roomName} has ${socketCount} sockets`);
+    console.log(`📤 Emitting '${event}' to ${socketCount} sockets`);
+    
+    io.to(roomName).emit(event, data);
+    logger.debug(`[ChatController] 📡 Emitted '${event}' to conversation:${conversationId}`);
+    return true;
+  } catch (error) {
+    logger.error(`[ChatController] Failed to emit '${event}' to conversation:`, error);
+    return false;
+  }
+}
 
+  emitToUser(userId, event, data) {
+    if (!userId) {
+      logger.warn(`[ChatController] ⚠️  emitToUser called with no userId for event '${event}' — skipping`);
+      return false;
+    }
+    if (!this.webSocketService) {
+      logger.warn(`[ChatController] ⚠️  WebSocketService not injected — cannot emit '${event}' to user:${userId}`);
+      return false;
+    }
     try {
-      this.webSocketService.sendToUser(userId, event, data);
+      const io = this.webSocketService.getIo();
+      if (!io) {
+        logger.warn(`[ChatController] ⚠️  Socket.io instance not available for event '${event}'`);
+        return false;
+      }
+      io.to(`user:${userId}`).emit(event, data);
+      logger.debug(`[ChatController] 📡 Emitted '${event}' to user:${userId}`);
       return true;
     } catch (error) {
-      logger.error("Failed to emit to user:", error);
+      logger.error(`[ChatController] Failed to emit '${event}' to user:`, error);
       return false;
     }
   }
@@ -107,17 +114,13 @@ class ChatController extends BaseController {
   async getConversations(req, res) {
     try {
       const userId = req.user?.id;
-
       if (!userId) {
         return this.errorResponse(res, 401, "User not authenticated");
       }
-
       const result = await this.conversationService.getUserConversations(userId, req.query);
-
       if (result.conversations) {
         result.conversations = messageFormatter.decryptConversationMessages(req, result.conversations, userId);
       }
-
       return this.successResponse(res, 200, result);
     } catch (error) {
       logger.error("getConversations error:", error);
@@ -128,6 +131,10 @@ class ChatController extends BaseController {
   async createConversation(req, res) {
     try {
       const result = await this.conversationService.createConversation(req.user.id, req.body);
+      this.emitToUser(req.user.id, 'conversation:created', {
+        conversation: result,
+        timestamp: new Date().toISOString()
+      });
       return this.successResponse(res, 200, result, "Conversation created");
     } catch (error) {
       logger.error("createConversation error:", error);
@@ -137,11 +144,15 @@ class ChatController extends BaseController {
 
   async getConversation(req, res) {
     try {
+      const userId = req.user.id;
       const result = await this.conversationService.getConversationWithUser(
-        req.user.id,
+        userId,
         req.params.userId,
         req.query
       );
+      if (result.messages && Array.isArray(result.messages)) {
+        result.messages = messageFormatter.decryptMessageList(req, result.messages, userId);
+      }
       return this.successResponse(res, 200, result);
     } catch (error) {
       logger.error("getConversation error:", error);
@@ -161,7 +172,7 @@ class ChatController extends BaseController {
         return this.errorResponse(res, 403, "Access denied");
       }
 
-      const messages = await this.messageService.getConversationMessages(conversationId, userId, { limit, before });
+      const messages = await this.messageService.getConversationMessages(conversationId, { limit, before });
       const decryptedMessages = messageFormatter.decryptMessageList(req, messages, userId);
 
       return this.successResponse(res, 200, {
@@ -179,19 +190,19 @@ class ChatController extends BaseController {
     try {
       const { userId } = req.params;
       const currentUserId = req.user.id;
+      const archived = req.body.archive !== undefined
+        ? req.body.archive !== false
+        : req.body.archived !== false;
 
-      const result = await this.conversationService.archiveConversation(
-        currentUserId,
+      const result = await this.conversationService.archiveConversation(currentUserId, userId, archived);
+
+      this.emitToUser(currentUserId, 'conversation:archived', {
         userId,
-        req.body.archived !== false
-      );
+        archived,
+        timestamp: new Date().toISOString()
+      });
 
-      return this.successResponse(
-        res,
-        200,
-        result,
-        req.body.archived !== false ? "Conversation archived" : "Conversation unarchived"
-      );
+      return this.successResponse(res, 200, result, archived ? "Conversation archived" : "Conversation unarchived");
     } catch (error) {
       logger.error("archiveConversation error:", error);
       return this.handleError(error, req, res);
@@ -203,18 +214,20 @@ class ChatController extends BaseController {
       const { userId } = req.params;
       const currentUserId = req.user.id;
 
-      if (req.body.muted === undefined) {
-        return this.errorResponse(res, 400, "muted field is required");
+      const muteValue = req.body.mute !== undefined ? req.body.mute : req.body.muted;
+      if (muteValue === undefined) {
+        return this.errorResponse(res, 400, "mute field is required");
       }
 
-      const result = await this.conversationService.muteConversation(currentUserId, userId, req.body.muted);
+      const result = await this.conversationService.muteConversation(currentUserId, userId, muteValue);
 
-      return this.successResponse(
-        res,
-        200,
-        result,
-        req.body.muted ? "Conversation muted" : "Conversation unmuted"
-      );
+      this.emitToUser(currentUserId, 'conversation:muted', {
+        userId,
+        muted: muteValue,
+        timestamp: new Date().toISOString()
+      });
+
+      return this.successResponse(res, 200, result, muteValue ? "Conversation muted" : "Conversation unmuted");
     } catch (error) {
       logger.error("muteConversation error:", error);
       return this.handleError(error, req, res);
@@ -227,15 +240,32 @@ class ChatController extends BaseController {
       const currentUserId = req.user.id;
 
       const conversation = await this.conversationService.getConversationWithUser(currentUserId, userId);
-
       if (!conversation?.conversationId) {
         return this.errorResponse(res, 404, "Conversation not found");
       }
 
       const result = await this.messageService.clearConversationMessages(conversation.conversationId, currentUserId);
 
+      const otherUserId = conversation.participant1?.toString() === currentUserId
+        ? conversation.participant2?.toString()
+        : conversation.participant1?.toString();
+
+      this.emitToConversation(conversation.conversationId, 'conversation:cleared', {
+        conversationId: conversation.conversationId,
+        clearedBy: currentUserId,
+        clearedCount: result.clearedCount,
+        timestamp: new Date().toISOString(),
+      });
+      if (otherUserId) {
+        this.emitToUser(otherUserId, 'conversation:cleared', {
+          conversationId: conversation.conversationId,
+          clearedBy: currentUserId,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       return this.successResponse(res, 200, {
-        clearedCount: result,
+        clearedCount: result.clearedCount,
         conversationId: conversation.conversationId,
       }, "Conversation cleared");
     } catch (error) {
@@ -251,7 +281,6 @@ class ChatController extends BaseController {
 
     try {
       const senderId = req.user?.id;
-      
       if (!senderId) {
         throw new Error("Sender ID not found in user object");
       }
@@ -260,15 +289,15 @@ class ChatController extends BaseController {
 
       const { receiverId, type, content, mediaUrl, conversationId, messageId } = req.body;
 
-      // Duplicate check
-      cacheKey = chatHelpers.createCacheKey ? chatHelpers.createCacheKey(senderId, receiverId, messageId, content) : null;
+      cacheKey = chatHelpers.createCacheKey
+        ? chatHelpers.createCacheKey(senderId, receiverId, messageId, content)
+        : null;
 
       if (chatHelpers.checkDuplicate && cacheKey && chatHelpers.checkDuplicate(cacheKey)) {
         logger.info("⏭️ [HTTP] Duplicate request prevented by cache");
         return this.successResponse(res, 200, { duplicate: true }, "Message already being processed");
       }
 
-      // Check for existing message
       if (messageId) {
         const Message = require("@models/Message");
         const existingMessage = await Message.findOne({
@@ -277,47 +306,30 @@ class ChatController extends BaseController {
         }).populate("senderId", "firstName lastName avatar email userName").lean();
 
         if (existingMessage) {
-          const formattedMessage = messageFormatter.formatSocketMessage ? 
-            messageFormatter.formatSocketMessage(req, existingMessage, senderId) : existingMessage;
-          
-          if (chatHelpers.clearCache && cacheKey) {
-            chatHelpers.clearCache(cacheKey);
-          }
+          const formattedMessage = messageFormatter.formatSocketMessage
+            ? messageFormatter.formatSocketMessage(req, existingMessage, senderId)
+            : existingMessage;
+          if (chatHelpers.clearCache && cacheKey) chatHelpers.clearCache(cacheKey);
           return this.successResponse(res, 200, formattedMessage, "Message already sent");
         }
       }
 
-      // Encrypt content
-      let finalContent = content;
-      let encryptionType = "none";
-      let isEncrypted = false;
-      let needsMigration = false;
+      // 🔥 FIX: REMOVED DOUBLE ENCRYPTION
+      // Don't encrypt here - MessageService handles encryption internally
+      // Send plaintext directly to MessageService
 
-      if (messageEncryptionHandler && messageEncryptionHandler.encryptMessageForStorage) {
-        const encryptionResult = await messageEncryptionHandler.encryptMessageForStorage(content);
-        finalContent = encryptionResult.content || content;
-        encryptionType = encryptionResult.encryptionType || "none";
-        isEncrypted = encryptionResult.isEncrypted || false;
-        needsMigration = encryptionResult.needsMigration || false;
-      }
-
-      // Prepare message data
       const messageData = {
         senderId,
         receiverId,
-        content: finalContent || "",
-        originalContent: content,
+        content,                    // ← PLAINTEXT (MessageService will encrypt)
         type,
         mediaUrl: mediaUrl || null,
         conversationId: conversationId || req.params.conversationId || null,
         clientMessageId: messageId || `http_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         source: "http",
-        isEncrypted,
-        encryptionType,
-        needsMigration: needsMigration || false,
+        // NO isEncrypted, encryptionType - MessageService adds these
       };
 
-      // Send message
       const result = await this.messageService.sendMessage(messageData);
 
       logger.info("MESSAGE_SAVED", {
@@ -326,46 +338,50 @@ class ChatController extends BaseController {
         senderId,
       });
 
-      // Format for response
+      // 🔥 FIX: REMOVED REDUNDANT DECRYPTION
+      // formatSocketMessage ALREADY decrypts - don't decrypt twice
       let formattedMessage = result;
       if (messageFormatter.formatSocketMessage) {
         formattedMessage = messageFormatter.formatSocketMessage(req, result, senderId);
       }
+      // Done! formattedMessage now contains plaintext
 
-      // Emit via WebSocket
-      if (result.conversationId && this.webSocketService) {
-        await this.emitToChat(result.conversationId.toString(), 'message:received', {
+      if (result.conversationId) {
+        // Broadcast to conversation room
+        this.emitToConversation(result.conversationId.toString(), 'new_message', {
           ...formattedMessage,
-          conversationId: result.conversationId.toString()
+          conversationId: result.conversationId.toString(),
         });
 
-        // Also send typing stop event
-        await this.emitToChat(result.conversationId.toString(), 'typing:stop', {
+        // Emit to receiver's user room
+        const actualReceiverId = receiverId || result.receiverId?.toString();
+        if (actualReceiverId && actualReceiverId !== senderId) {
+          this.emitToUser(actualReceiverId, 'new_message', formattedMessage);
+        }
+
+        // Clear typing indicator for the sender
+        this.emitToConversation(result.conversationId.toString(), 'user:typing', {
           userId: senderId,
-          timestamp: new Date().toISOString()
+          conversationId: result.conversationId.toString(),
+          isTyping: false,
+          timestamp: new Date().toISOString(),
         });
       }
 
-      if (chatHelpers.clearCache && cacheKey) {
-        chatHelpers.clearCache(cacheKey);
-      }
+      if (chatHelpers.clearCache && cacheKey) chatHelpers.clearCache(cacheKey);
 
       return this.successResponse(res, 200, formattedMessage, "Message sent successfully");
     } catch (error) {
-      if (chatHelpers.clearCache && cacheKey) {
-        chatHelpers.clearCache(cacheKey);
-      }
+      if (chatHelpers.clearCache && cacheKey) chatHelpers.clearCache(cacheKey);
       logger.error("❌ [HTTP] Send message error:", error);
 
       if (error.code === 11000 || error.message?.includes("duplicate") || error.message?.includes("Duplicate message")) {
         return this.successResponse(res, 200, { duplicate: true }, "Message already processed");
       }
-
-      if (error.message?.includes("required") || error.message?.includes("Invalid") || 
+      if (error.message?.includes("required") || error.message?.includes("Invalid") ||
           error.message?.includes("not found")) {
         return this.errorResponse(res, 400, error.message);
       }
-
       return this.handleError(error, req, res);
     }
   }
@@ -374,23 +390,20 @@ class ChatController extends BaseController {
     try {
       const result = await this.messageService.markMessageAsRead(req.user.id, req.params.messageId);
 
-      // Emit read receipt via WebSocket
-      if (result && this.webSocketService) {
-        const message = await this.messageService.getMessageById(req.params.messageId);
+      if (result && result.conversationId) {
+        this.emitToConversation(result.conversationId.toString(), 'messages:read', {
+          messageIds: [req.params.messageId],
+          readerId: req.user.id,
+          timestamp: new Date().toISOString(),
+        });
 
-        if (message?.conversationId) {
-          // Check if user is participant
-          const conversation = await this.conversationService.getConversationById(message.conversationId);
-          if (conversation && 
-              (conversation.participant1.toString() === req.user.id || 
-               conversation.participant2.toString() === req.user.id)) {
-            
-            await this.emitToChat(message.conversationId.toString(), 'message:read', {
-              messageId: req.params.messageId,
-              readerId: req.user.id,
-              timestamp: new Date().toISOString()
-            });
-          }
+        const senderId = result.senderId?.toString?.() ?? result.senderId;
+        if (senderId && senderId !== req.user.id) {
+          this.emitToUser(senderId, 'messages:read', {
+            messageIds: [req.params.messageId],
+            readerId: req.user.id,
+            timestamp: new Date().toISOString(),
+          });
         }
       }
 
@@ -409,16 +422,49 @@ class ChatController extends BaseController {
 
       const result = await this.messageService.markMessagesAsRead(req.body.messageIds, req.user.id);
 
-      // Emit via WebSocket
-      if (this.webSocketService && req.body.messageIds.length > 0) {
-        const firstMessage = await this.messageService.getMessageById(req.body.messageIds[0]);
+      const conversationId = result?.conversationId
+        ?? req.body.conversationId
+        ?? null;
 
-        if (firstMessage?.conversationId) {
-          await this.emitToChat(firstMessage.conversationId.toString(), 'messages:read:bulk', {
+      if (conversationId) {
+        this.emitToConversation(conversationId.toString(), 'messages:read', {
+          messageIds: req.body.messageIds,
+          readerId: req.user.id,
+          timestamp: new Date().toISOString(),
+        });
+
+        const senderId = result?.senderId?.toString?.() ?? result?.senderId;
+        if (senderId && senderId !== req.user.id) {
+          this.emitToUser(senderId, 'messages:read', {
             messageIds: req.body.messageIds,
             readerId: req.user.id,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
+        }
+      } else {
+        try {
+          const Message = require("@models/Message");
+          const firstMessage = await Message.findById(req.body.messageIds[0])
+            .select('conversationId senderId').lean();
+
+          if (firstMessage?.conversationId) {
+            this.emitToConversation(firstMessage.conversationId.toString(), 'messages:read', {
+              messageIds: req.body.messageIds,
+              readerId: req.user.id,
+              timestamp: new Date().toISOString(),
+            });
+
+            const sId = firstMessage.senderId?.toString();
+            if (sId && sId !== req.user.id) {
+              this.emitToUser(sId, 'messages:read', {
+                messageIds: req.body.messageIds,
+                readerId: req.user.id,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+        } catch (lookupErr) {
+          logger.warn('[ChatController] markMessagesAsRead: could not look up conversationId', lookupErr.message);
         }
       }
 
@@ -432,27 +478,24 @@ class ChatController extends BaseController {
   async deleteMessage(req, res) {
     try {
       const message = await this.messageService.getMessageById(req.params.messageId);
-
       if (!message) {
         return this.errorResponse(res, 404, "Message not found");
       }
 
-      // Check authorization
       const conversation = await this.conversationService.getConversationById(message.conversationId);
-      if (!conversation || 
-          (conversation.participant1.toString() !== req.user.id && 
+      if (!conversation ||
+          (conversation.participant1.toString() !== req.user.id &&
            conversation.participant2.toString() !== req.user.id)) {
         return this.errorResponse(res, 403, "Not authorized to delete this message");
       }
 
       await this.messageService.deleteMessage(req.user.id, req.params.messageId);
 
-      // Emit deletion via WebSocket
-      if (message.conversationId && this.webSocketService) {
-        await this.emitToChat(message.conversationId.toString(), 'message:deleted', {
+      if (message.conversationId) {
+        this.emitToConversation(message.conversationId.toString(), 'message:deleted', {
           messageId: req.params.messageId,
           deletedBy: req.user.id,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -470,6 +513,16 @@ class ChatController extends BaseController {
       }
 
       const result = await this.messageService.deleteMessagesBulk(req.user.id, req.body.messageIds);
+
+      const conversationId = result?.conversationId ?? req.body.conversationId ?? null;
+      if (conversationId) {
+        this.emitToConversation(conversationId.toString(), 'messages:deleted', {
+          messageIds: req.body.messageIds,
+          deletedBy: req.user.id,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       return this.successResponse(res, 200, result, "Messages deleted");
     } catch (error) {
       logger.error("deleteMessagesBulk error:", error);
@@ -485,25 +538,22 @@ class ChatController extends BaseController {
 
       const result = await this.messageService.editMessage(req.user.id, req.params.messageId, req.body.content);
 
-      // Emit edit via WebSocket
-      if (result?.conversationId && this.webSocketService) {
-        await this.emitToChat(result.conversationId.toString(), 'message:edited', {
+      if (result?.conversationId) {
+        this.emitToConversation(result.conversationId.toString(), 'message:edited', {
           messageId: req.params.messageId,
           content: req.body.content,
           editedBy: req.user.id,
           editedAt: result.editedAt || new Date(),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       return this.successResponse(res, 200, result, "Message updated");
     } catch (error) {
       logger.error("editMessage error:", error);
-
       if (error.message?.includes("15 minutes") || error.message?.includes("edit window")) {
         return this.errorResponse(res, 400, error.message);
       }
-
       return this.handleError(error, req, res);
     }
   }
@@ -525,7 +575,6 @@ class ChatController extends BaseController {
       if (!req.query.query || req.query.query.trim().length === 0) {
         return this.errorResponse(res, 400, "Search query is required");
       }
-
       const result = await this.searchService.searchMessages(req.user.id, req.query);
       return this.successResponse(res, 200, result);
     } catch (error) {
@@ -571,19 +620,16 @@ class ChatController extends BaseController {
       if (!req.body.reaction || req.body.reaction.trim().length === 0) {
         return this.errorResponse(res, 400, "Reaction is required");
       }
-
       const result = await this.reactionService.addReaction(req.user.id, req.params.messageId, req.body.reaction);
-
-      // Emit reaction via WebSocket
-      if (result?.conversationId && this.webSocketService) {
-        await this.emitToChat(result.conversationId.toString(), 'reaction:added', {
+      if (result?.conversationId) {
+        this.emitToConversation(result.conversationId.toString(), 'message:reaction', {
           messageId: req.params.messageId,
           userId: req.user.id,
           reaction: req.body.reaction,
-          timestamp: new Date().toISOString()
+          action: 'add',
+          timestamp: new Date().toISOString(),
         });
       }
-
       return this.successResponse(res, 200, result, "Reaction added");
     } catch (error) {
       logger.error("addReaction error:", error);
@@ -594,17 +640,15 @@ class ChatController extends BaseController {
   async removeReaction(req, res) {
     try {
       const result = await this.reactionService.removeReaction(req.user.id, req.params.messageId, req.params.reaction);
-
-      // Emit reaction removal via WebSocket
-      if (result?.conversationId && this.webSocketService) {
-        await this.emitToChat(result.conversationId.toString(), 'reaction:removed', {
+      if (result?.conversationId) {
+        this.emitToConversation(result.conversationId.toString(), 'message:reaction', {
           messageId: req.params.messageId,
           userId: req.user.id,
           reaction: req.params.reaction,
-          timestamp: new Date().toISOString()
+          action: 'remove',
+          timestamp: new Date().toISOString(),
         });
       }
-
       return this.successResponse(res, 200, result, "Reaction removed");
     } catch (error) {
       logger.error("removeReaction error:", error);
@@ -612,7 +656,7 @@ class ChatController extends BaseController {
     }
   }
 
-  // ========== WEBSOCKET ==========
+  // ========== WEBSOCKET TOKEN ==========
 
   async getWsToken(req, res) {
     try {
@@ -625,7 +669,7 @@ class ChatController extends BaseController {
   }
 }
 
-// Export instance with WebSocketService injection capability
+// Export singleton instance
 const chatController = new ChatController();
 module.exports = chatController;
-module.exports.ChatController = ChatController; 
+module.exports.ChatController = ChatController;

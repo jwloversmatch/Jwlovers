@@ -1,12 +1,48 @@
-const Conversation = require('@models/Conversation');
-const User = require('@models/User');
-const Message = require('@models/Message');
+// controllers/chat/ConversationService.js
+const Conversation = require('@models/Conversation'); 
+const { BaseUser } = require('@models/User');
+const Message = require('@models/Message'); 
 const notificationService = require('@services/notification.service');
 const { buildConversationQuery, formatConversation } = require('./helpers/formatters');
 const { applyPagination } = require('./helpers/pagination');
+const logger = require('@utils/logger');
+const MessageFormatter = require('@formatters/MessageFormatter'); 
 
 class ConversationService {
-  async getUserConversations(userId, filters = {}) {
+  // ADD MISSING METHOD - Used by ChatController
+  async getConversationById(conversationId, req = null) {
+    try {
+      if (!conversationId) throw new Error('Conversation ID is required');
+      
+      const conversation = await Conversation.findById(conversationId)
+        .populate('participants', 'firstName lastName userName fullName email avatar')
+        .populate({
+          path: 'lastMessage',
+          populate: [
+            { path: 'senderId', select: 'firstName lastName userName fullName email avatar' },
+            { path: 'receiverId', select: 'firstName lastName userName fullName email avatar' }
+          ]
+        })
+        .lean();
+      
+      // Decrypt lastMessage if it exists
+      if (conversation && conversation.lastMessage && req) {
+        const decryptedConversations = MessageFormatter.decryptConversationMessages(
+          req, 
+          [conversation], 
+          null // currentUserId not needed for single conversation decryption
+        );
+        return decryptedConversations[0];
+      }
+      
+      return conversation;
+    } catch (error) {
+      logger.error('Error in getConversationById:', error);
+      throw error;
+    }
+  }
+
+  async getUserConversations(userId, filters = {}, req = null) {
     try {
       console.log('🔍 Getting conversations for user:', userId);
       console.log('📋 Filters:', filters);
@@ -62,7 +98,17 @@ class ConversationService {
         };
       }
       
-      const formattedConversations = paginationResult.items.map(conv => {
+      // Decrypt lastMessages in conversations if req is provided
+      let conversationsToFormat = paginationResult.items;
+      if (req) {
+        conversationsToFormat = MessageFormatter.decryptConversationMessages(
+          req, 
+          paginationResult.items, 
+          userId
+        );
+      }
+      
+      const formattedConversations = conversationsToFormat.map(conv => {
         try {
           return formatConversation(conv, userId);
         } catch (error) {
@@ -89,14 +135,14 @@ class ConversationService {
     }
   }
 
-  async createConversation(userId, data) {
+  async createConversation(userId, data, req = null) {
     try {
       console.log('🔍 Creating conversation for user:', userId);
       console.log('📋 Data:', data);
       
       const { participantId } = data;
       
-      const participant = await User.findById(participantId);
+      const participant = await BaseUser.findById(participantId);
       if (!participant) {
         throw new Error('Participant not found');
       }
@@ -114,6 +160,16 @@ class ConversationService {
         
         conversation = await Conversation.findById(conversation._id)
           .populate('participants', 'firstName lastName userName fullName email avatar');
+      }
+      
+      // Decrypt lastMessage if it exists and req is provided
+      if (conversation.lastMessage && req) {
+        const decryptedConversations = MessageFormatter.decryptConversationMessages(
+          req,
+          [conversation.toObject()],
+          userId
+        );
+        conversation = decryptedConversations[0];
       }
       
       const otherUser = conversation.participants.find(p => p._id.toString() !== userId);
@@ -156,7 +212,10 @@ class ConversationService {
           email: otherUser.email || '',
           avatar: otherUser.avatar || null
         },
-        lastMessage: null,
+        lastMessage: conversation.lastMessage ? {
+          ...conversation.lastMessage,
+          content: conversation.lastMessage.content
+        } : null,
         unreadCount: 0,
         lastMessageAt: conversation.lastMessageAt,
         muted: false,
@@ -169,11 +228,11 @@ class ConversationService {
     }
   }
 
-  async getConversationWithUser(currentUserId, otherUserId, filters = {}) {
+  async getConversationWithUser(currentUserId, otherUserId, filters = {}, req = null) {
     try {
       console.log('🔍 Getting conversation between:', currentUserId, 'and', otherUserId);
       
-      const otherUser = await User.findById(otherUserId)
+      const otherUser = await BaseUser.findById(otherUserId)
         .select('firstName lastName userName fullName email avatar online lastSeen');
       
       if (!otherUser) {
@@ -252,7 +311,7 @@ class ConversationService {
       }
       
       const undeliveredMessages = paginationResult.items.filter(
-        msg => msg.receiverId._id.toString() === currentUserId && msg.status === 'sent'
+        msg => msg.receiverId?._id?.toString() === currentUserId && msg.status === 'sent'
       );
       
       if (undeliveredMessages.length > 0) {
@@ -267,6 +326,16 @@ class ConversationService {
         { $set: { [`unreadCount.${currentUserId}`]: 0 } }
       );
       
+      // Decrypt messages if req is provided
+      let messagesToFormat = paginationResult.items;
+      if (req) {
+        messagesToFormat = MessageFormatter.decryptMessageList(
+          req,
+          paginationResult.items,
+          currentUserId
+        );
+      }
+      
       const getDisplayName = (user) => {
         if (!user) return 'Unknown';
         if (user.userName && user.userName.trim()) return user.userName.trim();
@@ -278,7 +347,7 @@ class ConversationService {
         return 'User';
       };
       
-      const formattedMessages = paginationResult.items.reverse().map(msg => {
+      const formattedMessages = messagesToFormat.reverse().map(msg => {
         const senderName = getDisplayName(msg.senderId);
         
         return {
@@ -293,7 +362,6 @@ class ConversationService {
           senderLastName: msg.senderId?.lastName || '',
           senderuserName: msg.senderId?.userName || '',
           receiverId: msg.receiverId?._id || msg.receiverId,
-          // FIXED: Changed from 'timestamp' to 'createdAt' to match frontend interface
           createdAt: msg.createdAt || new Date(),
           status: msg.status || 'sent',
           conversationId: msg.conversationId

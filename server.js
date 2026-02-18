@@ -51,10 +51,6 @@ const startServer = async () => {
     serviceInitializer.exportToApp(app);
 
     // ── PRESENCE REAL-TIME INJECTION ──────────────────────────────────────
-    // presenceController is a module-level singleton (no io at require-time).
-    // WebSocketService is now fully initialised, so we inject io here.
-    // emitPresenceChange() in the controller guards with `if (!this.io) return`
-    // so if injection fails nothing crashes — events are just silently skipped.
     try {
       const presenceController = require("@controllers/presence.controller");
       const io = services.webSocketService?.getIo?.();
@@ -66,7 +62,38 @@ const startServer = async () => {
       }
     } catch (injectionError) {
       logger.error("❌ Failed to inject Socket.io into PresenceController:", injectionError.message);
-      // Non-fatal — server continues, real-time presence events just won't fire
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
+    // ── CHAT REAL-TIME INJECTION ───────────────────────────────────────────
+    // Inject WebSocketService into ChatController so sendMessage, markAsRead,
+    // editMessage, deleteMessage etc. can emit socket events in real-time.
+    try {
+      const chatController = require("@controllers/chat/chat.controller");
+      if (services.webSocketService && chatController.setWebSocketService) {
+        chatController.setWebSocketService(services.webSocketService);
+        logger.info("✅ WebSocketService injected into ChatController");
+      } else {
+        logger.warn("⚠️  WebSocketService not available for ChatController — real-time message events won't fire");
+      }
+    } catch (injectionError) {
+      logger.error("❌ Failed to inject WebSocketService into ChatController:", injectionError.message);
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
+    // ── MESSAGE SERVICE REDIS INJECTION ───────────────────────────────────
+    // MessageService no longer calls initServices() in its constructor.
+    // RedisService must be injected here for rate limiting + deduplication.
+    try {
+      const messageService = require("@controllers/chat/MessageService");
+      if (services.redisService && messageService.setRedisService) {
+        messageService.setRedisService(services.redisService);
+        logger.info("✅ RedisService injected into MessageService");
+      } else {
+        logger.warn("⚠️  RedisService not available for MessageService — rate limiting and deduplication will be skipped");
+      }
+    } catch (injectionError) {
+      logger.error("❌ Failed to inject RedisService into MessageService:", injectionError.message);
     }
     // ──────────────────────────────────────────────────────────────────────
 
@@ -204,7 +231,7 @@ const startServer = async () => {
       RATE_LIMIT_CONFIG
     );
 
-    // Add WebSocket health check endpoint (redundant but kept for compatibility)
+    // Add WebSocket health check endpoint
     app.get('/api/websocket/health', (req, res) => {
       const webSocketService = app.get('WebSocketService');
       const io = webSocketService?.getIo?.() || app.get('io');
@@ -243,7 +270,7 @@ const startServer = async () => {
       });
     });
 
-    // Add connection monitoring interval (development only)
+    // Connection monitoring (development only)
     if (services.webSocketService && config.app.environment === 'development') {
       setInterval(() => {
         try {
@@ -251,7 +278,6 @@ const startServer = async () => {
           if (io) {
             const connections = io.engine?.clientsCount || 0;
             logger.debug(`📊 WebSocket connections: ${connections}`);
-            
             if (connections > 0 || Math.random() < 0.1) {
               const memoryUsage = process.memoryUsage();
               logger.debug(`💾 Memory: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB used`);
@@ -275,18 +301,12 @@ const startServer = async () => {
         process.exit(1);
       } else {
         logger.error("❌ Server error:", error);
-        
         if (services.webSocketService) {
           try {
             const io = services.webSocketService.getIo();
-            if (io) {
-              logger.error(`WebSocket connections at crash: ${io.engine?.clientsCount || 0}`);
-            }
-          } catch (wsError) {
-            // Ignore WebSocket errors during crash
-          }
+            if (io) logger.error(`WebSocket connections at crash: ${io.engine?.clientsCount || 0}`);
+          } catch (wsError) { /* ignore */ }
         }
-        
         process.exit(1);
       }
     });
@@ -306,24 +326,14 @@ const startServer = async () => {
         await services.webSocketService.cleanup();
         logger.info("✅ WebSocket service cleaned up after startup failure");
       }
-      
       if (services.redisService) {
         try {
-          if (services.redisService.getClient) {
-            const client = services.redisService.getClient();
-            if (client) await client.quit();
-          }
-        } catch (redisError) {
-          // Ignore Redis cleanup errors
-        }
+          const client = services.redisService.getClient?.();
+          if (client) await client.quit();
+        } catch (redisError) { /* ignore */ }
       }
-      
       if (services.databaseService?.close) {
-        try {
-          await services.databaseService.close();
-        } catch (dbError) {
-          // Ignore DB cleanup errors
-        }
+        try { await services.databaseService.close(); } catch (dbError) { /* ignore */ }
       }
     } catch (cleanupError) {
       logger.error("Error during startup failure cleanup:", cleanupError);
@@ -335,19 +345,14 @@ const startServer = async () => {
 
 // ========== LOGGING HELPER ==========
 function logServerStartup(config, services, logger, routeMetrics = null) {
-  let wsConnections = 0;
   let wsStatus = "❌ Not available";
   
   const webSocketService = services.webSocketService;
   if (webSocketService?.getIo) {
     const io = webSocketService.getIo();
-    if (io) {
-      wsConnections = io.engine?.clientsCount || 0;
-      wsStatus = `✅ Ready (${wsConnections} connections)`;
-    }
+    if (io) wsStatus = `✅ Ready (${io.engine?.clientsCount || 0} connections)`;
   } else if (services.io) {
-    wsConnections = services.io.engine?.clientsCount || 0;
-    wsStatus = `✅ Ready via io (${wsConnections} connections)`;
+    wsStatus = `✅ Ready via io (${services.io.engine?.clientsCount || 0} connections)`;
   }
 
   const memoryUsage = process.memoryUsage();
@@ -373,11 +378,7 @@ function logServerStartup(config, services, logger, routeMetrics = null) {
   logger.info(`🛡️  Content Moderation: ${config.features.contentModeration ? "✅ Enabled" : "❌ Disabled"}`);
   logger.info(`🔞 Age Verification: ${config.features.ageVerification ? "✅ Required" : "❌ Not Required"}`);
   logger.info(`🔗 CORS Origins: ${config.cors.allowAll ? 'All (*)' : (config.cors.origins?.length || 0) + ' origins'}`);
-  
-  if (routeMetrics) {
-    logger.info(`📊 Routes: ${routeMetrics.successful}/${routeMetrics.total} loaded`);
-  }
-  
+  if (routeMetrics) logger.info(`📊 Routes: ${routeMetrics.successful}/${routeMetrics.total} loaded`);
   logger.info("=".repeat(60));
 
   if (config.app.environment === "development") {
@@ -419,52 +420,32 @@ const gracefulShutdown = async (signal) => {
     const services = app.get('services') || {};
     
     if (services.webSocketService?.cleanup) {
-      try {
-        await services.webSocketService.cleanup();
-        logger.info("✅ WebSocket service cleaned up");
-      } catch (error) {
-        logger.error("⚠️ Error cleaning up WebSocketService:", error.message);
-      }
+      try { await services.webSocketService.cleanup(); logger.info("✅ WebSocket service cleaned up"); }
+      catch (error) { logger.error("⚠️ Error cleaning up WebSocketService:", error.message); }
     }
 
     if (services.presenceService?.cleanup) {
-      try {
-        await services.presenceService.cleanup();
-        logger.info("✅ PresenceService cleaned up");
-      } catch (error) {
-        logger.error("⚠️ Error cleaning up PresenceService:", error.message);
-      }
+      try { await services.presenceService.cleanup(); logger.info("✅ PresenceService cleaned up"); }
+      catch (error) { logger.error("⚠️ Error cleaning up PresenceService:", error.message); }
     }
 
     if (services.controllerBridge?.cleanup) {
-      try {
-        await services.controllerBridge.cleanup();
-        logger.info("✅ Controller Bridge cleaned up");
-      } catch (error) {
-        logger.error("⚠️ Error cleaning up Controller Bridge:", error.message);
-      }
+      try { await services.controllerBridge.cleanup(); logger.info("✅ Controller Bridge cleaned up"); }
+      catch (error) { logger.error("⚠️ Error cleaning up Controller Bridge:", error.message); }
     }
 
     try {
       const redisService = services.redisService || app.get("RedisService");
       if (redisService) {
-        if (redisService.getClient) {
-          const client = redisService.getClient();
-          if (client) await client.quit();
-        }
-        if (redisService.getSubClient) {
-          const subClient = redisService.getSubClient();
-          if (subClient) await subClient.quit();
-        }
-        if (redisService.getPubClient) {
-          const pubClient = redisService.getPubClient();
-          if (pubClient) await pubClient.quit();
-        }
+        const client = redisService.getClient?.();
+        if (client) await client.quit();
+        const subClient = redisService.getSubClient?.();
+        if (subClient) await subClient.quit();
+        const pubClient = redisService.getPubClient?.();
+        if (pubClient) await pubClient.quit();
         logger.info("✅ Redis connections closed");
       }
-    } catch (error) {
-      logger.error("⚠️ Error closing Redis:", error.message);
-    }
+    } catch (error) { logger.error("⚠️ Error closing Redis:", error.message); }
 
     try {
       const databaseService = services.databaseService || app.get("DatabaseService");
@@ -472,54 +453,33 @@ const gracefulShutdown = async (signal) => {
         await databaseService.close();
         logger.info("✅ Database connections closed");
       }
-    } catch (error) {
-      logger.error("⚠️ Error closing MongoDB:", error.message);
-    }
+    } catch (error) { logger.error("⚠️ Error closing MongoDB:", error.message); }
 
     try {
       const WebSocketEmitter = require("./emitters/WebSocketEmitter");
-      if (WebSocketEmitter.cleanup) {
-        WebSocketEmitter.cleanup();
-        logger.info("✅ WebSocketEmitter cleaned up");
-      }
-    } catch (error) {
-      // Ignore if WebSocketEmitter doesn't exist
-    }
+      if (WebSocketEmitter.cleanup) { WebSocketEmitter.cleanup(); logger.info("✅ WebSocketEmitter cleaned up"); }
+    } catch (error) { /* ignore if doesn't exist */ }
 
-    const globalRefs = [
-      'redisClient', 'redis', 'io', 'getSocketIO', 
-      'getWebSocketService', 'presenceService', 'getPresenceService'
-    ];
-    
-    globalRefs.forEach(ref => {
-      if (global[ref]) {
-        delete global[ref];
-      }
-    });
+    ['redisClient', 'redis', 'io', 'getSocketIO', 'getWebSocketService', 'presenceService', 'getPresenceService']
+      .forEach(ref => { if (global[ref]) delete global[ref]; });
 
-    const shutdownDuration = Date.now() - shutdownStart;
-    logger.info(`✅ Shutdown complete (${shutdownDuration}ms)`);
+    logger.info(`✅ Shutdown complete (${Date.now() - shutdownStart}ms)`);
     process.exit(0);
   });
 
-  const forceShutdownTimeout = config.limits.shutdownTimeout || 10000;
   setTimeout(() => {
-    logger.error(`❌ Forced shutdown after ${forceShutdownTimeout}ms timeout`);
+    logger.error(`❌ Forced shutdown after ${config.limits.shutdownTimeout || 10000}ms timeout`);
     clearAllIntervals();
     process.exit(1);
-  }, forceShutdownTimeout);
+  }, config.limits.shutdownTimeout || 10000);
 };
 
 // ========== PROCESS EVENT HANDLERS ==========
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGINT",  () => gracefulShutdown("SIGINT"));
 
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("❌ Unhandled Rejection at:", {
-    promise,
-    reason: reason.message || reason,
-    stack: reason.stack,
-  });
+  logger.error("❌ Unhandled Rejection at:", { promise, reason: reason.message || reason, stack: reason.stack });
 });
 
 process.on("uncaughtException", (error) => {
@@ -535,15 +495,15 @@ startServer();
 module.exports = {
   app,
   server,
-  getServices: () => app.get("services"),
-  getRedisService: () => app.get("RedisService"),
+  getServices:          () => app.get("services"),
+  getRedisService:      () => app.get("RedisService"),
   getEncryptionService: () => app.get("EncryptionService"),
-  getDatabaseService: () => app.get("DatabaseService"),
-  getWebSocketService: () => app.get("WebSocketService"),
-  getPresenceService: () => app.get("PresenceService"),
-  getControllerBridge: () => app.get("controllerBridge"),
-  getIo: () => app.get("io"),
-  getLogger: () => logger,
-  getConfig: () => config,
-  getRouteLoader: () => app.get("routeLoader")
+  getDatabaseService:   () => app.get("DatabaseService"),
+  getWebSocketService:  () => app.get("WebSocketService"),
+  getPresenceService:   () => app.get("PresenceService"),
+  getControllerBridge:  () => app.get("controllerBridge"),
+  getIo:                () => app.get("io"),
+  getLogger:            () => logger,
+  getConfig:            () => config,
+  getRouteLoader:       () => app.get("routeLoader"),
 };

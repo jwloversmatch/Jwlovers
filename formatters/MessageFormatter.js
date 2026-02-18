@@ -1,131 +1,193 @@
 // formatters/MessageFormatter.js
-const logger = require("@utils/logger") || console;
-const chatHelpers = require("@utils/ChatHelpers");
+const logger = require('@utils/logger') || console;
 
-class MessageFormatter {
-  decryptMessageForUser(req, content, message, currentUserId) {
-    try {
-      if (!req || !content || !message) {
-        logger.debug("Missing parameters for decryption");
-        return content;
-      }
-
-      if (!chatHelpers.isUserAuthorized(message, currentUserId)) {
-        logger.warn("User not authorized to decrypt this message");
-        return content;
-      }
-
-      const socketHelpers = chatHelpers.getSocketHelpers(req);
-      if (!socketHelpers?.decryptForFrontend) {
-        logger.warn("Decryption function not available");
-        return content;
-      }
-
-      if (message.encryptionType === "server-side") {
-        const decrypted = socketHelpers.decryptForFrontend(content, "server-side");
-
-        if (decrypted === null || decrypted.startsWith("🔒")) {
-          logger.warn("Failed to decrypt message, returning placeholder");
-          return "🔒 [Encrypted message]";
-        }
-
-        return decrypted;
-      }
-
-      return content;
-    } catch (error) {
-      logger.error("Failed to decrypt message:", error);
-      return "🔒 [Encrypted message - error]";
-    }
-  }
-
-  formatSocketMessage(req, message, currentUserId = null) {
-    if (!message) return null;
-
-    try {
-      let content = message.content;
-      let isEncrypted = message.isEncrypted || false;
-
-      if (currentUserId && message.isEncrypted && message.encryptionType === "server-side") {
-        content = this.decryptMessageForUser(req, content, message, currentUserId);
-        isEncrypted = false;
-      }
-
-      const senderName = chatHelpers.getSenderName(message.senderId);
-
-      return {
-        _id: message._id?.toString() || message.id,
-        id: message._id?.toString() || message.id,
-        senderId: chatHelpers.safeToString(message.senderId),
-        senderName,
-        receiverId: chatHelpers.safeToString(message.receiverId),
-        conversationId: message.conversationId?.toString() || null,
-        content: content,
-        type: message.type || "text",
-        mediaUrl: message.mediaUrl || null,
-        status: message.status || "sent",
-        timestamp: message.createdAt || new Date().toISOString(),
-        createdAt: message.createdAt || new Date().toISOString(),
-        updatedAt: message.updatedAt || message.createdAt,
-        isEncrypted,
-        encryptionType: message.encryptionType || "none",
-        clientMessageId: message.clientMessageId || null,
-        editedAt: message.editedAt || null,
-        reactions: message.reactions || [],
-        needsMigration: message.needsMigration || false,
-      };
-    } catch (error) {
-      logger.error("Failed to format socket message:", error);
-      return null;
-    }
-  }
-
-  decryptConversationMessages(req, conversations, userId) {
-    if (!conversations) return conversations;
-
-    const socketHelpers = chatHelpers.getSocketHelpers(req);
-
-    return conversations.map((conv) => {
-      if (conv.lastMessage && conv.lastMessage.isEncrypted) {
-        try {
-          const decryptedContent = this.decryptMessageForUser(
-            req,
-            conv.lastMessage.content,
-            conv.lastMessage,
-            userId
-          );
-          conv.lastMessage.content = decryptedContent;
-          conv.lastMessage.isEncrypted = false;
-        } catch (error) {
-          logger.error("Failed to decrypt conversation last message:", error);
-        }
-      }
-      return conv;
-    });
-  }
-
-  decryptMessageList(req, messages, userId) {
-    return messages.map((message) => {
-      const messageObj = message.toObject ? message.toObject() : message;
-
-      if (messageObj.isEncrypted) {
-        try {
-          const decryptedContent = this.decryptMessageForUser(
-            req,
-            messageObj.content,
-            messageObj,
-            userId
-          );
-          messageObj.content = decryptedContent;
-          messageObj.isEncrypted = false;
-        } catch (error) {
-          logger.error("Failed to decrypt message:", error);
-        }
-      }
-
-      return messageObj;
-    });
+function getEncryptionService(req) {
+  try {
+    return req?.app?.get?.('EncryptionService') ?? null;
+  } catch {
+    return null;
   }
 }
 
-module.exports = new MessageFormatter();
+/**
+ * Detect whether content is our AES-256-GCM encrypted JSON blob.
+ * The DB stores encryption metadata in message.encryption.version ("v2")
+ * but does NOT set message.encryptionType or message.isEncrypted on older docs.
+ * So we detect by content shape, not by metadata fields.
+ */
+function isEncryptedJson(content) {
+  if (!content || typeof content !== 'string' || !content.startsWith('{')) {
+    return false;
+  }
+  try {
+    const parsed = JSON.parse(content);
+    return (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      typeof parsed.iv === 'string' &&
+      typeof parsed.authTag === 'string' &&
+      typeof parsed.content === 'string'
+      // alg may or may not be present depending on version
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve the effective encryptionType for a message document.
+ * 
+ * ROOT CAUSE OF ISSUE 1:
+ *   DB stores: message.encryption = { version: "v2", keyId: "default" }
+ *   But:       message.encryptionType = undefined
+ *              message.isEncrypted    = undefined
+ *   Old code:  encryptionType = encryption?.encryptionType ?? encryptionType ?? (isEncrypted ? 'server-side' : 'none')
+ *              → resolves to 'none' → decryptContent() skips decryption ❌
+ *
+ * FIX: fall back to content-shape detection when metadata fields are missing.
+ */
+function resolveEncryptionType(message) {
+  // 1. Explicit field on document (newer messages may have this)
+  if (message.encryptionType && message.encryptionType !== 'none') {
+    return message.encryptionType;
+  }
+  // 2. Nested encryption object (what the DB actually stores)
+  if (message.encryption?.encryptionType) {
+    return message.encryption.encryptionType;
+  }
+  // 3. isEncrypted flag
+  if (message.isEncrypted) {
+    return 'server-side';
+  }
+  // 4. encryption.version present → was encrypted at save time
+  if (message.encryption?.version) {
+    return 'server-side';
+  }
+  // 5. Last resort: parse the content and check its shape
+  if (isEncryptedJson(message.content)) {
+    return 'server-side';
+  }
+  return 'none';
+}
+
+function decryptContent(req, content, encryptionType) {
+  if (!content) return content;
+
+  // Only attempt decryption for server-side encrypted content
+  if (encryptionType !== 'server-side') {
+    return content;
+  }
+
+  // Must look like our encrypted JSON
+  if (!isEncryptedJson(content)) {
+    return content;
+  }
+
+  try {
+    const encryptionService = getEncryptionService(req);
+    if (!encryptionService) {
+      logger.warn('[MessageFormatter] EncryptionService not available — returning placeholder');
+      return '[Encrypted message]';
+    }
+
+    const decrypted = encryptionService.decryptForFrontend(content, encryptionType);
+    return decrypted ?? content;
+  } catch (err) {
+    logger.warn('[MessageFormatter] decryptContent error:', err.message);
+    return content;
+  }
+}
+
+function formatSocketMessage(req, message, currentUserId) {
+  if (!message) return message;
+
+  // FIX: use resolveEncryptionType — handles missing encryptionType/isEncrypted fields
+  const encryptionType = resolveEncryptionType(message);
+  const decryptedContent = decryptContent(req, message.content, encryptionType);
+
+  return {
+    _id:             message._id,
+    id:              message._id,
+    content:         decryptedContent,
+    type:            message.type || 'text',
+    senderId:        message.senderId?._id ?? message.senderId,
+    senderName:      getSenderName(message.senderId),
+    senderUserName:  message.senderId?.userName ?? '',
+    senderAvatar:    message.senderId?.avatar ?? null,
+    receiverId:      message.receiverId?._id ?? message.receiverId,
+    conversationId:  message.conversationId,
+    status:          message.status ?? 'sent',
+    clientMessageId: message.clientMessageId,
+    createdAt:       message.createdAt,
+    updatedAt:       message.updatedAt,
+    readAt:          message.readAt ?? null,
+    deliveredAt:     message.deliveredAt ?? null,
+    isEdited:        message.isEdited ?? false,
+    editedAt:        message.editedAt ?? null,
+    mediaUrl:        message.mediaUrl ?? null,
+    reactions:       message.reactions ?? [],
+    isEncrypted:     false, // frontend always receives plaintext
+    duplicate:       message.duplicate ?? false,
+  };
+}
+
+function decryptMessageList(req, messages, currentUserId) {
+  if (!Array.isArray(messages)) return messages;
+  return messages.map(msg => {
+    try {
+      return formatSocketMessage(req, msg, currentUserId);
+    } catch (err) {
+      logger.error('[MessageFormatter] Error formatting message:', err.message, msg?._id);
+      return msg;
+    }
+  });
+}
+
+function decryptConversationMessages(req, conversations, currentUserId) {
+  if (!Array.isArray(conversations)) return conversations;
+
+  return conversations.map(conv => {
+    try {
+      if (!conv.lastMessage) return conv;
+
+      const lastMessage = conv.lastMessage;
+      // FIX: same resolveEncryptionType logic for lastMessage
+      const encryptionType = resolveEncryptionType(lastMessage);
+
+      return {
+        ...conv,
+        lastMessage: {
+          ...lastMessage,
+          content:     decryptContent(req, lastMessage.content, encryptionType),
+          isEncrypted: false,
+        },
+      };
+    } catch (err) {
+      logger.error('[MessageFormatter] Error decrypting conversation lastMessage:', err.message, conv?._id);
+      return conv;
+    }
+  });
+}
+
+function decryptSingleMessage(req, content, encryptionType = 'server-side') {
+  return decryptContent(req, content, encryptionType);
+}
+
+function getSenderName(sender) {
+  if (!sender) return 'Unknown';
+  if (typeof sender === 'string') return 'User'; // just an ID
+  if (sender.userName?.trim()) return sender.userName.trim();
+  if (sender.fullName?.trim()) return sender.fullName.trim();
+  if (sender.firstName || sender.lastName) {
+    return [sender.firstName, sender.lastName].filter(Boolean).join(' ').trim();
+  }
+  if (sender.email) return sender.email.split('@')[0];
+  return 'User';
+}
+
+module.exports = {
+  formatSocketMessage,
+  decryptMessageList,
+  decryptConversationMessages,
+  decryptSingleMessage,
+};

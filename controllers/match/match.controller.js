@@ -482,6 +482,8 @@ exports.likeUser = async (req, res) => {
     const { isSuperLike = false, source = "swipe" } = req.body || {};
     const userId = req.user?.id || req.userId;
 
+    console.log('Like attempt:', { userId, targetUserId, isSuperLike, source });
+
     if (!userId) {
       return res.status(401).json({ success: false, error: "User authentication required" });
     }
@@ -490,16 +492,35 @@ exports.likeUser = async (req, res) => {
       return res.status(400).json({ success: false, error: "Cannot like yourself" });
     }
 
+    // Validate targetUserId is valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ success: false, error: "Invalid user ID format" });
+    }
+
     const [currentUser, targetUser] = await Promise.all([
       DatingUser.findById(userId).populate("profile"),
       DatingUser.findById(targetUserId).populate("profile"),
     ]);
 
-    if (!currentUser?.profile || !targetUser?.profile) {
-      return res.status(404).json({ success: false, error: "User or profile not found" });
+    if (!currentUser) {
+      return res.status(404).json({ success: false, error: "Current user not found" });
+    }
+
+    if (!targetUser) {
+      return res.status(404).json({ success: false, error: "Target user not found" });
+    }
+
+    if (!currentUser?.profile) {
+      return res.status(404).json({ success: false, error: "Your dating profile not found" });
+    }
+
+    if (!targetUser?.profile) {
+      return res.status(404).json({ success: false, error: "Target user profile not found" });
     }
 
     const targetProfileId = targetUser.profile._id.toString();
+    
+    // Check if already liked
     const alreadyLiked = currentUser.likedProfiles?.some(like => {
       const p = like.profile;
       return (p?._id ?? p)?.toString() === targetProfileId;
@@ -516,8 +537,10 @@ exports.likeUser = async (req, res) => {
       likedAt: new Date(),
       isSuperLike,
     });
+    
     currentUser.datingStats = currentUser.datingStats || {};
     currentUser.datingStats.totalLikes = (currentUser.datingStats.totalLikes || 0) + 1;
+    
     await currentUser.save();
 
     // Check mutual like
@@ -537,30 +560,84 @@ exports.likeUser = async (req, res) => {
         console.error('Compatibility calculation error:', e);
       }
 
-      const match = await Match.create({
-        users: [userId, targetUserId],
+      // FIX: Create match with BOTH user1 and user2 (required fields)
+      // and the users array for backward compatibility
+      const matchData = {
+        user1: userId,                    // ← REQUIRED field
+        user2: targetUserId,               // ← REQUIRED field
+        users: [userId, targetUserId],     // ← For backward compatibility
         status: "matched",
         initiator: userId,
         matchedAt: new Date(),
         compatibilityScore,
-        metadata: { source, superLikeUsed: isSuperLike },
-      });
+        metadata: { 
+          source, 
+          superLikeUsed: isSuperLike,
+          createdAt: new Date()
+        },
+        conversation: {
+          lastMessage: null,
+          lastMessageAt: null,
+          unreadCount: new Map(),
+          messageCount: 0
+        },
+        activity: {
+          lastMessageAt: null,
+          lastPhotoSharedAt: null,
+          lastVideoCallAt: null,
+          meetupSuggestedAt: null,
+          totalInteractions: 0
+        }
+      };
+
+      console.log('Creating match with data:', matchData);
+
+      const match = await Match.create(matchData);
       matchId = match._id;
 
+      // Update stats for both users
       currentUser.datingStats.totalMatches = (currentUser.datingStats.totalMatches || 0) + 1;
       targetUser.datingStats = targetUser.datingStats || {};
       targetUser.datingStats.totalMatches = (targetUser.datingStats.totalMatches || 0) + 1;
-      await Promise.all([currentUser.save(), targetUser.save()]);
+      
+      await Promise.all([
+        currentUser.save(),
+        targetUser.save()
+      ]);
+      
+      console.log('Match created successfully:', match._id);
     }
 
     return res.json({
       success: true,
       message: isMutualLike ? "It's a match! 🎉" : "Like sent successfully",
-      data: { match: isMutualLike, matchId, compatibilityScore },
+      data: { 
+        match: isMutualLike, 
+        matchId, 
+        compatibilityScore 
+      },
     });
 
   } catch (error) {
     console.error("Like user error:", error);
+    
+    // Handle duplicate key error specifically
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Match already exists between these users" 
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Validation error",
+        details: error.message 
+      });
+    }
+    
     return res.status(500).json({
       success: false,
       error: "Unable to like user",

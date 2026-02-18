@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const conversationSchema = new mongoose.Schema({
   participants: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'BaseUser',
     
   }],
   lastMessage: {
@@ -22,11 +22,11 @@ const conversationSchema = new mongoose.Schema({
   },
   mutedBy: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'BaseUser'
   }],
   archivedBy: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'BaseUser'
   }]
 }, {
   timestamps: true

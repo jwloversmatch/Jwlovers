@@ -1,5 +1,5 @@
 const webpush = require('web-push');
-const User = require('@models/User');
+const {BaseUser} = require('@models/User');
 const logger = console; 
 
 class NotificationService {
@@ -66,8 +66,8 @@ class NotificationService {
 
   async sendNewMessageNotification(receiverId, senderId, messagePreview, extraData = {}) {
     try {
-      const receiver = await User.findById(receiverId);
-      const sender = await User.findById(senderId);
+      const receiver = await BaseUser.findById(receiverId);
+      const sender = await BaseUser.findById(senderId);
       
       if (!receiver || !sender) {
         return false;
@@ -98,8 +98,8 @@ class NotificationService {
 
   async sendOnlineStatusNotification(userId, contactId, isOnline) {
     try {
-      const user = await User.findById(userId);
-      const contact = await User.findById(contactId);
+      const user = await BaseUser.findById(userId);
+      const contact = await BaseUser.findById(contactId);
       
       if (!user || !contact) {
         return false;
