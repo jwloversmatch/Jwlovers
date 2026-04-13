@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn -r tsconfig-paths/register server.js",
-    "build": "tsc",
-    "start": "node dist/server.js"
-  },
+  "dev": "ts-node-dev --respawn -r tsconfig-paths/register server.js",
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "postinstall": "npm run build"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
