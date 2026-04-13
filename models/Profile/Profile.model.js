@@ -73,28 +73,61 @@ const profileSchema = new mongoose.Schema({
     profile: {
       url: {
         type: String,
+        required: false,  // ✅ Not required
+        default: '',      // ✅ Default to empty string
         validate: {
-          validator: (v) => !v || validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }),
-          message: "Please provide a valid profile picture URL"
+          validator: function(v) {
+            // ✅ Allow empty/null OR valid URL
+            if (!v || v === '' || v === null) return true;
+            return /^https?:\/\/.+/.test(v);
+          },
+          message: 'Please provide a valid profile picture URL'
         }
       },
-      verified: { type: Boolean, default: false },
-      uploadedAt: { type: Date, default: Date.now }
+      filename: {
+        type: String,
+        default: ''
+      },
+      verified: { 
+        type: Boolean, 
+        default: false 
+      },
+      uploadedAt: Date
     },
-    
-    gallery: [{
-      url: { 
-        type: String, 
-        required: true,
-        validate: {
-          validator: (v) => validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }),
-          message: "Please provide a valid photo URL"
+    gallery: {
+      type: [
+        {
+          url: {
+            type: String,
+            required: true,  // Gallery photos MUST have URL (since they're added explicitly)
+            validate: {
+              validator: function(v) {
+                return /^https?:\/\/.+/.test(v);
+              },
+              message: 'Please provide a valid gallery photo URL'
+            }
+          },
+          filename: {
+            type: String,
+            required: true
+          },
+          caption: { 
+            type: String, 
+            maxlength: 100,
+            default: ''
+          },
+          order: {
+            type: Number,
+            default: 0
+          },
+          uploadedAt: {
+            type: Date,
+            default: Date.now
+          }
         }
-      },
-      order: { type: Number, default: 0 },
-      caption: { type: String, maxlength: 100 },
-      uploadedAt: { type: Date, default: Date.now }
-    }]
+      ],
+      default: []
+    }
   },
   
   // ========== LOCATION - FIXED WITH DEFAULTS ==========

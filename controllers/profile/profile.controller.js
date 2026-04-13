@@ -3,6 +3,8 @@ const { BaseUser, DatingUser } = require("@models/User");
 const optionService = require("@services/option.service");
 const logger = require("@utils/logger");
 const { v4: uuidv4 } = require("uuid");
+const path = require('path');
+const fs = require('fs');
 
 // ========== CONSTANTS ==========
 const CONFIG = {
@@ -204,8 +206,6 @@ class ProfileController {
         meetingAttendance: profile.personality?.meetingAttendance
       },
 
-      // Preferences are intentionally public — visitors can see what a
-      // profile owner is looking for before deciding to connect.
       preferences: {
         basic: {
           gender:   profile.preferences?.basic?.gender   || [],
@@ -297,7 +297,6 @@ class ProfileController {
 
       const defaults = Profile.getDefaultValues();
       
-      // Ensure location is properly initialized
       const mergedProfile = {
         userId,
         ...deepMerge(defaults, profileData),
@@ -379,12 +378,10 @@ class ProfileController {
         }
       }
 
-      // ===== FIX: Build update operations with proper nested handling =====
       const updateOps = {};
       
-      // Handle location specially - ensure it's never null
+      // Handle location specially
       if (updateData.location) {
-        // Initialize location object if it doesn't exist
         if (!profile.location) {
           updateOps['location'] = {
             type: 'Point',
@@ -397,22 +394,17 @@ class ProfileController {
           };
         }
         
-        // Add location updates
         Object.keys(updateData.location).forEach(key => {
           updateOps[`location.${key}`] = updateData.location[key];
         });
         
-        // Always update lastUpdated when location changes
         updateOps['location.lastUpdated'] = new Date();
-        
-        // Remove location from updateData so we don't process it again
         delete updateData.location;
       }
 
-      // Handle all other nested fields safely
+      // Handle all other nested fields
       Object.keys(updateData).forEach(key => {
         if (updateData[key] && typeof updateData[key] === 'object' && !Array.isArray(updateData[key])) {
-          // Use recursive helper for deep nested objects
           const nestedOps = buildNestedUpdateOps(updateData[key], key);
           Object.assign(updateOps, nestedOps);
         } else {
@@ -458,7 +450,7 @@ class ProfileController {
     }
   };
 
-  // ========== SECTION UPDATES - FIXED with proper nested handling ==========
+  // ========== SECTION UPDATES ==========
   updateBasicInfo = async (req, res) => {
     try {
       const userId = req.user.id;
@@ -725,6 +717,7 @@ class ProfileController {
 
       const validatedPhotos = photos.map((photo, index) => ({
         url: photo.url,
+        filename: photo.filename || null, // ✅ FIXED: filename is optional
         order: photo.order ?? index,
         caption: photo.caption || "",
         uploadedAt: new Date()
@@ -741,6 +734,161 @@ class ProfileController {
         data: { gallery: profile.photos.gallery },
         timestamp: new Date().toISOString()
       });
+    } catch (error) {
+      this.handleError(error, req, res);
+    }
+  };
+
+  // ========== UPLOAD & DELETE PHOTOS - FIXED ==========
+  
+  /**
+   * Upload photo and auto-update profile
+   * POST /api/profile/photos/upload
+   * ✅ FIXED: Properly handles filename in gallery
+   */
+  uploadPhoto = async (req, res) => {
+    try {
+      if (!req.file) {
+        throw createError("No file uploaded", "NO_FILE", 400);
+      }
+
+      const userId = req.user.id;
+      const type = req.body.type || 'gallery';
+      const caption = req.body.caption?.trim() || '';
+      
+      // Generate URL from uploaded file
+      const filename = req.file.filename;
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/profiles/${filename}`;
+
+      // Find profile
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        // Delete uploaded file if profile not found
+        const filePath = path.join(process.cwd(), 'uploads/profiles', filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      // Update profile based on type
+      if (type === 'profile') {
+        // Delete old profile picture file if exists
+        if (profile.photos?.profile?.filename) {
+          const oldPath = path.join(process.cwd(), 'uploads/profiles', profile.photos.profile.filename);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+            logger.info(`Deleted old profile picture: ${profile.photos.profile.filename}`);
+          }
+        }
+
+        profile.photos.profile = {
+          url: fileUrl,
+          filename: filename,
+          verified: false,
+          uploadedAt: new Date()
+        };
+      } else {
+        // Gallery - add to array, limit to 9
+        if (!profile.photos.gallery) profile.photos.gallery = [];
+        
+        // ✅ FIXED: Include filename in gallery photo
+        profile.photos.gallery.push({
+          url: fileUrl,
+          filename: filename, // ✅ This is now included
+          caption: caption,
+          order: profile.photos.gallery.length,
+          uploadedAt: new Date()
+        });
+
+        // Keep only last 9
+        if (profile.photos.gallery.length > 9) {
+          // Delete excess files
+          const excess = profile.photos.gallery.slice(0, -9);
+          excess.forEach(photo => {
+            if (photo.filename) { // ✅ Check if filename exists before deleting
+              const filePath = path.join(process.cwd(), 'uploads/profiles', photo.filename);
+              if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            }
+          });
+          
+          profile.photos.gallery = profile.photos.gallery.slice(-9);
+        }
+      }
+
+      await profile.save();
+
+      logger.info(`Photo uploaded for user ${userId}`, { type, filename });
+
+      res.json({
+        success: true,
+        data: {
+          url: fileUrl,
+          filename: filename,
+          type: type,
+          updated: true
+        },
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      // Cleanup on error
+      if (req.file?.path) {
+        const tempPath = req.file.path;
+        const finalPath = path.join(process.cwd(), 'uploads/profiles', req.file.filename);
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+        if (fs.existsSync(finalPath)) fs.unlinkSync(finalPath);
+      }
+      this.handleError(error, req, res);
+    }
+  };
+
+  /**
+   * Delete a photo
+   * DELETE /api/profile/photos/:filename
+   */
+  deletePhoto = async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const userId = req.user.id;
+
+      // Security: Validate filename format (prevent directory traversal)
+      if (!filename || !filename.match(/^[a-zA-Z0-9.-]+$/)) {
+        throw createError("Invalid filename", "INVALID_FILENAME", 400);
+      }
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+      }
+
+      // Check if photo belongs to user
+      const isProfilePic = profile.photos?.profile?.filename === filename;
+      const galleryIndex = profile.photos?.gallery?.findIndex(p => p.filename === filename);
+
+      if (!isProfilePic && galleryIndex === -1) {
+        throw createError("Photo not found or access denied", "ACCESS_DENIED", 403);
+      }
+
+      // Remove from database
+      if (isProfilePic) {
+        profile.photos.profile = { url: null, filename: null, verified: false };
+      } else {
+        profile.photos.gallery.splice(galleryIndex, 1);
+      }
+      await profile.save();
+
+      // Delete physical file
+      const filePath = path.join(process.cwd(), 'uploads/profiles', filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        logger.info(`Deleted photo file: ${filename}`);
+      }
+
+      res.json({
+        success: true,
+        message: "Photo deleted successfully",
+        timestamp: new Date().toISOString()
+      });
+
     } catch (error) {
       this.handleError(error, req, res);
     }
@@ -942,7 +1090,6 @@ class ProfileController {
   }
 
   async calculateDistance(viewerId, targetUserId) {
-    // Implement distance calculation logic here
     return null;
   }
 
@@ -954,9 +1101,7 @@ class ProfileController {
       requestId,
       userId: req.user?.id,
       path: req.path,
-      error: error.message,
-      code: error.code,
-      stack: error.stack
+      error: error.message
     });
 
     if (error.name === 'ValidationError') {
@@ -1007,5 +1152,4 @@ class ProfileController {
   }
 }
 
-// ========== EXPORT ==========
 module.exports = new ProfileController();

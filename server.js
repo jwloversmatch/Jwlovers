@@ -2,6 +2,8 @@
 require("dotenv").config();
 require("module-alias/register");
 const express = require("express");
+const path = require("path"); // ADDED
+const fs = require("fs"); // ADDED
 const { validateEnvVars } = require("./config/env-validator");
 
 // Import our modular components
@@ -38,10 +40,36 @@ const middlewareSetup = new MiddlewareSetup(app, config, logger);
 middlewareSetup.setupAll();
 middlewareSetup.setupRateLimitInfo(rateLimitInfoMiddleware);
 
+// ========== STATIC FILE SERVING FOR UPLOADS ==========
+// MUST be before API routes so /uploads/profiles is accessible
+app.use('/uploads/profiles', 
+  express.static(path.join(process.cwd(), 'uploads/profiles'), {
+    maxAge: '1d',
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  })
+);
+logger.info("✅ Static file serving enabled for /uploads/profiles");
+
 // ========== SERVER STARTUP ==========
 const startServer = async () => {
   try {
     ServerConfig.logConfiguration();
+
+    // Ensure upload directories exist
+    const uploadDirs = [
+      path.join(process.cwd(), 'uploads', 'temp'),
+      path.join(process.cwd(), 'uploads', 'profiles')
+    ];
+    uploadDirs.forEach(dir => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        logger.info(`📁 Created upload directory: ${dir}`);
+      }
+    });
 
     // Initialize all services
     const serviceInitializer = new ServiceInitializer(server, config, logger);
@@ -66,8 +94,6 @@ const startServer = async () => {
     // ──────────────────────────────────────────────────────────────────────
 
     // ── CHAT REAL-TIME INJECTION ───────────────────────────────────────────
-    // Inject WebSocketService into ChatController so sendMessage, markAsRead,
-    // editMessage, deleteMessage etc. can emit socket events in real-time.
     try {
       const chatController = require("@controllers/chat/chat.controller");
       if (services.webSocketService && chatController.setWebSocketService) {
@@ -82,8 +108,6 @@ const startServer = async () => {
     // ──────────────────────────────────────────────────────────────────────
 
     // ── MESSAGE SERVICE REDIS INJECTION ───────────────────────────────────
-    // MessageService no longer calls initServices() in its constructor.
-    // RedisService must be injected here for rate limiting + deduplication.
     try {
       const messageService = require("@controllers/chat/MessageService");
       if (services.redisService && messageService.setRedisService) {
