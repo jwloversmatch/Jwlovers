@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
   "dev": "ts-node-dev --respawn -r tsconfig-paths/register server.js",
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "postinstall": "npm run build"
+  "build": "echo 'No build needed'",
+  "start": "node server.js",
+  "postinstall": "echo 'Ready to start'"
 },
   "keywords": [],
   "author": "",
