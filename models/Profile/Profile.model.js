@@ -427,62 +427,70 @@ profileSchema.virtual('fullName').get(function() {
 
 // ========== INSTANCE METHODS ==========
 profileSchema.methods.calculateCompletion = function() {
-  const weights = {
-    'basic.userName': 5,
-    'photos.profile.url': 10,
-    'basic.bio': 10,
-    'basic.dateOfBirth': 5,
-    'basic.gender': 5,
-    'location.city': 5,
-    'faith.baptismDate': 10,
-    'faith.servingAs': 10,
-    'relationship.status': 5,
-    'relationship.lookingFor': 5,
-    'lifestyle.hobbies': 10,
-    'lifestyle.languages': 5,
-    'photos.gallery': 10,
-    'badges': 10
-  };
-  
   let completion = 0;
-  
-  Object.entries(weights).forEach(([field, weight]) => {
-    const value = field.split('.').reduce((obj, key) => obj && obj[key], this);
-    
-    // Bio: requires at least 50 characters
-    if (field === 'basic.bio' && value?.length >= 50) {
-      completion += weight;
-    }
-    // Hobbies: requires at least 3 entries
-    else if (field === 'lifestyle.hobbies' && Array.isArray(value) && value.length >= 3) {
-      completion += weight;
-    }
-    // Languages: requires at least 1 entry
-    else if (field === 'lifestyle.languages' && Array.isArray(value) && value.length >= 1) {
-      completion += weight;
-    }
-    // Gallery: requires at least 2 photos
-    else if (field === 'photos.gallery' && Array.isArray(value) && value.length >= 2) {
-      completion += weight;
-    }
-    // Badges: requires at least 1 badge
-    else if (field === 'badges' && Array.isArray(value) && value.length >= 1) {
-      completion += weight;
-    }
-    // LookingFor: requires at least 1 selection (non‑empty array)
-    else if (field === 'relationship.lookingFor' && Array.isArray(value) && value.length > 0) {
-      completion += weight;
-    }
-    // City: requires a non‑empty string (trimmed)
-    else if (field === 'location.city' && value && typeof value === 'string' && value.trim().length > 0) {
-      completion += weight;
-    }
-    // All other fields: truthy value (non‑null, non‑undefined, non‑empty string, Date, etc.)
-    else if (value && value !== null && value !== undefined && value !== '') {
-      completion += weight;
-    }
-  });
-  
+
+  // ========== BASIC (max 30) ==========
+  if (this.basic?.userName) completion += 5;                    // 5
+  if (this.basic?.bio?.length >= 50) completion += 10;         // 10
+  if (this.basic?.dateOfBirth) completion += 5;                // 5
+  if (this.basic?.gender) completion += 5;                     // 5
+  if (this.basic?.height) completion += 3;                     // 3
+  if (this.photos?.profile?.url) completion += 2;              // 2 (part of photos below)
+
+  // ========== PHOTOS (max 20) ==========
+  if (this.photos?.profile?.url) completion += 10;             // 10
+  if (this.photos?.gallery?.length >= 2) completion += 10;     // 10
+
+  // ========== LOCATION (max 10) ==========
+  if (this.location?.city?.trim()) completion += 5;            // 5
+  if (this.location?.country?.trim()) completion += 5;         // 5
+
+  // ========== FAITH (max 25) ==========
+  if (this.faith?.baptismDate) completion += 5;                // 5
+  if (this.faith?.servingAs) completion += 10;                 // 10
+  if (this.faith?.congregation?.name) completion += 3;         // 3
+  if (this.faith?.missionary?.served) completion += 2;         // 2
+  if (this.faith?.bethel?.served) completion += 2;             // 2
+  if (this.faith?.pioneerHours) completion += 3;               // 3
+
+  // ========== RELATIONSHIP (max 20) ==========
+  if (this.relationship?.status) completion += 5;              // 5
+  if (this.relationship?.lookingFor?.length > 0) completion += 5; // 5
+  if (this.relationship?.children?.have) completion += 3;      // 3
+  if (this.relationship?.children?.want) completion += 3;      // 3
+  if (this.relationship?.livingSituation) completion += 4;     // 4
+
+  // ========== CAREER (max 15) ==========
+  if (this.career?.work?.occupation) completion += 8;          // 8
+  if (this.career?.education?.level) completion += 7;          // 7
+
+  // ========== LIFESTYLE (max 25) ==========
+  if (this.lifestyle?.hobbies?.length >= 3) completion += 5;   // 5
+  if (this.lifestyle?.languages?.length >= 1) completion += 4; // 4
+  if (this.lifestyle?.pets?.length > 0) completion += 3;       // 3
+  if (this.lifestyle?.diet) completion += 3;                   // 3
+  if (this.lifestyle?.exercise?.frequency) completion += 3;    // 3
+  if (this.lifestyle?.smoking) completion += 2;                // 2
+  if (this.lifestyle?.drinking) completion += 2;               // 2
+  if (this.lifestyle?.exercise?.activities?.length > 0) completion += 3; // 3
+
+  // ========== PERSONALITY (max 20) ==========
+  if (this.personality?.introvertExtrovert) completion += 4;   // 4
+  if (this.personality?.loveLanguage?.length > 0) completion += 4; // 4
+  if (this.personality?.communicationStyle) completion += 4;   // 4
+  if (this.personality?.spiritualGoals?.length > 0) completion += 4; // 4
+  if (this.personality?.meetingAttendance) completion += 4;    // 4
+
+  // ========== PREFERENCES (max 20) ==========
+  if (this.preferences?.basic?.gender?.length > 0) completion += 5;   // 5
+  if (this.preferences?.basic?.ageRange?.min && this.preferences?.basic?.ageRange?.max) completion += 5; // 5
+  if (this.preferences?.faith?.servingAs?.length > 0) completion += 5; // 5
+  if (this.preferences?.relationship?.goals?.length > 0) completion += 5; // 5
+
+  // ========== BADGES (max 10) ==========
+  if (this.badges?.length >= 1) completion += 10;              // 10
+
+  // Cap at 100
   this.progress.completion = Math.min(completion, 100);
   return this.progress.completion;
 };

@@ -351,8 +351,8 @@ class ProfileController {
     }
   };
 
-  // ========== UPDATE PROFILE - FULLY FIXED with location handling ==========
-  updateProfile = async (req, res) => {
+// ========== UPDATE PROFILE - FULLY FIXED with completion recalculation ==========
+updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const updateData = req.body;
@@ -412,13 +412,14 @@ class ProfileController {
       }
     });
 
+    // Apply the update
     const updatedProfile = await Profile.findOneAndUpdate(
       { userId },
       { $set: updateOps },
       { new: true, runValidators: true }
     );
 
-    // ✅ CRITICAL FIX: Recalculate completion and save
+    // ✅ CRITICAL: Recalculate completion and save (triggers pre('save') and stores the new percentage)
     updatedProfile.calculateCompletion();
     await updatedProfile.save();
 
