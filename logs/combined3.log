@@ -122868,3 +122868,353 @@ MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
   "hasProfile": true,
   "profileCompletion": 55
 }
+2026-04-14T13:44:26.787Z [info]: User 69907e9d150b6be44b648051 (DatingUser) went offline
+2026-04-14T13:44:26.804Z [debug]: Broadcasted status update for user 69907e9d150b6be44b648051: offline
+2026-04-14T13:44:26.805Z [info]: Cleaned up stale presence for user 69907e9d150b6be44b648051 (DatingUser)
+2026-04-14T19:31:59.738Z [error]: Cleanup stale presence error: connection <monitor> to 20.96.187.159:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 128455951,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 128455952,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 128455949,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000086"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-04-14T20:07:52.055Z [error]: Cleanup stale presence error: connection <monitor> to 20.96.187.159:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 130616059,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "region": "US_EAST_2",
+          "availabilityZone": "3",
+          "diskState": "READY",
+          "workloadType": "OPERATIONAL",
+          "nodeType": "ELECTABLE",
+          "provider": "AZURE"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 181.9,
+        "minRoundTripTime": 181,
+        "lastUpdateTime": 130619320,
+        "lastWriteDate": {
+          "$date": "2026-04-14T20:07:47Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "69da83f2d6a65e8ae1e0269f"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1776197267,
+              "i": 38
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 13,
+              "1": 234,
+              "2": 106,
+              "3": 107,
+              "4": 149,
+              "5": 183,
+              "6": 37,
+              "7": 207,
+              "8": 196,
+              "9": 162,
+              "10": 74,
+              "11": 10,
+              "12": 41,
+              "13": 44,
+              "14": 202,
+              "15": 133,
+              "16": 149,
+              "17": 122,
+              "18": 40,
+              "19": 193
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "diskState": "READY",
+          "provider": "AZURE",
+          "workloadType": "OPERATIONAL",
+          "availabilityZone": "1",
+          "region": "US_EAST_2"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 256.4,
+        "minRoundTripTime": 185,
+        "lastUpdateTime": 130620791,
+        "lastWriteDate": {
+          "$date": "2026-04-14T20:07:49Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "69da82319a729321ade5cd6d"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 34,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1776197269,
+              "i": 24
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 183,
+              "1": 103,
+              "2": 254,
+              "3": 237,
+              "4": 229,
+              "5": 223,
+              "6": 240,
+              "7": 48,
+              "8": 118,
+              "9": 139,
+              "10": 106,
+              "11": 150,
+              "12": 147,
+              "13": 215,
+              "14": 123,
+              "15": 36,
+              "16": 57,
+              "17": 13,
+              "18": 220,
+              "19": 232
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000086"
+    },
+    "maxSetVersion": 34,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-04-14T20:24:47.380Z [info]: User 69907e9d150b6be44b648051 (DatingUser) went offline
+2026-04-14T20:24:47.385Z [debug]: Broadcasted status update for user 69907e9d150b6be44b648051: offline
+2026-04-14T20:24:47.385Z [info]: Cleaned up stale presence for user 69907e9d150b6be44b648051 (DatingUser)

@@ -449,12 +449,38 @@ profileSchema.methods.calculateCompletion = function() {
   Object.entries(weights).forEach(([field, weight]) => {
     const value = field.split('.').reduce((obj, key) => obj && obj[key], this);
     
-    if (field === 'basic.bio' && value?.length >= 50) completion += weight;
-    else if (field === 'lifestyle.hobbies' && value?.length >= 3) completion += weight;
-    else if (field === 'lifestyle.languages' && value?.length >= 1) completion += weight;
-    else if (field === 'photos.gallery' && value?.length >= 2) completion += weight;
-    else if (field === 'badges' && value?.length >= 1) completion += weight;
-    else if (value) completion += weight;
+    // Bio: requires at least 50 characters
+    if (field === 'basic.bio' && value?.length >= 50) {
+      completion += weight;
+    }
+    // Hobbies: requires at least 3 entries
+    else if (field === 'lifestyle.hobbies' && Array.isArray(value) && value.length >= 3) {
+      completion += weight;
+    }
+    // Languages: requires at least 1 entry
+    else if (field === 'lifestyle.languages' && Array.isArray(value) && value.length >= 1) {
+      completion += weight;
+    }
+    // Gallery: requires at least 2 photos
+    else if (field === 'photos.gallery' && Array.isArray(value) && value.length >= 2) {
+      completion += weight;
+    }
+    // Badges: requires at least 1 badge
+    else if (field === 'badges' && Array.isArray(value) && value.length >= 1) {
+      completion += weight;
+    }
+    // LookingFor: requires at least 1 selection (non‑empty array)
+    else if (field === 'relationship.lookingFor' && Array.isArray(value) && value.length > 0) {
+      completion += weight;
+    }
+    // City: requires a non‑empty string (trimmed)
+    else if (field === 'location.city' && value && typeof value === 'string' && value.trim().length > 0) {
+      completion += weight;
+    }
+    // All other fields: truthy value (non‑null, non‑undefined, non‑empty string, Date, etc.)
+    else if (value && value !== null && value !== undefined && value !== '') {
+      completion += weight;
+    }
   });
   
   this.progress.completion = Math.min(completion, 100);
