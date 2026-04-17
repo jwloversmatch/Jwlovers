@@ -353,102 +353,107 @@ class ProfileController {
 
   // ========== UPDATE PROFILE - FULLY FIXED with location handling ==========
   updateProfile = async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const updateData = req.body;
+  try {
+    const userId = req.user.id;
+    const updateData = req.body;
 
-      const profile = await Profile.findOne({ userId });
-      if (!profile) {
-        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
-      }
-
-      // Remove protected fields
-      const protectedFields = ['_id', 'userId', 'badges', 'stats', 'progress', 'createdAt', 'updatedAt'];
-      protectedFields.forEach(field => delete updateData[field]);
-
-      // Check username availability
-      if (updateData.basic?.userName && 
-          updateData.basic.userName !== profile.basic?.userName) {
-        const userNameTaken = await Profile.findOne({
-          'basic.userName': { $regex: new RegExp(`^${updateData.basic.userName}$`, 'i') },
-          userId: { $ne: userId }
-        });
-        if (userNameTaken) {
-          throw createError("Username already taken", "USERNAME_TAKEN", 409);
-        }
-      }
-
-      const updateOps = {};
-      
-      // Handle location specially
-      if (updateData.location) {
-        if (!profile.location) {
-          updateOps['location'] = {
-            type: 'Point',
-            coordinates: [0, 0],
-            city: '',
-            country: '',
-            countryCode: '',
-            formattedAddress: '',
-            lastUpdated: new Date()
-          };
-        }
-        
-        Object.keys(updateData.location).forEach(key => {
-          updateOps[`location.${key}`] = updateData.location[key];
-        });
-        
-        updateOps['location.lastUpdated'] = new Date();
-        delete updateData.location;
-      }
-
-      // Handle all other nested fields
-      Object.keys(updateData).forEach(key => {
-        if (updateData[key] && typeof updateData[key] === 'object' && !Array.isArray(updateData[key])) {
-          const nestedOps = buildNestedUpdateOps(updateData[key], key);
-          Object.assign(updateOps, nestedOps);
-        } else {
-          updateOps[key] = updateData[key];
-        }
-      });
-
-      const updatedProfile = await Profile.findOneAndUpdate(
-        { userId },
-        { $set: updateOps },
-        { new: true, runValidators: true }
-      );
-
-      // Update user type if age changed to 18+
-      if (updateData.basic?.dateOfBirth) {
-        const age = calculateAge(updateData.basic.dateOfBirth);
-        if (age >= 18) {
-          const user = await BaseUser.findById(userId);
-          if (user && user.userType !== "DatingUser") {
-            user.userType = "DatingUser";
-            await user.save();
-          }
-        }
-      }
-
-      logger.info("Profile updated", { 
-        userId, 
-        fields: Object.keys(updateOps) 
-      });
-
-      res.json({
-        success: true,
-        message: "Profile updated successfully",
-        data: { profile: this.formatOwnProfile(updatedProfile) },
-        meta: {
-          completion: updatedProfile.progress?.completion || 0,
-          requestId: req.requestId
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      this.handleError(error, req, res);
+    const profile = await Profile.findOne({ userId });
+    if (!profile) {
+      throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
     }
-  };
+
+    // Remove protected fields
+    const protectedFields = ['_id', 'userId', 'badges', 'stats', 'progress', 'createdAt', 'updatedAt'];
+    protectedFields.forEach(field => delete updateData[field]);
+
+    // Check username availability
+    if (updateData.basic?.userName && 
+        updateData.basic.userName !== profile.basic?.userName) {
+      const userNameTaken = await Profile.findOne({
+        'basic.userName': { $regex: new RegExp(`^${updateData.basic.userName}$`, 'i') },
+        userId: { $ne: userId }
+      });
+      if (userNameTaken) {
+        throw createError("Username already taken", "USERNAME_TAKEN", 409);
+      }
+    }
+
+    const updateOps = {};
+    
+    // Handle location specially
+    if (updateData.location) {
+      if (!profile.location) {
+        updateOps['location'] = {
+          type: 'Point',
+          coordinates: [0, 0],
+          city: '',
+          country: '',
+          countryCode: '',
+          formattedAddress: '',
+          lastUpdated: new Date()
+        };
+      }
+      
+      Object.keys(updateData.location).forEach(key => {
+        updateOps[`location.${key}`] = updateData.location[key];
+      });
+      
+      updateOps['location.lastUpdated'] = new Date();
+      delete updateData.location;
+    }
+
+    // Handle all other nested fields
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] && typeof updateData[key] === 'object' && !Array.isArray(updateData[key])) {
+        const nestedOps = buildNestedUpdateOps(updateData[key], key);
+        Object.assign(updateOps, nestedOps);
+      } else {
+        updateOps[key] = updateData[key];
+      }
+    });
+
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { userId },
+      { $set: updateOps },
+      { new: true, runValidators: true }
+    );
+
+    // ✅ CRITICAL FIX: Recalculate completion and save
+    updatedProfile.calculateCompletion();
+    await updatedProfile.save();
+
+    // Update user type if age changed to 18+
+    if (updateData.basic?.dateOfBirth) {
+      const age = calculateAge(updateData.basic.dateOfBirth);
+      if (age >= 18) {
+        const user = await BaseUser.findById(userId);
+        if (user && user.userType !== "DatingUser") {
+          user.userType = "DatingUser";
+          await user.save();
+        }
+      }
+    }
+
+    logger.info("Profile updated", { 
+      userId, 
+      fields: Object.keys(updateOps),
+      newCompletion: updatedProfile.progress.completion
+    });
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: { profile: this.formatOwnProfile(updatedProfile) },
+      meta: {
+        completion: updatedProfile.progress.completion,
+        requestId: req.requestId
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    this.handleError(error, req, res);
+  }
+};
 
   // ========== SECTION UPDATES ==========
   updateBasicInfo = async (req, res) => {
