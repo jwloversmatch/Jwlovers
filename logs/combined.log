@@ -105459,3 +105459,6 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.
 {"level":"info","message":"✅ Message indexes already exist, skipping","timestamp":"2026-04-20T15:36:41.812Z"}
 {"level":"info","message":"✅ Background index creation completed","timestamp":"2026-04-20T15:36:41.813Z"}
 {"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-04-20T15:37:40.196Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-04-20T15:38:40.197Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-04-20T15:39:40.204Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-04-20T15:40:40.208Z"}
