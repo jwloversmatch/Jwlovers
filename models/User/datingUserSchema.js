@@ -8,7 +8,6 @@ const datingUserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profile',
     required: false,
-    unique: true
   },
 
   // ========== DATING SPECIFIC VERIFICATION ==========

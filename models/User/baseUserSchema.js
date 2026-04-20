@@ -299,15 +299,10 @@ const baseUserSchema = new mongoose.Schema({
 });
 
 // ========== INDEXES ==========
-baseUserSchema.index({ email: 1 }, { unique: true });
-baseUserSchema.index({ phoneNumber: 1 }, { sparse: true });
-baseUserSchema.index({ userName: 1 }, { sparse: true });
 baseUserSchema.index({ role: 1, accountStatus: 1 });
 baseUserSchema.index({ createdAt: -1 });
 baseUserSchema.index({ lastActive: -1 });
 baseUserSchema.index({ 'badges.type': 1 });
-baseUserSchema.index({ emailVerificationToken: 1 }, { sparse: true });
-baseUserSchema.index({ passwordResetToken: 1 }, { sparse: true });
 baseUserSchema.index({ tokenVersion: 1 });
 
 // ========== VIRTUAL PROPERTIES ==========

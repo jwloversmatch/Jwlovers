@@ -139,7 +139,6 @@ const profileSchema = new mongoose.Schema({
     coordinates: {
       type: [Number],
       default: [0, 0],
-      index: '2dsphere'
     },
     lastUpdated: { type: Date, default: Date.now }
   },
@@ -684,9 +683,6 @@ profileSchema.index({
 
 // Geospatial index for location (VERIFY this exists)
 profileSchema.index({ 'location.coordinates': '2dsphere' });
-
-// Index for username lookups
-profileSchema.index({ 'basic.userName': 1 }, { unique: true, sparse: true });
 
 // Index for verification badges
 profileSchema.index({ 'badges.type': 1 });
