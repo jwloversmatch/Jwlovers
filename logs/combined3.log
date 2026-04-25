@@ -123383,3 +123383,771 @@ MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
 2026-04-20T15:36:39.118Z [info]: ✅ Socket.io instance injected into PresenceController
 2026-04-20T15:36:39.122Z [info]: ✅ WebSocketService injected into ChatController
 2026-04-20T15:36:39.125Z [info]: ✅ RedisService injected into MessageService
+2026-04-21T01:08:13.246Z [error]: Cleanup stale presence error: connection <monitor> to 20.36.142.157:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.36.142.157:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 38178998,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 38178997,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 38178992,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000086"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-04-23T16:29:31.747Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at processTimers (node:internal/timers:520:9)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 266271404,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 266271054,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 266269588,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000086"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-04-23T17:37:47.097Z [error]: Cleanup stale presence error: connection <monitor> to 20.96.187.159:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:630:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:270:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2436:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "availabilityZone": "3",
+          "cacheState": "READY",
+          "nodeType": "ELECTABLE",
+          "provider": "AZURE",
+          "diskState": "READY",
+          "region": "US_EAST_2",
+          "workloadType": "OPERATIONAL"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 183.5,
+        "minRoundTripTime": 181,
+        "lastUpdateTime": 270372813,
+        "lastWriteDate": {
+          "$date": "2026-04-23T17:37:45Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "69da83f2d6a65e8ae1e0269f"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 35,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1776965865,
+              "i": 152
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 100,
+              "1": 135,
+              "2": 14,
+              "3": 74,
+              "4": 171,
+              "5": 49,
+              "6": 21,
+              "7": 113,
+              "8": 246,
+              "9": 81,
+              "10": 12,
+              "11": 183,
+              "12": 162,
+              "13": 101,
+              "14": 24,
+              "15": 55,
+              "16": 213,
+              "17": 112,
+              "18": 72,
+              "19": 230
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "region": "US_EAST_2",
+          "availabilityZone": "1",
+          "cacheState": "READY",
+          "diskState": "READY",
+          "provider": "AZURE",
+          "workloadType": "OPERATIONAL",
+          "nodeType": "ELECTABLE"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 223.1,
+        "minRoundTripTime": 177,
+        "lastUpdateTime": 270373088,
+        "lastWriteDate": {
+          "$date": "2026-04-23T17:37:45Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "69da82319a729321ade5cd6d"
+          },
+          "counter": 5
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 35,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1776965865,
+              "i": 152
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 100,
+              "1": 135,
+              "2": 14,
+              "3": 74,
+              "4": 171,
+              "5": 49,
+              "6": 21,
+              "7": 113,
+              "8": 246,
+              "9": 81,
+              "10": 12,
+              "11": 183,
+              "12": 162,
+              "13": 101,
+              "14": 24,
+              "15": 55,
+              "16": 213,
+              "17": 112,
+              "18": 72,
+              "19": 230
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 270369145,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000086"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 0,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-04-25T13:19:55.540Z [warn]: Safety service not available:
+2026-04-25T13:20:01.243Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T13:20:01.245Z [info]:    API: 100 requests/15 minutes
+2026-04-25T13:20:01.246Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T13:20:01.247Z [info]:    Premium multiplier: 2x
+2026-04-25T13:20:01.248Z [info]:    Boost multiplier: 3x
+2026-04-25T13:20:01.249Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T13:20:01.251Z [info]:    API: 100 requests/15 minutes
+2026-04-25T13:20:01.252Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T13:20:01.253Z [info]:    Premium multiplier: 2x
+2026-04-25T13:20:01.255Z [info]:    Boost multiplier: 3x
+2026-04-25T13:20:01.256Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T13:20:01.257Z [info]:    API: 100 requests/15 minutes
+2026-04-25T13:20:01.261Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T13:20:01.262Z [info]:    Premium multiplier: 2x
+2026-04-25T13:20:01.266Z [info]:    Boost multiplier: 3x
+2026-04-25T13:20:01.268Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T13:20:01.268Z [info]:    API: 100 requests/15 minutes
+2026-04-25T13:20:01.270Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T13:20:01.271Z [info]:    Premium multiplier: 2x
+2026-04-25T13:20:01.272Z [info]:    Boost multiplier: 3x
+2026-04-25T13:20:01.274Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T13:20:05.154Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T13:20:05.351Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T13:20:05.360Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T13:20:05.373Z [info]: ✅ PresenceService initialized
+2026-04-25T13:20:05.390Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T13:20:06.718Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T13:20:06.736Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T13:20:06.748Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T13:20:07.563Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T13:20:07.567Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T13:20:07.573Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:01:53.537Z [warn]: Safety service not available:
+2026-04-25T14:01:54.833Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:01:54.833Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:01:54.834Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:01:54.834Z [info]:    Premium multiplier: 2x
+2026-04-25T14:01:54.835Z [info]:    Boost multiplier: 3x
+2026-04-25T14:01:54.836Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:01:54.837Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:01:54.837Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:01:54.838Z [info]:    Premium multiplier: 2x
+2026-04-25T14:01:54.838Z [info]:    Boost multiplier: 3x
+2026-04-25T14:01:54.839Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:01:54.839Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:01:54.840Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:01:54.840Z [info]:    Premium multiplier: 2x
+2026-04-25T14:01:54.840Z [info]:    Boost multiplier: 3x
+2026-04-25T14:01:54.841Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:01:54.841Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:01:54.841Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:01:54.842Z [info]:    Premium multiplier: 2x
+2026-04-25T14:01:54.842Z [info]:    Boost multiplier: 3x
+2026-04-25T14:01:54.842Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:01:57.368Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:01:57.393Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:01:57.396Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:01:57.397Z [info]: ✅ PresenceService initialized
+2026-04-25T14:01:57.398Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:01:57.530Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:01:57.535Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:01:57.537Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:01:57.641Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:01:57.643Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:01:57.644Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:23:52.640Z [warn]: Safety service not available:
+2026-04-25T14:23:56.775Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:23:56.776Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:23:56.776Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:23:56.777Z [info]:    Premium multiplier: 2x
+2026-04-25T14:23:56.777Z [info]:    Boost multiplier: 3x
+2026-04-25T14:23:56.778Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:23:56.779Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:23:56.780Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:23:56.781Z [info]:    Premium multiplier: 2x
+2026-04-25T14:23:56.781Z [info]:    Boost multiplier: 3x
+2026-04-25T14:23:56.782Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:23:56.783Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:23:56.783Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:23:56.784Z [info]:    Premium multiplier: 2x
+2026-04-25T14:23:56.784Z [info]:    Boost multiplier: 3x
+2026-04-25T14:23:56.784Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:23:56.785Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:23:56.785Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:23:56.786Z [info]:    Premium multiplier: 2x
+2026-04-25T14:23:56.786Z [info]:    Boost multiplier: 3x
+2026-04-25T14:23:56.786Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:23:58.973Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:23:58.980Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:23:58.980Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:23:58.981Z [info]: ✅ PresenceService initialized
+2026-04-25T14:23:58.981Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:23:59.019Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:23:59.021Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:23:59.021Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:23:59.077Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:23:59.079Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:23:59.080Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:37:02.960Z [warn]: Safety service not available:
+2026-04-25T14:37:03.570Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:37:03.571Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:37:03.571Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:37:03.572Z [info]:    Premium multiplier: 2x
+2026-04-25T14:37:03.572Z [info]:    Boost multiplier: 3x
+2026-04-25T14:37:03.573Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:37:03.574Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:37:03.574Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:37:03.575Z [info]:    Premium multiplier: 2x
+2026-04-25T14:37:03.575Z [info]:    Boost multiplier: 3x
+2026-04-25T14:37:03.576Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:37:03.576Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:37:03.577Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:37:03.577Z [info]:    Premium multiplier: 2x
+2026-04-25T14:37:03.577Z [info]:    Boost multiplier: 3x
+2026-04-25T14:37:03.579Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:37:03.579Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:37:03.580Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:37:03.580Z [info]:    Premium multiplier: 2x
+2026-04-25T14:37:03.580Z [info]:    Boost multiplier: 3x
+2026-04-25T14:37:03.582Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:37:06.486Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:37:06.493Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:37:06.493Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:37:06.494Z [info]: ✅ PresenceService initialized
+2026-04-25T14:37:06.494Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:37:06.525Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:37:06.526Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:37:06.527Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:37:06.572Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:37:06.574Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:37:06.575Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:38:30.667Z [warn]: Safety service not available:
+2026-04-25T14:38:31.364Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:38:31.364Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:38:31.365Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:38:31.366Z [info]:    Premium multiplier: 2x
+2026-04-25T14:38:31.366Z [info]:    Boost multiplier: 3x
+2026-04-25T14:38:31.367Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:38:31.368Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:38:31.368Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:38:31.369Z [info]:    Premium multiplier: 2x
+2026-04-25T14:38:31.370Z [info]:    Boost multiplier: 3x
+2026-04-25T14:38:31.370Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:38:31.371Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:38:31.371Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:38:31.371Z [info]:    Premium multiplier: 2x
+2026-04-25T14:38:31.371Z [info]:    Boost multiplier: 3x
+2026-04-25T14:38:31.372Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:38:31.372Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:38:31.372Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:38:31.373Z [info]:    Premium multiplier: 2x
+2026-04-25T14:38:31.373Z [info]:    Boost multiplier: 3x
+2026-04-25T14:38:31.373Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:38:33.512Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:38:33.519Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:38:33.519Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:38:33.520Z [info]: ✅ PresenceService initialized
+2026-04-25T14:38:33.520Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:38:33.551Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:38:33.552Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:38:33.553Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:38:33.591Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:38:33.593Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:38:33.594Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:39:09.450Z [warn]: Safety service not available:
+2026-04-25T14:39:10.301Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:39:10.302Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:39:10.303Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:39:10.303Z [info]:    Premium multiplier: 2x
+2026-04-25T14:39:10.304Z [info]:    Boost multiplier: 3x
+2026-04-25T14:39:10.305Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:39:10.305Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:39:10.306Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:39:10.306Z [info]:    Premium multiplier: 2x
+2026-04-25T14:39:10.307Z [info]:    Boost multiplier: 3x
+2026-04-25T14:39:10.308Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:39:10.308Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:39:10.308Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:39:10.308Z [info]:    Premium multiplier: 2x
+2026-04-25T14:39:10.309Z [info]:    Boost multiplier: 3x
+2026-04-25T14:39:10.309Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:39:10.309Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:39:10.310Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:39:10.310Z [info]:    Premium multiplier: 2x
+2026-04-25T14:39:10.310Z [info]:    Boost multiplier: 3x
+2026-04-25T14:39:10.310Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:39:13.131Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:39:13.142Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:39:13.143Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:39:13.144Z [info]: ✅ PresenceService initialized
+2026-04-25T14:39:13.144Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:39:13.186Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:39:13.188Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:39:13.189Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:39:13.253Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:39:13.255Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:39:13.257Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:50:51.656Z [warn]: Safety service not available:
+2026-04-25T14:50:52.273Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:50:52.274Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:50:52.274Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:50:52.275Z [info]:    Premium multiplier: 2x
+2026-04-25T14:50:52.275Z [info]:    Boost multiplier: 3x
+2026-04-25T14:50:52.276Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:50:52.277Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:50:52.277Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:50:52.278Z [info]:    Premium multiplier: 2x
+2026-04-25T14:50:52.278Z [info]:    Boost multiplier: 3x
+2026-04-25T14:50:52.279Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:50:52.280Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:50:52.280Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:50:52.280Z [info]:    Premium multiplier: 2x
+2026-04-25T14:50:52.281Z [info]:    Boost multiplier: 3x
+2026-04-25T14:50:52.281Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:50:52.282Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:50:52.282Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:50:52.282Z [info]:    Premium multiplier: 2x
+2026-04-25T14:50:52.282Z [info]:    Boost multiplier: 3x
+2026-04-25T14:50:52.283Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:50:55.276Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:50:55.290Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:50:55.291Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:50:55.292Z [info]: ✅ PresenceService initialized
+2026-04-25T14:50:55.293Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:50:55.356Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:50:55.359Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:50:55.360Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:50:55.455Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:50:55.458Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:50:55.460Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:51:26.376Z [warn]: Safety service not available:
+2026-04-25T14:51:26.946Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:51:26.947Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:51:26.947Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:51:26.948Z [info]:    Premium multiplier: 2x
+2026-04-25T14:51:26.948Z [info]:    Boost multiplier: 3x
+2026-04-25T14:51:26.949Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:51:26.949Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:51:26.950Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:51:26.950Z [info]:    Premium multiplier: 2x
+2026-04-25T14:51:26.951Z [info]:    Boost multiplier: 3x
+2026-04-25T14:51:26.951Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:51:26.952Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:51:26.952Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:51:26.952Z [info]:    Premium multiplier: 2x
+2026-04-25T14:51:26.952Z [info]:    Boost multiplier: 3x
+2026-04-25T14:51:26.953Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T14:51:26.953Z [info]:    API: 100 requests/15 minutes
+2026-04-25T14:51:26.953Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T14:51:26.953Z [info]:    Premium multiplier: 2x
+2026-04-25T14:51:26.954Z [info]:    Boost multiplier: 3x
+2026-04-25T14:51:26.954Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T14:51:30.209Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T14:51:30.229Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T14:51:30.230Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T14:51:30.231Z [info]: ✅ PresenceService initialized
+2026-04-25T14:51:30.233Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T14:51:30.312Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:51:30.315Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T14:51:30.317Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T14:51:30.410Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T14:51:30.412Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T14:51:30.414Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T15:07:39.571Z [warn]: Safety service not available:
+2026-04-25T15:07:42.056Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T15:07:42.058Z [info]:    API: 100 requests/15 minutes
+2026-04-25T15:07:42.060Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T15:07:42.061Z [info]:    Premium multiplier: 2x
+2026-04-25T15:07:42.063Z [info]:    Boost multiplier: 3x
+2026-04-25T15:07:42.066Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T15:07:42.069Z [info]:    API: 100 requests/15 minutes
+2026-04-25T15:07:42.070Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T15:07:42.072Z [info]:    Premium multiplier: 2x
+2026-04-25T15:07:42.074Z [info]:    Boost multiplier: 3x
+2026-04-25T15:07:42.075Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T15:07:42.076Z [info]:    API: 100 requests/15 minutes
+2026-04-25T15:07:42.078Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T15:07:42.078Z [info]:    Premium multiplier: 2x
+2026-04-25T15:07:42.080Z [info]:    Boost multiplier: 3x
+2026-04-25T15:07:42.081Z [info]: 📊 Rate limit config loaded for development environment
+2026-04-25T15:07:42.081Z [info]:    API: 100 requests/15 minutes
+2026-04-25T15:07:42.082Z [info]:    Dating: 300 actions/1 minutes
+2026-04-25T15:07:42.084Z [info]:    Premium multiplier: 2x
+2026-04-25T15:07:42.084Z [info]:    Boost multiplier: 3x
+2026-04-25T15:07:42.086Z [warn]: Redis not available, using memory store for rate limiting
+2026-04-25T15:07:45.292Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-04-25T15:07:45.319Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-04-25T15:07:45.322Z [warn]: Redis not available, skipping subscription setup
+2026-04-25T15:07:45.323Z [info]: ✅ PresenceService initialized
+2026-04-25T15:07:45.324Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-04-25T15:07:45.436Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T15:07:45.441Z [info]: ✅ RedisService injected into MessageService
+2026-04-25T15:07:45.446Z [info]: ✅ EncryptionService injected into MessageService
+2026-04-25T15:07:45.618Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-04-25T15:07:45.623Z [info]: ✅ WebSocketService injected into ChatController
+2026-04-25T15:07:45.628Z [info]: ✅ RedisService injected into MessageService

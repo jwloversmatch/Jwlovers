@@ -84,6 +84,7 @@ const profileSchema = new mongoose.Schema({
           message: 'Please provide a valid profile picture URL'
         }
       },
+      cloudinaryId: { type: String, default: '' }, 
       filename: {
         type: String,
         default: ''
@@ -99,7 +100,7 @@ const profileSchema = new mongoose.Schema({
         {
           url: {
             type: String,
-            required: true,  // Gallery photos MUST have URL (since they're added explicitly)
+            required: true,  
             validate: {
               validator: function(v) {
                 return /^https?:\/\/.+/.test(v);
@@ -107,6 +108,7 @@ const profileSchema = new mongoose.Schema({
               message: 'Please provide a valid gallery photo URL'
             }
           },
+          cloudinaryId: { type: String, required: true }, 
           filename: {
             type: String,
             required: true

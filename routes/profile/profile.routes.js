@@ -6,7 +6,13 @@ const { body, param, validationResult, query } = require('express-validator');
 const profileController = require("@controllers/profile/profile.controller");
 const { protect, authorize, requireDatingProfile } = require("@middleware/authmiddleware");
 const { apiLimiter, createDynamicRateLimiter, rateLimitInfoMiddleware } = require("@middleware/rateLimit");
-const { uploadSingle, UPLOAD_CONFIG } = require("@middleware/upload.middleware");
+
+// ✅ UPDATED: import new Cloudinary-based upload middleware
+const { 
+  uploadProfilePic, 
+  uploadGalleryPhoto, 
+  UPLOAD_CONFIG 
+} = require("@middleware/upload.middleware");
 
 // ============ RATE LIMITERS ============
 const limiters = {
@@ -505,40 +511,60 @@ router.put("/settings",
 // ===== PHOTO MANAGEMENT =====
 
 /**
- * Upload photo with file (uses multer)
- * POST /api/profile/photos/upload
+ * Upload profile picture
+ * POST /api/profile/photos/upload/profile
  * Content-Type: multipart/form-data
- * 
- * Form fields:
- * - photo: (file) The image file
- * - type: (string) "profile" or "gallery"
- * - caption: (string) Optional caption for gallery photos
+ * Fields: photo (file)
+ *
+ * After multer runs:
+ *   req.file.path     = full Cloudinary URL  → save as photos.profile.url
+ *   req.file.filename = Cloudinary public_id → save as photos.profile.cloudinaryId
  */
-router.post("/photos/upload",
+router.post("/photos/upload/profile",
   limiters.photos,
-  uploadSingle('photo'), // Multer middleware from upload.middleware.js
-  profileController.uploadPhoto  
+  uploadProfilePic('photo'),
+  profileController.uploadPhoto
 );
 
 /**
- * Delete a photo by filename
- * DELETE /api/profile/photos/:filename
+ * Upload gallery photo
+ * POST /api/profile/photos/upload/gallery
+ * Content-Type: multipart/form-data
+ * Fields: photo (file), caption? (string)
+ *
+ * After multer runs:
+ *   req.file.path     = full Cloudinary URL  → save as gallery[n].url
+ *   req.file.filename = Cloudinary public_id → save as gallery[n].cloudinaryId
  */
-router.delete("/photos/:filename",
-  limiters.update, 
+router.post("/photos/upload/gallery",
+  limiters.photos,
+  uploadGalleryPhoto('photo'),
+  profileController.uploadPhoto
+);
+
+/**
+ * Delete a photo
+ * DELETE /api/profile/photos
+ * Body: { "cloudinaryId": "profiles/userId/gallery_1234567890" }
+ *
+ * ✅ Uses cloudinaryId (not filename) because files live on Cloudinary, not local disk.
+ */
+router.delete("/photos",
+  limiters.update,
   validate([
-    param('filename')
-      .matches(/^[a-zA-Z0-9._-]+$/)
-      .withMessage('Invalid filename format')
+    body('cloudinaryId')
+      .isString()
+      .notEmpty()
+      .withMessage('cloudinaryId is required')
+      .matches(/^[a-zA-Z0-9/_-]+$/)
+      .withMessage('Invalid cloudinaryId format')
   ]),
   profileController.deletePhoto
 );
 
 /**
- * Update profile picture with URL (no file upload)
+ * Update profile picture with a URL directly (no file upload)
  * PUT /api/profile/photos/profile
- * Content-Type: application/json
- * 
  * Body: { "url": "https://..." }
  */
 router.put("/photos/profile",
@@ -553,10 +579,8 @@ router.put("/photos/profile",
 );
 
 /**
- * Update gallery with URLs (no file upload)
+ * Replace entire gallery with a URL array (no file upload)
  * PUT /api/profile/photos/gallery
- * Content-Type: application/json
- * 
  * Body: { "photos": [{ "url": "...", "caption": "...", "order": 0 }] }
  */
 router.put("/photos/gallery",
@@ -679,7 +703,6 @@ router.use((err, req, res, next) => {
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 
-  // Multer errors
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({
       success: false,
@@ -716,10 +739,9 @@ router.use((err, req, res, next) => {
     });
   }
 
-  // Default error
   res.status(err.statusCode || 500).json({
     success: false,
-    error: process.env.NODE_ENV === 'production' && err.statusCode === 500 
+    error: process.env.NODE_ENV === 'production' && !err.statusCode
       ? 'Internal server error' 
       : err.message,
     code: err.code || 'INTERNAL_ERROR',
