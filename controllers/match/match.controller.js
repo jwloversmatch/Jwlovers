@@ -400,7 +400,7 @@ exports.findMatches = async (req, res) => {
           user: {
             id:                du._id,
             userName:          profile.basic?.userName,
-            profilePicture:    profile.photos?.profile?.url || profile.photos?.gallery?.[0]?.url,
+            profilePicture:    profile.photos?.profile?.url || profile.photos?.gallery?.[0]?.url || null,
             age:               computedAge,
             gender:            profile.basic?.gender,
             bio:               profile.basic?.bio,
