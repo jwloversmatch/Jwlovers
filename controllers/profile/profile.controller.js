@@ -1,3 +1,4 @@
+// ========== FILE: controller/profile.controller.js ==========
 const Profile = require("@models/Profile/Profile.model");
 const { BaseUser, DatingUser } = require("@models/User");
 const optionService = require("@services/option.service");
@@ -724,7 +725,7 @@ updateProfile = async (req, res) => {
 
       const validatedPhotos = photos.map((photo, index) => ({
         url: photo.url,
-        filename: photo.filename || null, // ✅ FIXED: filename is optional
+        filename: photo.filename || null,
         order: photo.order ?? index,
         caption: photo.caption || "",
         uploadedAt: new Date()
@@ -751,124 +752,120 @@ updateProfile = async (req, res) => {
   /**
    * Upload photo and auto-update profile
    * POST /api/profile/photos/upload
-   * ✅ FIXED: Properly handles filename in gallery
+   * ✅ FIXED: Profile picture no longer destroys the newly overwritten file.
    */
- uploadPhoto = async (req, res) => {
-  try {
-    if (!req.file) {
-      throw createError("No file uploaded", "NO_FILE", 400);
-    }
-
-    const userId = req.user.id;
-    const type = req.body.type || 'profile'; // 'profile' or 'gallery'
-
-    const profile = await Profile.findOne({ userId });
-    if (!profile) {
-      // Rollback: delete just-uploaded cloudinary file
-      await cloudinary.uploader.destroy(req.file.filename);
-      throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
-    }
-
-    const cloudinaryUrl  = req.file.path;      // Full URL from Cloudinary
-    const cloudinaryId   = req.file.filename;  // public_id (for deletion later)
-
-    if (type === 'profile') {
-      // Delete old profile picture from Cloudinary if it exists
-      if (profile.photos?.profile?.cloudinaryId) {
-        await cloudinary.uploader.destroy(profile.photos.profile.cloudinaryId)
-          .catch(err => logger.warn("Failed to delete old Cloudinary photo:", err));
+  uploadPhoto = async (req, res) => {
+    try {
+      if (!req.file) {
+        throw createError("No file uploaded", "NO_FILE", 400);
       }
 
-      profile.photos.profile = {
-        url: cloudinaryUrl,
-        cloudinaryId,          // ← store this so you can delete later
-        verified: false,
-        uploadedAt: new Date()
-      };
+      const userId = req.user.id;
+      const type = req.body.type || 'profile';
 
-    } else {
-      // Gallery — max 9 photos
-      if (!profile.photos.gallery) profile.photos.gallery = [];
-
-      if (profile.photos.gallery.length >= 9) {
-        // Rollback new upload
-        await cloudinary.uploader.destroy(cloudinaryId);
-        throw createError("Gallery is full (max 9 photos)", "GALLERY_FULL", 400);
+      const profile = await Profile.findOne({ userId });
+      if (!profile) {
+        // Rollback: delete just-uploaded cloudinary file
+        await cloudinary.uploader.destroy(req.file.filename);
+        throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
       }
 
-      profile.photos.gallery.push({
-        url: cloudinaryUrl,
-        cloudinaryId,
-        caption: req.body.caption?.trim() || '',
-        order: profile.photos.gallery.length,
-        uploadedAt: new Date()
+      const cloudinaryUrl  = req.file.path;
+      const cloudinaryId   = req.file.filename;
+
+      if (type === 'profile') {
+        // 🔧 Overwrite storage already replaced the old file; destroying the old cloudinaryId
+        // would delete the new file because they share the same public_id.
+        // Simply update the database record.
+        profile.photos.profile = {
+          url: cloudinaryUrl,
+          cloudinaryId,
+          verified: false,
+          uploadedAt: new Date()
+        };
+      } else {
+        // Gallery — max 9 photos
+        if (!profile.photos.gallery) profile.photos.gallery = [];
+
+        if (profile.photos.gallery.length >= 9) {
+          // Rollback new upload
+          await cloudinary.uploader.destroy(cloudinaryId);
+          throw createError("Gallery is full (max 9 photos)", "GALLERY_FULL", 400);
+        }
+
+        profile.photos.gallery.push({
+          url: cloudinaryUrl,
+          cloudinaryId,
+          caption: req.body.caption?.trim() || '',
+          order: profile.photos.gallery.length,
+          uploadedAt: new Date()
+        });
+      }
+
+      await profile.save();
+
+      res.json({
+        success: true,
+        data: {
+          url: cloudinaryUrl,
+          cloudinaryId,
+          type
+        },
+        timestamp: new Date().toISOString()
       });
+
+    } catch (error) {
+      this.handleError(error, req, res);
     }
-
-    await profile.save();
-
-    res.json({
-      success: true,
-      data: {
-        url: cloudinaryUrl,
-        cloudinaryId,
-        type
-      },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    this.handleError(error, req, res);
-  }
-};
+  };
 
   /**
    * Delete a photo
    * DELETE /api/profile/photos/:filename
    */
   deletePhoto = async (req, res) => {
-  try {
-    const { cloudinaryId } = req.body; // send cloudinaryId from frontend
-    const userId = req.user.id;
+    try {
+      const { cloudinaryId } = req.body;
+      const userId = req.user.id;
 
-    if (!cloudinaryId) {
-      throw createError("cloudinaryId is required", "MISSING_ID", 400);
+      if (!cloudinaryId) {
+        throw createError("cloudinaryId is required", "MISSING_ID", 400);
+      }
+
+      const profile = await Profile.findOne({ userId });
+      if (!profile) throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
+
+      const isProfilePic = profile.photos?.profile?.cloudinaryId === cloudinaryId;
+      const galleryIdx   = profile.photos?.gallery?.findIndex(p => p.cloudinaryId === cloudinaryId);
+
+      if (!isProfilePic && galleryIdx === -1) {
+        throw createError("Photo not found or access denied", "ACCESS_DENIED", 403);
+      }
+
+      // Delete from Cloudinary first
+      await cloudinary.uploader.destroy(cloudinaryId);
+
+      // Then remove from DB
+      if (isProfilePic) {
+        profile.photos.profile = { url: '', cloudinaryId: '', verified: false };
+      } else {
+        profile.photos.gallery.splice(galleryIdx, 1);
+        // Re-order remaining photos
+        profile.photos.gallery.forEach((p, i) => { p.order = i; });
+      }
+
+      await profile.save();
+
+      res.json({
+        success: true,
+        message: "Photo deleted",
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      this.handleError(error, req, res);
     }
-
-    const profile = await Profile.findOne({ userId });
-    if (!profile) throw createError("Profile not found", "PROFILE_NOT_FOUND", 404);
-
-    const isProfilePic = profile.photos?.profile?.cloudinaryId === cloudinaryId;
-    const galleryIdx   = profile.photos?.gallery?.findIndex(p => p.cloudinaryId === cloudinaryId);
-
-    if (!isProfilePic && galleryIdx === -1) {
-      throw createError("Photo not found or access denied", "ACCESS_DENIED", 403);
-    }
-
-    // Delete from Cloudinary first
-    await cloudinary.uploader.destroy(cloudinaryId);
-
-    // Then remove from DB
-    if (isProfilePic) {
-      profile.photos.profile = { url: '', cloudinaryId: '', verified: false };
-    } else {
-      profile.photos.gallery.splice(galleryIdx, 1);
-      // Re-order remaining photos
-      profile.photos.gallery.forEach((p, i) => { p.order = i; });
-    }
-
-    await profile.save();
-
-    res.json({
-      success: true,
-      message: "Photo deleted",
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    this.handleError(error, req, res);
-  }
-};
+  };
 
   // ========== BADGES ==========
   addBadge = async (req, res) => {

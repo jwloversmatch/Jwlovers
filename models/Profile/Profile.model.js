@@ -111,7 +111,6 @@ const profileSchema = new mongoose.Schema({
           cloudinaryId: { type: String, required: true }, 
           filename: {
             type: String,
-            required: true
           },
           caption: { 
             type: String, 
