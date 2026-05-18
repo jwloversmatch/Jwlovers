@@ -495,7 +495,7 @@ datingUserSchema.statics.findCompatibleUsers = async function(userId, options = 
     throw new Error('User or profile not found');
   }
 
-  const myPreferences = currentUser.profile.datingPreferences;
+  const myPreferences = currentUser.profile.preferences?.basic;
   const myLocation = currentUser.profile.location;
 
   const query = {
@@ -508,39 +508,92 @@ datingUserSchema.statics.findCompatibleUsers = async function(userId, options = 
 
   // Age range filter
   const today = new Date();
-  const minBirthDate = new Date(today.getFullYear() - myPreferences.ageRange.max - 1, today.getMonth(), today.getDate());
-  const maxBirthDate = new Date(today.getFullYear() - myPreferences.ageRange.min, today.getMonth(), today.getDate());
+  const minBirthDate = new Date(
+    today.getFullYear() - myPreferences.ageRange.max - 1,
+    today.getMonth(),
+    today.getDate()
+  );
+  const maxBirthDate = new Date(
+    today.getFullYear() - myPreferences.ageRange.min,
+    today.getMonth(),
+    today.getDate()
+  );
 
-  query['profile.basic.dateOfBirth'] = { $gte: minBirthDate, $lte: maxBirthDate };
+  query['profile.basic.dateOfBirth'] = { 
+    $gte: minBirthDate, 
+    $lte: maxBirthDate 
+  };
 
   // Gender preference filter
-  const genderPrefs = currentUser.profile.preferences?.basic?.gender || [];
+  const genderPrefs = myPreferences.gender || [];
   if (genderPrefs.length > 0 && !genderPrefs.includes('any')) {
     query['profile.basic.gender'] = { $in: genderPrefs };
   }
 
-  // Distance filter
-  if (myLocation?.coordinates && myPreferences.distance) {
-    query['profile.location.coordinates'] = {
-      $near: {
-        $geometry: {
-          type: "Point",
-          coordinates: myLocation.coordinates
-        },
-        $maxDistance: myPreferences.distance * 1000
+  // ✅ NEW: Country-based filtering
+  if (myPreferences.searchScope === 'international') {
+    // Search across all countries or specific preferred countries
+    if (myPreferences.preferredCountries?.length > 0) {
+      query['profile.location.countryCode'] = { 
+        $in: myPreferences.preferredCountries 
+      };
+    }
+  } else if (myPreferences.searchScope === 'national') {
+    // Only search within user's own country
+    if (myLocation?.countryCode) {
+      query['profile.location.countryCode'] = myLocation.countryCode;
+    }
+  } else if (myPreferences.searchScope === 'local') {
+    // Use distance-based filtering (original logic)
+    if (myLocation?.coordinates && myPreferences.useDistanceFilter) {
+      query['profile.location.coordinates'] = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: myLocation.coordinates
+          },
+          $maxDistance: myPreferences.distance * 1000
+        }
+      };
+    } else if (myLocation?.countryCode) {
+      // Fallback to same country if no coordinates
+      query['profile.location.countryCode'] = myLocation.countryCode;
+    }
+  }
+
+  // ✅ NEW: Region/state filtering within countries
+  if (myPreferences.preferredRegions?.length > 0) {
+    const regionConditions = myPreferences.preferredRegions.map(region => {
+      // ✅ FIXED: removed TypeScript type annotation
+      const condition = {
+        'profile.location.countryCode': region.country
+      };
+      
+      // If specific states/cities are selected
+      if (region.states?.length > 0) {
+        condition['profile.location.state'] = { $in: region.states };
       }
-    };
+      if (region.cities?.length > 0) {
+        condition['profile.location.city'] = { $in: region.cities };
+      }
+      
+      return condition;
+    });
+
+    if (regionConditions.length > 0) {
+      query.$or = regionConditions;
+    }
   }
 
   // Exclude seen profiles
-  if (currentUser.seenProfiles && currentUser.seenProfiles.length > 0) {
+  if (currentUser.seenProfiles?.length > 0) {
     query['profile._id'] = { $nin: currentUser.seenProfiles };
   }
 
   return this.find(query)
     .populate({
       path: 'profile',
-      select: 'basic.userName basic.bio photos.profile.url basic.age basic.gender location.city location.country lifestyle.hobbies badges progress.completion relationship.lookingFor datingPreferences'
+      select: 'basic.userName basic.bio photos.profile.url basic.age basic.gender location.city location.country location.countryCode lifestyle.hobbies badges progress.completion relationship.lookingFor'
     })
     .limit(options.limit || 20)
     .skip(options.skip || 0)

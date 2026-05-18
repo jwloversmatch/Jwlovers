@@ -305,25 +305,47 @@ const profileSchema = new mongoose.Schema({
   },
   
   // ========== WHAT I'M LOOKING FOR ==========
-  preferences: {
-    basic: {
-      gender: [{
-        type: String,
-        enum: ["male", "female", "any"]
-      }],
-      
-      ageRange: {
-        min: { type: Number, min: 18, max: 100, default: 18 },
-        max: { type: Number, min: 18, max: 100, default: 45 }
-      },
-      
-      distance: { 
-        type: Number, 
-        min: 1, 
-        max: 500, 
-        default: 50 
-      }
+preferences: {
+  basic: {
+    gender: [{
+      type: String,
+      enum: ["male", "female", "any"]
+    }],
+    
+    ageRange: {
+      min: { type: Number, min: 18, max: 100, default: 18 },
+      max: { type: Number, min: 18, max: 100, default: 45 }
     },
+    
+    // ✅ NEW: Country-based matching
+    preferredCountries: [{
+      type: String,  // Country codes like "US", "CA", "GB"
+      default: []
+    }],
+    
+    // ✅ NEW: Optional state/city filtering within countries
+    preferredRegions: [{
+      country: String,    // e.g., "US"
+      states: [String],   // e.g., ["California", "New York"]
+      cities: [String]    // e.g., ["Los Angeles", "San Francisco"]
+    }],
+    
+    // ✅ OPTIONAL: Keep distance for local searches within same country
+    useDistanceFilter: { type: Boolean, default: false },
+    distance: { 
+      type: Number, 
+      min: 1, 
+      max: 500, 
+      default: 50 
+    },
+    
+    // ✅ NEW: Search scope
+    searchScope: {
+      type: String,
+      enum: ["local", "national", "international"],
+      default: "national"
+    }
+  },
     
     faith: {
       mustBeJW: { type: Boolean, default: true },
@@ -623,6 +645,10 @@ profileSchema.statics.getDefaultValues = () => ({
     basic: {
       gender: [],
       ageRange: { min: 18, max: 45 },
+      preferredCountries: [],      
+      preferredRegions: [],        
+      searchScope: "national",     
+      useDistanceFilter: false,  
       distance: 50
     },
     faith: {
