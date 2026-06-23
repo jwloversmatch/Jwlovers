@@ -284,7 +284,7 @@ exports.findMatches = async (req, res) => {
     const myPrefs = myProfile.preferences || {};
     const myGender = myProfile.basic?.gender;
     const myAge = myProfile.age;
-    const coords = myProfile.location?.coordinates;
+    const myLocation = myProfile.location;
 
     const existingMatches = await Match.find({
       users: userId,
@@ -385,6 +385,52 @@ exports.findMatches = async (req, res) => {
       profileQuery["preferences.basic.ageRange.max"] = { $gte: myAge };
     }
 
+    // ==================== NEW: SCOPE-BASED GEO FILTER ====================
+    const scope = myPrefs.basic?.searchScope || "national"; // fallback (can be removed later)
+    const useDistanceFilter = scope === "local" && myPrefs.basic?.useDistanceFilter;
+
+    if (scope === "local") {
+      // Local: same country (if available), distance handled later
+      if (myLocation?.countryCode) {
+        profileQuery["location.countryCode"] = myLocation.countryCode;
+      }
+    } else if (scope === "national") {
+      // National: same country, optionally narrowed by preferred regions/states
+      if (myLocation?.countryCode) {
+        profileQuery["location.countryCode"] = myLocation.countryCode;
+      }
+
+      const regions = myPrefs.basic?.preferredRegions || [];
+      if (regions.length > 0) {
+        const regionConditions = regions.map((region) => {
+          const cond = { "location.countryCode": region.country };
+          if (region.states?.length) {
+            cond["location.state"] = { $in: region.states };
+          }
+          if (region.cities?.length) {
+            cond["location.city"] = { $in: region.cities };
+          }
+          return cond;
+        });
+
+        // Replace the country filter with a combined filter:
+        // must be in my country AND match any region condition
+        delete profileQuery["location.countryCode"]; // remove simple filter
+        profileQuery.$and = [
+          { "location.countryCode": myLocation.countryCode },
+          { $or: regionConditions },
+        ];
+      }
+    } else if (scope === "international") {
+      // International: respect preferred countries if set, else worldwide
+      const countries = myPrefs.basic?.preferredCountries || [];
+      if (countries.length > 0) {
+        profileQuery["location.countryCode"] = { $in: countries };
+      }
+      // if no countries, no country filter → worldwide
+    }
+    // ===================================================================
+
     if (premium === "true") {
       if (req.query.education) {
         profileQuery["career.education.level"] = req.query.education;
@@ -404,17 +450,19 @@ exports.findMatches = async (req, res) => {
       )
       .lean();
 
-    const maxDistanceKm = myPrefs.basic?.distance || null;
+    // ==================== DISTANCE FILTER (only for local scope) ====================
+    const maxDistanceKm = useDistanceFilter ? myPrefs.basic?.distance : null;
     const distanceMap = new Map();
 
     const nearbyProfiles = candidateProfiles.filter((p) => {
-      if (!maxDistanceKm || !coords || !p.location?.coordinates) return true;
-      const d = calculateDistance(coords, p.location.coordinates);
+      if (!maxDistanceKm || !myLocation?.coordinates || !p.location?.coordinates) return true;
+      const d = calculateDistance(myLocation.coordinates, p.location.coordinates);
       if (d === null) return true;
       if (d > maxDistanceKm) return false;
       distanceMap.set(p._id.toString(), d);
       return true;
     });
+    // ================================================================================
 
     const candidateUserIds = nearbyProfiles.map((p) => p.userId);
 
@@ -494,8 +542,8 @@ exports.findMatches = async (req, res) => {
 
         const distance =
           distanceMap.get(profile._id.toString()) ??
-          (coords && profile.location?.coordinates
-            ? calculateDistance(coords, profile.location.coordinates)
+          (myLocation?.coordinates && profile.location?.coordinates
+            ? calculateDistance(myLocation.coordinates, profile.location.coordinates)
             : null);
 
         return {
@@ -578,9 +626,6 @@ exports.findMatches = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LIKE USER
-// ─────────────────────────────────────────────────────────────────────────────
 
 exports.likeUser = async (req, res) => {
   // No transactions — Atlas M0 free tier does not support them.
