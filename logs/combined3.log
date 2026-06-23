@@ -124151,3 +124151,782 @@ MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
 2026-04-25T15:07:45.618Z [info]: ✅ Socket.io instance injected into PresenceController
 2026-04-25T15:07:45.623Z [info]: ✅ WebSocketService injected into ChatController
 2026-04-25T15:07:45.628Z [info]: ✅ RedisService injected into MessageService
+2026-06-22T17:19:44.238Z [warn]: Safety service not available:
+2026-06-22T17:19:45.620Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-22T17:19:45.621Z [info]:    API: 100 requests/15 minutes
+2026-06-22T17:19:45.621Z [info]:    Dating: 300 actions/1 minutes
+2026-06-22T17:19:45.621Z [info]:    Premium multiplier: 2x
+2026-06-22T17:19:45.621Z [info]:    Boost multiplier: 3x
+2026-06-22T17:19:45.622Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-22T17:19:45.622Z [info]:    API: 100 requests/15 minutes
+2026-06-22T17:19:45.622Z [info]:    Dating: 300 actions/1 minutes
+2026-06-22T17:19:45.623Z [info]:    Premium multiplier: 2x
+2026-06-22T17:19:45.623Z [info]:    Boost multiplier: 3x
+2026-06-22T17:19:45.624Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-22T17:19:45.624Z [info]:    API: 100 requests/15 minutes
+2026-06-22T17:19:45.624Z [info]:    Dating: 300 actions/1 minutes
+2026-06-22T17:19:45.624Z [info]:    Premium multiplier: 2x
+2026-06-22T17:19:45.624Z [info]:    Boost multiplier: 3x
+2026-06-22T17:19:45.625Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-22T17:19:45.625Z [info]:    API: 100 requests/15 minutes
+2026-06-22T17:19:45.625Z [info]:    Dating: 300 actions/1 minutes
+2026-06-22T17:19:45.625Z [info]:    Premium multiplier: 2x
+2026-06-22T17:19:45.625Z [info]:    Boost multiplier: 3x
+2026-06-22T17:19:45.625Z [warn]: Redis not available, using memory store for rate limiting
+2026-06-22T17:19:48.938Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-06-22T17:19:49.016Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-06-22T17:19:49.017Z [warn]: Redis not available, skipping subscription setup
+2026-06-22T17:19:49.017Z [info]: ✅ PresenceService initialized
+2026-06-22T17:19:49.018Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-06-22T17:19:49.296Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-22T17:19:49.297Z [info]: ✅ RedisService injected into MessageService
+2026-06-22T17:19:49.298Z [info]: ✅ EncryptionService injected into MessageService
+2026-06-22T17:19:49.492Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-06-22T17:19:49.493Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-22T17:19:49.494Z [info]: ✅ RedisService injected into MessageService
+2026-06-22T17:42:54.892Z [error]: Cleanup stale presence error: connection <monitor> to 20.36.142.157:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.36.142.157:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:637:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2473:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 1378087,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 1393609,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 1393603,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000094"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 25,
+    "logicalSessionTimeoutMinutes": null
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-06-22T17:43:56.307Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:637:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:206:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2473:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 1437900,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 1437817,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "cacheState": "READY",
+          "provider": "AZURE",
+          "workloadType": "OPERATIONAL",
+          "availabilityZone": "1",
+          "nodeType": "ELECTABLE",
+          "diskState": "READY",
+          "region": "US_EAST_2"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 303.2,
+        "minRoundTripTime": 183,
+        "lastUpdateTime": 1449677,
+        "lastWriteDate": {
+          "$date": "2026-06-22T17:43:41Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6a32f10e423b26a2fcba9669"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 35,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1782150221,
+              "i": 7
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 103,
+              "1": 75,
+              "2": 69,
+              "3": 211,
+              "4": 139,
+              "5": 21,
+              "6": 9,
+              "7": 188,
+              "8": 99,
+              "9": 150,
+              "10": 232,
+              "11": 54,
+              "12": 84,
+              "13": 11,
+              "14": 180,
+              "15": 156,
+              "16": 211,
+              "17": 181,
+              "18": 146,
+              "19": 144
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000094"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 25,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-06-22T21:57:03.950Z [error]: Cleanup stale presence error: connection <monitor> to 20.36.142.157:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.36.142.157:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:637:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:271:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2473:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 16638180,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 16639150,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "cacheState": "READY",
+          "provider": "AZURE",
+          "diskState": "READY",
+          "nodeType": "ELECTABLE",
+          "region": "US_EAST_2",
+          "availabilityZone": "1",
+          "workloadType": "OPERATIONAL"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 271.3,
+        "minRoundTripTime": 211,
+        "lastUpdateTime": 16643118,
+        "lastWriteDate": {
+          "$date": "2026-06-22T21:56:55Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6a32f10e423b26a2fcba9669"
+          },
+          "counter": 4
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 35,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1782165415,
+              "i": 2
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 159,
+              "1": 59,
+              "2": 110,
+              "3": 20,
+              "4": 246,
+              "5": 1,
+              "6": 144,
+              "7": 87,
+              "8": 64,
+              "9": 142,
+              "10": 82,
+              "11": 184,
+              "12": 142,
+              "13": 161,
+              "14": 41,
+              "15": 170,
+              "16": 12,
+              "17": 234,
+              "18": 166,
+              "19": 57
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000094"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 25,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-06-22T23:35:50.951Z [error]: Cleanup stale presence error: connection <monitor> to 20.96.187.159:27017 timed out
+MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:637:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:271:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2473:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "cacheState": "READY",
+          "provider": "AZURE",
+          "region": "US_EAST_2",
+          "workloadType": "OPERATIONAL",
+          "diskState": "READY",
+          "availabilityZone": "3"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 214.8,
+        "minRoundTripTime": 181,
+        "lastUpdateTime": 22573580,
+        "lastWriteDate": {
+          "$date": "2026-06-22T23:35:40Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6a32f67b1cf83dfcd4eef4c0"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 35,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1782171340,
+              "i": 3
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 174,
+              "1": 245,
+              "2": 191,
+              "3": 107,
+              "4": 149,
+              "5": 135,
+              "6": 198,
+              "7": 200,
+              "8": 19,
+              "9": 202,
+              "10": 92,
+              "11": 150,
+              "12": 187,
+              "13": 107,
+              "14": 138,
+              "15": 110,
+              "16": 111,
+              "17": 11,
+              "18": 130,
+              "19": 130
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 22570518,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 22572957,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000094"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 25,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}
+2026-06-23T00:07:47.313Z [info]: User 698e221642e8c757eb779d56 (DatingUser) went offline
+2026-06-23T00:07:47.341Z [debug]: Broadcasted status update for user 698e221642e8c757eb779d56: offline
+2026-06-23T00:07:47.342Z [info]: Cleaned up stale presence for user 698e221642e8c757eb779d56 (DatingUser)
+2026-06-23T00:18:01.638Z [warn]: Safety service not available:
+2026-06-23T00:18:03.142Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:18:03.143Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:18:03.144Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:18:03.144Z [info]:    Premium multiplier: 2x
+2026-06-23T00:18:03.145Z [info]:    Boost multiplier: 3x
+2026-06-23T00:18:03.146Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:18:03.147Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:18:03.148Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:18:03.150Z [info]:    Premium multiplier: 2x
+2026-06-23T00:18:03.151Z [info]:    Boost multiplier: 3x
+2026-06-23T00:18:03.152Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:18:03.152Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:18:03.153Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:18:03.153Z [info]:    Premium multiplier: 2x
+2026-06-23T00:18:03.154Z [info]:    Boost multiplier: 3x
+2026-06-23T00:18:03.154Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:18:03.155Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:18:03.155Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:18:03.156Z [info]:    Premium multiplier: 2x
+2026-06-23T00:18:03.156Z [info]:    Boost multiplier: 3x
+2026-06-23T00:18:03.157Z [warn]: Redis not available, using memory store for rate limiting
+2026-06-23T00:18:06.374Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-06-23T00:18:06.387Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-06-23T00:18:06.388Z [warn]: Redis not available, skipping subscription setup
+2026-06-23T00:18:06.389Z [info]: ✅ PresenceService initialized
+2026-06-23T00:18:06.389Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-06-23T00:18:06.456Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-23T00:18:06.458Z [info]: ✅ RedisService injected into MessageService
+2026-06-23T00:18:06.459Z [info]: ✅ EncryptionService injected into MessageService
+2026-06-23T00:18:06.558Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-06-23T00:18:06.560Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-23T00:18:06.563Z [info]: ✅ RedisService injected into MessageService
+2026-06-23T00:22:52.093Z [warn]: Safety service not available:
+2026-06-23T00:22:52.965Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:22:52.965Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:22:52.966Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:22:52.966Z [info]:    Premium multiplier: 2x
+2026-06-23T00:22:52.967Z [info]:    Boost multiplier: 3x
+2026-06-23T00:22:52.968Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:22:52.968Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:22:52.969Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:22:52.970Z [info]:    Premium multiplier: 2x
+2026-06-23T00:22:52.970Z [info]:    Boost multiplier: 3x
+2026-06-23T00:22:52.971Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:22:52.971Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:22:52.972Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:22:52.972Z [info]:    Premium multiplier: 2x
+2026-06-23T00:22:52.972Z [info]:    Boost multiplier: 3x
+2026-06-23T00:22:52.973Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:22:52.973Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:22:52.974Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:22:52.974Z [info]:    Premium multiplier: 2x
+2026-06-23T00:22:52.974Z [info]:    Boost multiplier: 3x
+2026-06-23T00:22:52.975Z [warn]: Redis not available, using memory store for rate limiting
+2026-06-23T00:22:55.726Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-06-23T00:22:55.733Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-06-23T00:22:55.734Z [warn]: Redis not available, skipping subscription setup
+2026-06-23T00:22:55.735Z [info]: ✅ PresenceService initialized
+2026-06-23T00:22:55.735Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-06-23T00:22:55.772Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-23T00:22:55.773Z [info]: ✅ RedisService injected into MessageService
+2026-06-23T00:22:55.774Z [info]: ✅ EncryptionService injected into MessageService
+2026-06-23T00:22:55.833Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-06-23T00:22:55.834Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-23T00:22:55.836Z [info]: ✅ RedisService injected into MessageService
+2026-06-23T00:44:49.320Z [warn]: Safety service not available:
+2026-06-23T00:44:50.847Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:44:50.848Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:44:50.849Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:44:50.849Z [info]:    Premium multiplier: 2x
+2026-06-23T00:44:50.851Z [info]:    Boost multiplier: 3x
+2026-06-23T00:44:50.853Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:44:50.854Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:44:50.855Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:44:50.856Z [info]:    Premium multiplier: 2x
+2026-06-23T00:44:50.856Z [info]:    Boost multiplier: 3x
+2026-06-23T00:44:50.857Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:44:50.858Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:44:50.859Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:44:50.859Z [info]:    Premium multiplier: 2x
+2026-06-23T00:44:50.860Z [info]:    Boost multiplier: 3x
+2026-06-23T00:44:50.860Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-23T00:44:50.861Z [info]:    API: 100 requests/15 minutes
+2026-06-23T00:44:50.861Z [info]:    Dating: 300 actions/1 minutes
+2026-06-23T00:44:50.862Z [info]:    Premium multiplier: 2x
+2026-06-23T00:44:50.862Z [info]:    Boost multiplier: 3x
+2026-06-23T00:44:50.863Z [warn]: Redis not available, using memory store for rate limiting
+2026-06-23T00:44:55.092Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-06-23T00:44:55.113Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-06-23T00:44:55.114Z [warn]: Redis not available, skipping subscription setup
+2026-06-23T00:44:55.114Z [info]: ✅ PresenceService initialized
+2026-06-23T00:44:55.114Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-06-23T00:44:55.221Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-23T00:44:55.234Z [info]: ✅ RedisService injected into MessageService
+2026-06-23T00:44:55.240Z [info]: ✅ EncryptionService injected into MessageService
+2026-06-23T00:44:55.366Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-06-23T00:44:55.367Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-23T00:44:55.369Z [info]: ✅ RedisService injected into MessageService
