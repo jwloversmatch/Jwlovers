@@ -708,26 +708,21 @@ profileSchema.index({
   'relationship.status': 1
 });
 
-// Geospatial index for location (VERIFY this exists)
 profileSchema.index({ 'location.coordinates': '2dsphere' });
 
-// Index for verification badges
 profileSchema.index({ 'badges.type': 1 });
 
-// Index for lifestyle/preferences
 profileSchema.index({
   'lifestyle.hobbies': 1,
   'lifestyle.smoking': 1,
   'lifestyle.drinking': 1
 });
 
-// Index for career
 profileSchema.index({
   'career.education.level': 1,
   'career.work.occupation': 1
 });
 
-// ========== MIDDLEWARE - FIXED with location initialization ==========
 profileSchema.pre('save', function() {
   // Initialize location if it's somehow null
   if (!this.location || this.location === null) {
@@ -740,27 +735,40 @@ profileSchema.pre('save', function() {
       lastUpdated: new Date()
     };
   }
-  
+
+  // ✅ NEW: Enforce searchScope/field consistency — prevents stale cross-scope data
+  if (this.preferences?.basic?.searchScope) {
+    const scope = this.preferences.basic.searchScope;
+    if (scope !== 'international') {
+      this.preferences.basic.preferredCountries = [];
+    }
+    if (scope !== 'national') {
+      this.preferences.basic.preferredRegions = [];
+    }
+    if (scope !== 'local') {
+      this.preferences.basic.useDistanceFilter = false;
+    }
+  }
+
   this.calculateCompletion();
   this.stats.lastActive = new Date();
   this.progress.lastUpdated = new Date();
 });
 
-// ========== ADD findOneAndUpdate middleware to prevent location null issues ==========
 profileSchema.pre('findOneAndUpdate', async function() {
   const update = this.getUpdate();
-  
+
   // If we're updating location fields, ensure location object exists
-  const hasLocationUpdate = 
-    update.$set?.location || 
-    update.$set?.['location.city'] || 
-    update.$set?.['location.country'] || 
+  const hasLocationUpdate =
+    update.$set?.location ||
+    update.$set?.['location.city'] ||
+    update.$set?.['location.country'] ||
     update.$set?.['location.coordinates'] ||
     update.location;
-  
+
   if (hasLocationUpdate) {
     const doc = await this.model.findOne(this.getQuery());
-    
+
     // If document exists and location is null, initialize it first
     if (doc && (!doc.location || doc.location === null)) {
       const initOps = {
@@ -775,18 +783,34 @@ profileSchema.pre('findOneAndUpdate', async function() {
           }
         }
       };
-      
+
       // Merge existing updates
       if (update.$set) {
         Object.assign(initOps.$set, update.$set);
       }
-      
+
       this.setUpdate(initOps);
     }
   }
+
+  // ✅ NEW: Enforce searchScope consistency on direct updates too
+  const currentUpdate = this.getUpdate();
+  const newScope = currentUpdate.$set?.['preferences.basic.searchScope'];
+  if (newScope) {
+    if (!currentUpdate.$set) currentUpdate.$set = {};
+    if (newScope !== 'international') {
+      currentUpdate.$set['preferences.basic.preferredCountries'] = [];
+    }
+    if (newScope !== 'national') {
+      currentUpdate.$set['preferences.basic.preferredRegions'] = [];
+    }
+    if (newScope !== 'local') {
+      currentUpdate.$set['preferences.basic.useDistanceFilter'] = false;
+    }
+    this.setUpdate(currentUpdate);
+  }
 });
 
-// ========== SYNC USERNAME TO BASEUSER ==========
 profileSchema.post('save', async function(doc) {
   try {
     if (!doc.basic?.userName) return;

@@ -530,21 +530,46 @@ datingUserSchema.statics.findCompatibleUsers = async function(userId, options = 
     query['profile.basic.gender'] = { $in: genderPrefs };
   }
 
-  // ✅ NEW: Country-based filtering
+  // ✅ Scope-based location filtering
+  // local        -> distance (km) radius around the user's coordinates
+  // national     -> own country, optionally narrowed by preferred states/regions
+  // international -> worldwide, optionally narrowed by preferred countries (no states)
   if (myPreferences.searchScope === 'international') {
-    // Search across all countries or specific preferred countries
     if (myPreferences.preferredCountries?.length > 0) {
-      query['profile.location.countryCode'] = { 
-        $in: myPreferences.preferredCountries 
+      query['profile.location.countryCode'] = {
+        $in: myPreferences.preferredCountries
       };
     }
+    // empty preferredCountries => no country filter => true worldwide search
+
   } else if (myPreferences.searchScope === 'national') {
-    // Only search within user's own country
     if (myLocation?.countryCode) {
       query['profile.location.countryCode'] = myLocation.countryCode;
     }
+
+    // Region/state filtering only applies within national scope
+    if (myPreferences.preferredRegions?.length > 0) {
+      const regionConditions = myPreferences.preferredRegions.map(region => {
+        const condition = {
+          'profile.location.countryCode': region.country
+        };
+
+        if (region.states?.length > 0) {
+          condition['profile.location.state'] = { $in: region.states };
+        }
+        if (region.cities?.length > 0) {
+          condition['profile.location.city'] = { $in: region.cities };
+        }
+
+        return condition;
+      });
+
+      if (regionConditions.length > 0) {
+        query.$or = regionConditions;
+      }
+    }
+
   } else if (myPreferences.searchScope === 'local') {
-    // Use distance-based filtering (original logic)
     if (myLocation?.coordinates && myPreferences.useDistanceFilter) {
       query['profile.location.coordinates'] = {
         $near: {
@@ -556,32 +581,8 @@ datingUserSchema.statics.findCompatibleUsers = async function(userId, options = 
         }
       };
     } else if (myLocation?.countryCode) {
-      // Fallback to same country if no coordinates
+      // Fallback to same country if no coordinates available
       query['profile.location.countryCode'] = myLocation.countryCode;
-    }
-  }
-
-  // ✅ NEW: Region/state filtering within countries
-  if (myPreferences.preferredRegions?.length > 0) {
-    const regionConditions = myPreferences.preferredRegions.map(region => {
-      // ✅ FIXED: removed TypeScript type annotation
-      const condition = {
-        'profile.location.countryCode': region.country
-      };
-      
-      // If specific states/cities are selected
-      if (region.states?.length > 0) {
-        condition['profile.location.state'] = { $in: region.states };
-      }
-      if (region.cities?.length > 0) {
-        condition['profile.location.city'] = { $in: region.cities };
-      }
-      
-      return condition;
-    });
-
-    if (regionConditions.length > 0) {
-      query.$or = regionConditions;
     }
   }
 

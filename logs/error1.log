@@ -12519,3 +12519,176 @@ MongoServerSelectionError: connection <monitor> to 20.96.187.159:27017 timed out
     "beforeHandshake": false
   }
 }
+2026-06-23T04:13:57.240Z [error]: Cleanup stale presence error: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net
+    at Topology.selectServer (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\sdam\topology.ts:637:30)
+    at tryOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:271:16)
+    at executeOperation (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\operations\execute_operation.ts:123:12)
+    at FindCursor._initialize (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\find_cursor.ts:92:22)
+    at FindCursor.cursorInit (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:917:21)
+    at FindCursor.fetchBatch (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:955:7)
+    at FindCursor.next (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:573:9)
+    at FindCursor.[Symbol.asyncIterator] (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:492:26)
+    at FindCursor.toArray (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongodb\src\cursor\abstract_cursor.ts:661:22)
+    at model.Query._find (C:\Users\LENOVO\OneDrive\Desktop\JWLovers\server\node_modules\mongoose\lib\query.js:2473:14)
+{
+  "errorLabelSet": {},
+  "reason": {
+    "type": "ReplicaSetNoPrimary",
+    "servers": {
+      "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 12552023,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "type": "RSSecondary",
+        "hosts": [
+          "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+          "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017"
+        ],
+        "passives": [],
+        "arbiters": [],
+        "tags": {
+          "nodeType": "ELECTABLE",
+          "cacheState": "READY",
+          "provider": "AZURE",
+          "region": "US_EAST_2",
+          "workloadType": "OPERATIONAL",
+          "diskState": "READY",
+          "availabilityZone": "3"
+        },
+        "minWireVersion": 0,
+        "maxWireVersion": 25,
+        "roundTripTime": 321.2,
+        "minRoundTripTime": 177,
+        "lastUpdateTime": 12554778,
+        "lastWriteDate": {
+          "$date": "2026-06-23T04:13:47Z"
+        },
+        "error": null,
+        "topologyVersion": {
+          "processId": {
+            "$oid": "6a32f67b1cf83dfcd4eef4c0"
+          },
+          "counter": 3
+        },
+        "setName": "atlas-ldvzrz-shard-0",
+        "setVersion": 35,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": 30,
+        "maxMessageSizeBytes": 48000000,
+        "maxWriteBatchSize": 100000,
+        "maxBsonObjectSize": 16777216,
+        "primary": "ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net:27017",
+        "me": "ac-ycssmpd-shard-00-02.tvw48ir.mongodb.net:27017",
+        "$clusterTime": {
+          "clusterTime": {
+            "$timestamp": {
+              "t": 1782188027,
+              "i": 13
+            }
+          },
+          "signature": {
+            "hash": {
+              "0": 205,
+              "1": 221,
+              "2": 52,
+              "3": 56,
+              "4": 124,
+              "5": 89,
+              "6": 122,
+              "7": 146,
+              "8": 29,
+              "9": 253,
+              "10": 162,
+              "11": 145,
+              "12": 116,
+              "13": 228,
+              "14": 21,
+              "15": 162,
+              "16": 220,
+              "17": 59,
+              "18": 15,
+              "19": 235
+            },
+            "keyId": 7595688910387151000
+          }
+        },
+        "iscryptd": false
+      },
+      "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017": {
+        "address": "ac-ycssmpd-shard-00-00.tvw48ir.mongodb.net:27017",
+        "type": "Unknown",
+        "hosts": [],
+        "passives": [],
+        "arbiters": [],
+        "tags": {},
+        "minWireVersion": 0,
+        "maxWireVersion": 0,
+        "roundTripTime": -1,
+        "minRoundTripTime": 0,
+        "lastUpdateTime": 12552021,
+        "lastWriteDate": 0,
+        "error": {
+          "errorLabelSet": {},
+          "beforeHandshake": false
+        },
+        "topologyVersion": null,
+        "setName": null,
+        "setVersion": null,
+        "electionId": null,
+        "logicalSessionTimeoutMinutes": null,
+        "maxMessageSizeBytes": null,
+        "maxWriteBatchSize": null,
+        "maxBsonObjectSize": null,
+        "primary": null,
+        "me": null,
+        "$clusterTime": null,
+        "iscryptd": false
+      }
+    },
+    "stale": false,
+    "compatible": true,
+    "heartbeatFrequencyMS": 10000,
+    "localThresholdMS": 15,
+    "setName": "atlas-ldvzrz-shard-0",
+    "maxElectionId": {
+      "$oid": "7fffffff0000000000000094"
+    },
+    "maxSetVersion": 35,
+    "commonWireVersion": 25,
+    "logicalSessionTimeoutMinutes": 30
+  },
+  "cause": {
+    "errorLabelSet": {},
+    "beforeHandshake": false
+  }
+}

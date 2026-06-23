@@ -299,6 +299,13 @@ class ProfileController {
               min: 18,
               max: 45,
             },
+            searchScope: profile.preferences?.basic?.searchScope || "national",
+            preferredCountries:
+              profile.preferences?.basic?.preferredCountries || [],
+            preferredRegions:
+              profile.preferences?.basic?.preferredRegions || [],
+            useDistanceFilter:
+              profile.preferences?.basic?.useDistanceFilter ?? false,
             distance: profile.preferences?.basic?.distance ?? 50,
           },
           faith: {
@@ -829,46 +836,46 @@ class ProfileController {
   };
 
   updateGallery = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { photos } = req.body;
+    try {
+      const userId = req.user.id;
+      const { photos } = req.body;
 
-    if (!Array.isArray(photos)) {
-      throw createError("Photos must be an array", "INVALID_PHOTOS", 400);
-    }
+      if (!Array.isArray(photos)) {
+        throw createError("Photos must be an array", "INVALID_PHOTOS", 400);
+      }
 
-    const missingId = photos.find((p) => !p.cloudinaryId);
-    if (missingId) {
-      throw createError(
-        "Each photo must include a cloudinaryId",
-        "MISSING_CLOUDINARY_ID",
-        400,
+      const missingId = photos.find((p) => !p.cloudinaryId);
+      if (missingId) {
+        throw createError(
+          "Each photo must include a cloudinaryId",
+          "MISSING_CLOUDINARY_ID",
+          400,
+        );
+      }
+
+      const validatedPhotos = photos.map((photo, index) => ({
+        url: photo.url,
+        cloudinaryId: photo.cloudinaryId,
+        caption: photo.caption || "",
+        order: photo.order ?? index,
+        uploadedAt: photo.uploadedAt || new Date(),
+      }));
+
+      const profile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: { "photos.gallery": validatedPhotos } },
+        { new: true, runValidators: true },
       );
+
+      res.json({
+        success: true,
+        data: { gallery: profile.photos.gallery },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      this.handleError(error, req, res);
     }
-
-    const validatedPhotos = photos.map((photo, index) => ({
-      url: photo.url,
-      cloudinaryId: photo.cloudinaryId,
-      caption: photo.caption || "",
-      order: photo.order ?? index,
-      uploadedAt: photo.uploadedAt || new Date(),
-    }));
-
-    const profile = await Profile.findOneAndUpdate(
-      { userId },
-      { $set: { "photos.gallery": validatedPhotos } },
-      { new: true, runValidators: true },
-    );
-
-    res.json({
-      success: true,
-      data: { gallery: profile.photos.gallery },
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    this.handleError(error, req, res);
-  }
-};
+  };
   // ========== UPLOAD & DELETE PHOTOS - FIXED ==========
 
   /**
