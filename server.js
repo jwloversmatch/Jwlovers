@@ -255,6 +255,16 @@ const startServer = async () => {
       RATE_LIMIT_CONFIG
     );
 
+    // ===== RENDER KEEP-AWAKE PING ENDPOINT =====
+    app.get('/ping', (req, res) => {
+      res.status(200).json({
+        status: 'success',
+        message: 'Server is awake and active',
+        timestamp: new Date().toISOString()
+      });
+    });
+    logger.info("Render keep-awake endpoint registered at /ping");
+
     // Add WebSocket health check endpoint
     app.get('/api/websocket/health', (req, res) => {
       const webSocketService = app.get('WebSocketService');

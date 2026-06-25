@@ -125297,3 +125297,69 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-01.tvw48ir.
 2026-06-23T11:27:26.032Z [info]: User 698e221642e8c757eb779d56 (DatingUser) went offline
 2026-06-23T11:27:26.039Z [debug]: Broadcasted status update for user 698e221642e8c757eb779d56: offline
 2026-06-23T11:27:26.040Z [info]: Cleaned up stale presence for user 698e221642e8c757eb779d56 (DatingUser)
+2026-06-25T15:48:19.495Z [warn]: Safety service not available:
+2026-06-25T15:48:20.791Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T15:48:20.791Z [info]:    API: 100 requests/15 minutes
+2026-06-25T15:48:20.792Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T15:48:20.792Z [info]:    Premium multiplier: 2x
+2026-06-25T15:48:20.792Z [info]:    Boost multiplier: 3x
+2026-06-25T15:48:20.793Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T15:48:20.793Z [info]:    API: 100 requests/15 minutes
+2026-06-25T15:48:20.793Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T15:48:20.794Z [info]:    Premium multiplier: 2x
+2026-06-25T15:48:20.794Z [info]:    Boost multiplier: 3x
+2026-06-25T15:48:20.795Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T15:48:20.795Z [info]:    API: 100 requests/15 minutes
+2026-06-25T15:48:20.795Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T15:48:20.796Z [info]:    Premium multiplier: 2x
+2026-06-25T15:48:20.796Z [info]:    Boost multiplier: 3x
+2026-06-25T15:48:20.796Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T15:48:20.796Z [info]:    API: 100 requests/15 minutes
+2026-06-25T15:48:20.796Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T15:48:20.797Z [info]:    Premium multiplier: 2x
+2026-06-25T15:48:20.797Z [info]:    Boost multiplier: 3x
+2026-06-25T15:48:20.797Z [warn]: Redis not available, using memory store for rate limiting
+2026-06-25T15:48:22.845Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-06-25T15:48:22.931Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-06-25T15:48:22.932Z [warn]: Redis not available, skipping subscription setup
+2026-06-25T15:48:22.932Z [info]: ✅ PresenceService initialized
+2026-06-25T15:48:22.932Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-06-25T15:48:23.169Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-25T15:48:23.170Z [info]: ✅ RedisService injected into MessageService
+2026-06-25T15:48:23.171Z [info]: ✅ EncryptionService injected into MessageService
+2026-06-25T15:48:23.312Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-06-25T15:48:23.313Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-25T15:48:23.314Z [info]: ✅ RedisService injected into MessageService
+2026-06-25T17:26:28.192Z [warn]: Safety service not available:
+2026-06-25T17:26:30.926Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T17:26:30.927Z [info]:    API: 100 requests/15 minutes
+2026-06-25T17:26:30.928Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T17:26:30.929Z [info]:    Premium multiplier: 2x
+2026-06-25T17:26:30.930Z [info]:    Boost multiplier: 3x
+2026-06-25T17:26:30.931Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T17:26:30.932Z [info]:    API: 100 requests/15 minutes
+2026-06-25T17:26:30.932Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T17:26:30.934Z [info]:    Premium multiplier: 2x
+2026-06-25T17:26:30.935Z [info]:    Boost multiplier: 3x
+2026-06-25T17:26:30.936Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T17:26:30.937Z [info]:    API: 100 requests/15 minutes
+2026-06-25T17:26:30.938Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T17:26:30.938Z [info]:    Premium multiplier: 2x
+2026-06-25T17:26:30.939Z [info]:    Boost multiplier: 3x
+2026-06-25T17:26:30.940Z [info]: 📊 Rate limit config loaded for development environment
+2026-06-25T17:26:30.940Z [info]:    API: 100 requests/15 minutes
+2026-06-25T17:26:30.941Z [info]:    Dating: 300 actions/1 minutes
+2026-06-25T17:26:30.941Z [info]:    Premium multiplier: 2x
+2026-06-25T17:26:30.941Z [info]:    Boost multiplier: 3x
+2026-06-25T17:26:30.942Z [warn]: Redis not available, using memory store for rate limiting
+2026-06-25T17:26:33.357Z [info]: ✅ SocketAuthMiddleware initialized with RedisService
+2026-06-25T17:26:33.475Z [warn]: ⚠️  PresenceService: io parameter is invalid, will be injected later via setIo()
+2026-06-25T17:26:33.476Z [warn]: Redis not available, skipping subscription setup
+2026-06-25T17:26:33.476Z [info]: ✅ PresenceService initialized
+2026-06-25T17:26:33.477Z [info]: ✅ Socket.IO instance injected into PresenceService via setIo()
+2026-06-25T17:26:33.789Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-25T17:26:33.791Z [info]: ✅ RedisService injected into MessageService
+2026-06-25T17:26:33.793Z [info]: ✅ EncryptionService injected into MessageService
+2026-06-25T17:26:34.041Z [info]: ✅ Socket.io instance injected into PresenceController
+2026-06-25T17:26:34.043Z [info]: ✅ WebSocketService injected into ChatController
+2026-06-25T17:26:34.045Z [info]: ✅ RedisService injected into MessageService
