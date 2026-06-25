@@ -58050,3 +58050,4 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.
 {"contentLength":"886","contentType":"application/json; charset=utf-8","duration":2,"level":"error","message":"[5d5e1f879626c865] GET /me 503 2ms","status":503,"timestamp":"2026-02-21T16:07:38.651Z"}
 {"level":"error","message":"❌ Profile routes failed: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info","timestamp":"2026-02-21T16:08:27.721Z"}
 {"contentLength":"126","contentType":"application/json; charset=utf-8","duration":5071,"level":"error","message":"[d33570ff6b109780] POST /login 500 5071ms","status":500,"timestamp":"2026-02-25T18:46:16.223Z"}
+{"level":"error","message":"❌ Auth routes failed: Unexpected token '{'","timestamp":"2026-06-25T22:58:47.462Z"}

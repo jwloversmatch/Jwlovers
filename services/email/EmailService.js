@@ -3,7 +3,7 @@
 class EmailService {
   constructor(config, logger = console) {
     this.transporter = null;
-    this.from = config.from || "jwloversmatch@gmail.com"; // Defaulting to your verified sender
+    this.from = config.from || "jwloversmatch@gmail.com"; 
     this.initialized = false;
     this.logger = logger;
     this.config = config;
