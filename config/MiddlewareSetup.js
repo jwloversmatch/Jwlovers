@@ -78,8 +78,8 @@ class MiddlewareSetup {
 
     const corsOptions = {
       origin: (origin, callback) => {
-        // Allow requests with no origin in development
-        if (!origin && appConfig.environment === "development") {
+        // ✅ FIX: Allow requests with no origin (like cron-jobs, Postman, or curl) in all environments
+        if (!origin) {
           return callback(null, true);
         }
 
