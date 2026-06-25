@@ -109783,3 +109783,316 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ycssmpd-shard-00-02.tvw48ir.
 {"level":"info","message":"✅ Conversation indexes already exist, skipping","timestamp":"2026-06-25T18:16:16.833Z"}
 {"level":"info","message":"✅ Message indexes already exist, skipping","timestamp":"2026-06-25T18:16:18.276Z"}
 {"level":"info","message":"✅ Background index creation completed","timestamp":"2026-06-25T18:16:18.297Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:17:16.595Z"}
+{"level":"debug","message":"💾 Memory: 50MB used","timestamp":"2026-06-25T18:17:16.631Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:18:16.601Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:19:16.669Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:20:16.683Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:21:16.686Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:22:16.697Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:23:16.708Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:24:16.733Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:25:16.742Z"}
+{"level":"debug","message":"💾 Memory: 51MB used","timestamp":"2026-06-25T18:25:16.744Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:26:16.754Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:27:16.753Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:28:16.762Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:29:16.775Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:30:16.771Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:31:16.790Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:32:16.792Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:33:16.798Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:34:16.801Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:35:16.811Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:36:16.816Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:37:16.816Z"}
+{"level":"debug","message":"💾 Memory: 52MB used","timestamp":"2026-06-25T18:37:16.818Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:38:16.822Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:39:16.821Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:40:16.835Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:41:16.836Z"}
+{"level":"debug","message":"💾 Memory: 52MB used","timestamp":"2026-06-25T18:41:16.836Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:42:16.845Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:43:16.856Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:44:16.868Z"}
+{"level":"debug","message":"💾 Memory: 51MB used","timestamp":"2026-06-25T18:44:16.868Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:45:16.881Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:46:16.888Z"}
+{"level":"debug","message":"💾 Memory: 52MB used","timestamp":"2026-06-25T18:46:16.889Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:47:16.897Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:48:16.900Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:49:16.902Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:50:16.910Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:51:16.916Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:52:16.918Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:53:16.922Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:54:16.929Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:55:16.934Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:56:16.942Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:57:16.949Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:58:16.952Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T18:59:16.958Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:00:16.960Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:01:16.965Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:02:16.967Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:03:16.973Z"}
+{"level":"debug","message":"💾 Memory: 52MB used","timestamp":"2026-06-25T19:03:16.974Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:04:16.978Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:05:16.978Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:06:16.980Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:07:16.987Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:08:16.998Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:09:17.012Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:10:17.022Z"}
+{"level":"info","message":"✅ Security headers enabled","timestamp":"2026-06-25T19:10:50.932Z"}
+{"level":"info","message":"✅ Trust proxy configured: 1","timestamp":"2026-06-25T19:10:50.934Z"}
+{"level":"info","message":"✅ Compression enabled","timestamp":"2026-06-25T19:10:50.935Z"}
+{"level":"info","message":"✅ CORS configured for origins: http://localhost:3000, http://localhost:3001, http://localhost:5173","timestamp":"2026-06-25T19:10:50.936Z"}
+{"level":"info","message":"✅ Request logging enabled","timestamp":"2026-06-25T19:10:50.937Z"}
+{"level":"info","message":"✅ Performance logging enabled","timestamp":"2026-06-25T19:10:50.937Z"}
+{"level":"info","message":"Render keep-awake endpoint registered at /ping","timestamp":"2026-06-25T19:10:50.939Z"}
+{"level":"info","message":"✅ Static file serving enabled for /uploads/profiles","timestamp":"2026-06-25T19:10:50.940Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:10:50.943Z"}
+{"level":"info","message":"🚀 Starting JWLoversMatch Server","timestamp":"2026-06-25T19:10:50.944Z"}
+{"level":"info","message":"📦 Version: 1.0.0","timestamp":"2026-06-25T19:10:50.945Z"}
+{"level":"info","message":"🌐 Environment: development","timestamp":"2026-06-25T19:10:50.946Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:10:50.947Z"}
+{"level":"info","message":"==================================================","timestamp":"2026-06-25T19:10:50.948Z"}
+{"level":"info","message":"📊 Rate Limiting System","timestamp":"2026-06-25T19:10:50.949Z"}
+{"level":"info","message":"==================================================","timestamp":"2026-06-25T19:10:50.949Z"}
+{"level":"info","message":"✅ Rate limiting ENABLED for development environment","timestamp":"2026-06-25T19:10:50.949Z"}
+{"level":"info","message":"🔧 Storage: Redis with memory fallback","timestamp":"2026-06-25T19:10:50.950Z"}
+{"level":"info","message":"⚡ Circuit Breaker: Disabled","timestamp":"2026-06-25T19:10:50.950Z"}
+{"level":"info","message":"📈 Limits:","timestamp":"2026-06-25T19:10:50.951Z"}
+{"level":"info","message":"   - API: 100 requests/15 minutes","timestamp":"2026-06-25T19:10:50.952Z"}
+{"level":"info","message":"   - Auth: 10 requests/1 hours","timestamp":"2026-06-25T19:10:50.952Z"}
+{"level":"info","message":"   - Messages: 60 messages/minute","timestamp":"2026-06-25T19:10:50.952Z"}
+{"level":"info","message":"   - Registration: 5 registrations/24 hours","timestamp":"2026-06-25T19:10:50.952Z"}
+{"level":"info","message":"   - Socket: 120 events/minute","timestamp":"2026-06-25T19:10:50.953Z"}
+{"level":"info","message":"   - Search: 30 searches/minute","timestamp":"2026-06-25T19:10:50.953Z"}
+{"level":"info","message":"   - Upload: 50 uploads/hour","timestamp":"2026-06-25T19:10:50.953Z"}
+{"level":"info","message":"   - Profile Views: 60 views/minute","timestamp":"2026-06-25T19:10:50.953Z"}
+{"level":"info","message":"💡 Development mode: Limits are 10x higher","timestamp":"2026-06-25T19:10:50.954Z"}
+{"level":"info","message":"💡 Localhost requests are exempt from rate limiting","timestamp":"2026-06-25T19:10:50.954Z"}
+{"level":"info","message":"==================================================","timestamp":"2026-06-25T19:10:50.954Z"}
+{"level":"info","message":"🚀 Starting service initialization...","timestamp":"2026-06-25T19:10:50.955Z"}
+{"level":"info","message":"🔄 Initializing Encryption Service...","timestamp":"2026-06-25T19:10:50.955Z"}
+{"level":"info","message":"🔐 Encryption salt: 4fbdf60f...","timestamp":"2026-06-25T19:10:50.956Z"}
+{"level":"info","message":"✅ Encryption Service initialized","timestamp":"2026-06-25T19:10:51.072Z"}
+{"level":"info","message":"🔄 Initializing Redis...","timestamp":"2026-06-25T19:10:51.073Z"}
+{"level":"info","message":"🔄 Initializing Redis connections...","timestamp":"2026-06-25T19:10:51.073Z"}
+{"level":"info","message":"✅ Redis Pub Client connected","timestamp":"2026-06-25T19:10:51.102Z"}
+{"level":"info","message":"✅ Redis Sub Client connected","timestamp":"2026-06-25T19:10:51.105Z"}
+{"level":"info","message":"✅ Redis connection test successful","timestamp":"2026-06-25T19:10:51.117Z"}
+{"level":"info","message":"✅ Redis connected: PONG","timestamp":"2026-06-25T19:10:51.118Z"}
+{"level":"info","message":"✅ Redis client made globally available","timestamp":"2026-06-25T19:10:51.118Z"}
+{"level":"info","message":"🔄 Connecting to MongoDB...","timestamp":"2026-06-25T19:10:51.119Z"}
+{"level":"info","message":"✅ Redis Sub Client ready","timestamp":"2026-06-25T19:10:51.144Z"}
+{"level":"info","message":"✅ MongoDB connected: ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net","timestamp":"2026-06-25T19:10:53.079Z"}
+{"level":"info","message":"📊 Database: jwlovers_match","timestamp":"2026-06-25T19:10:53.079Z"}
+{"level":"info","message":"🔌 Pool: min=10, max=50","timestamp":"2026-06-25T19:10:53.079Z"}
+{"level":"info","message":"🔄 Starting background index creation...","timestamp":"2026-06-25T19:10:53.080Z"}
+{"level":"info","message":"✅ MongoDB connected","timestamp":"2026-06-25T19:10:53.087Z"}
+{"level":"info","message":"🔄 Initializing Chat Service...","timestamp":"2026-06-25T19:10:53.087Z"}
+{"level":"info","message":"✅ Chat Service initialized","timestamp":"2026-06-25T19:10:53.087Z"}
+{"level":"info","message":"🔄 Initializing Conversation Service Wrapper...","timestamp":"2026-06-25T19:10:53.088Z"}
+{"level":"info","message":"✅ Conversation Service Wrapper initialized","timestamp":"2026-06-25T19:10:53.089Z"}
+{"level":"info","message":"🔄 Setting up WebSocket...","timestamp":"2026-06-25T19:10:53.091Z"}
+{"level":"warn","message":"⚠️ Socket validation schemas not found, using empty schema","timestamp":"2026-06-25T19:10:53.094Z"}
+{"level":"info","message":"WebSocket service initialized","timestamp":"2026-06-25T19:10:53.094Z"}
+{"level":"info","message":"✅ WebSocket server setup completed","timestamp":"2026-06-25T19:10:53.098Z"}
+{"level":"info","message":"✅ WebSocket middleware setup","timestamp":"2026-06-25T19:10:53.214Z"}
+{"level":"info","message":"✅ WebSocket initialized","timestamp":"2026-06-25T19:10:53.215Z"}
+{"level":"info","message":"🔄 Initializing Presence Service...","timestamp":"2026-06-25T19:10:53.217Z"}
+{"level":"info","message":"✅ Presence Service initialized","timestamp":"2026-06-25T19:10:53.226Z"}
+{"level":"info","message":"🔄 Setting up Controller Bridge...","timestamp":"2026-06-25T19:10:53.227Z"}
+{"level":"info","message":"✅ Controller Bridge initialized","timestamp":"2026-06-25T19:10:53.227Z"}
+{"level":"info","message":"🔄 Injecting services into controllers...","timestamp":"2026-06-25T19:10:53.228Z"}
+{"level":"info","message":"✅ WebSocketService injected into ChatController","timestamp":"2026-06-25T19:10:53.272Z"}
+{"level":"info","message":"✅ RedisService injected into MessageService","timestamp":"2026-06-25T19:10:53.274Z"}
+{"level":"info","message":"✅ EncryptionService injected into MessageService","timestamp":"2026-06-25T19:10:53.275Z"}
+{"level":"info","message":"✅ Service injection completed","timestamp":"2026-06-25T19:10:53.275Z"}
+{"level":"info","message":"🔄 Finalizing WebSocket setup...","timestamp":"2026-06-25T19:10:53.276Z"}
+{"level":"info","message":"✅ WebSocket event handlers setup","timestamp":"2026-06-25T19:10:53.277Z"}
+{"level":"info","message":"✅ PresenceService injected into WebSocketService","timestamp":"2026-06-25T19:10:53.278Z"}
+{"level":"info","message":"✅ PresenceService injected into WebSocketService","timestamp":"2026-06-25T19:10:53.278Z"}
+{"level":"info","message":"✅ EncryptionService injected into WebSocketService","timestamp":"2026-06-25T19:10:53.278Z"}
+{"level":"info","message":"✅ EncryptionService injected into WebSocketService","timestamp":"2026-06-25T19:10:53.278Z"}
+{"level":"info","message":"✅ WebSocket ready (0 connections)","timestamp":"2026-06-25T19:10:53.279Z"}
+{"level":"info","message":"✅ WebSocket setup finalized","timestamp":"2026-06-25T19:10:53.279Z"}
+{"level":"info","message":"🎉 All services initialized successfully","timestamp":"2026-06-25T19:10:53.279Z"}
+{"level":"info","message":"✅ All services exported to Express app","timestamp":"2026-06-25T19:10:53.280Z"}
+{"level":"info","message":"✅ Socket.io injected into PresenceController","timestamp":"2026-06-25T19:10:53.333Z"}
+{"level":"info","message":"✅ WebSocketService injected into ChatController","timestamp":"2026-06-25T19:10:53.335Z"}
+{"level":"info","message":"✅ RedisService injected into MessageService","timestamp":"2026-06-25T19:10:53.336Z"}
+{"level":"info","message":"✅ Enhanced global rate limiting enabled","timestamp":"2026-06-25T19:10:53.337Z"}
+{"level":"info","message":"📦 Loading application routes...","timestamp":"2026-06-25T19:10:53.338Z"}
+{"level":"info","message":"✅ Chat routes mounted at /api/chat (21 endpoints)","timestamp":"2026-06-25T19:10:53.785Z"}
+{"level":"info","message":"✅ Auth routes mounted at /api/auth (31 endpoints)","timestamp":"2026-06-25T19:10:54.371Z"}
+{"level":"info","message":"✅ User routes mounted at /api/users (15 endpoints)","timestamp":"2026-06-25T19:10:54.405Z"}
+{"level":"info","message":"✅ Presence routes mounted at /api/presence (20 endpoints)","timestamp":"2026-06-25T19:10:54.430Z"}
+{"level":"info","message":"✅ Match routes mounted at /api/match (33 endpoints)","timestamp":"2026-06-25T19:10:54.475Z"}
+{"level":"info","message":"✅ Profile routes mounted at /api/profile (25 endpoints)","timestamp":"2026-06-25T19:10:54.581Z"}
+{"level":"info","message":"✅ Admin routes mounted at /api/admin (52 endpoints)","timestamp":"2026-06-25T19:10:54.747Z"}
+{"level":"info","message":"✅ WebSocket Management routes mounted at /api/websocket (10 endpoints)","timestamp":"2026-06-25T19:10:54.790Z"}
+{"level":"info","message":"✅ Health routes mounted at /api/health (1 endpoints)","timestamp":"2026-06-25T19:10:54.808Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:10:54.809Z"}
+{"level":"info","message":"📊 Route Loading Summary:","timestamp":"2026-06-25T19:10:54.809Z"}
+{"level":"info","message":"✅ Successful: 9/9","timestamp":"2026-06-25T19:10:54.809Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:10:54.810Z"}
+{"level":"info","message":"📊 Routes loaded: 9/9","timestamp":"2026-06-25T19:10:54.812Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:10:54.820Z"}
+{"level":"info","message":"🚀 Server running on http://0.0.0.0:5000","timestamp":"2026-06-25T19:10:54.821Z"}
+{"level":"info","message":"🔗 Health check: http://0.0.0.0:5000/health","timestamp":"2026-06-25T19:10:54.821Z"}
+{"level":"info","message":"📊 System status: http://0.0.0.0:5000/api/system/status","timestamp":"2026-06-25T19:10:54.822Z"}
+{"level":"info","message":"🔍 Diagnostics: http://0.0.0.0:5000/api/diagnostics/routes","timestamp":"2026-06-25T19:10:54.822Z"}
+{"level":"info","message":"📈 Rate limit metrics: http://0.0.0.0:5000/api/rate-limit/metrics","timestamp":"2026-06-25T19:10:54.823Z"}
+{"level":"info","message":"🔌 WebSocket Health: http://0.0.0.0:5000/api/websocket/health","timestamp":"2026-06-25T19:10:54.823Z"}
+{"level":"info","message":"🔌 WebSocket: ws://0.0.0.0:5000 ✅ Ready (0 connections)","timestamp":"2026-06-25T19:10:54.823Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-25T19:10:54.824Z"}
+{"level":"info","message":"💾 Memory: 59MB / 82MB","timestamp":"2026-06-25T19:10:54.824Z"}
+{"level":"info","message":"🔐 Encryption: AES-256-GCM ✅","timestamp":"2026-06-25T19:10:54.824Z"}
+{"level":"info","message":"🔐 E2EE: ✅ Enabled","timestamp":"2026-06-25T19:10:54.824Z"}
+{"level":"info","message":"⚡ Redis: ✅ Ready","timestamp":"2026-06-25T19:10:54.825Z"}
+{"level":"info","message":"🗄️  MongoDB: ✅ Connected","timestamp":"2026-06-25T19:10:54.825Z"}
+{"level":"info","message":"⚡ Rate Limiting: ✅ Enabled","timestamp":"2026-06-25T19:10:54.825Z"}
+{"level":"info","message":"🔒 Security Headers: ✅ Enabled","timestamp":"2026-06-25T19:10:54.826Z"}
+{"level":"info","message":"🛡️  Content Moderation: ✅ Enabled","timestamp":"2026-06-25T19:10:54.826Z"}
+{"level":"info","message":"🔞 Age Verification: ✅ Required","timestamp":"2026-06-25T19:10:54.826Z"}
+{"level":"info","message":"🔗 CORS Origins: 3 origins","timestamp":"2026-06-25T19:10:54.826Z"}
+{"level":"info","message":"📊 Routes: 9/9 loaded","timestamp":"2026-06-25T19:10:54.827Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:10:54.827Z"}
+{"level":"info","message":"💡 Development flags:","timestamp":"2026-06-25T19:10:54.828Z"}
+{"level":"info","message":"💡 Debug endpoints available:","timestamp":"2026-06-25T19:10:54.828Z"}
+{"level":"info","message":"   http://0.0.0.0:5000/api/diagnostics/routes","timestamp":"2026-06-25T19:10:54.829Z"}
+{"level":"info","message":"   http://0.0.0.0:5000/api/system/status","timestamp":"2026-06-25T19:10:54.829Z"}
+{"level":"info","message":"✅ Conversation indexes already exist, skipping","timestamp":"2026-06-25T19:10:54.834Z"}
+{"level":"info","message":"✅ Message indexes already exist, skipping","timestamp":"2026-06-25T19:10:55.992Z"}
+{"level":"info","message":"✅ Background index creation completed","timestamp":"2026-06-25T19:10:55.992Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:11:54.817Z"}
+{"level":"debug","message":"📊 WebSocket connections: 0","timestamp":"2026-06-25T19:12:54.824Z"}
+{"level":"info","message":"✅ Security headers enabled","timestamp":"2026-06-25T19:13:46.935Z"}
+{"level":"info","message":"✅ Trust proxy configured: 1","timestamp":"2026-06-25T19:13:46.950Z"}
+{"level":"info","message":"✅ Compression enabled","timestamp":"2026-06-25T19:13:46.970Z"}
+{"level":"info","message":"✅ CORS configured for origins: http://localhost:3000, http://localhost:3001, http://localhost:5173","timestamp":"2026-06-25T19:13:46.996Z"}
+{"level":"info","message":"✅ Request logging enabled","timestamp":"2026-06-25T19:13:47.012Z"}
+{"level":"info","message":"✅ Performance logging enabled","timestamp":"2026-06-25T19:13:47.029Z"}
+{"level":"info","message":"Render keep-awake endpoint registered at /ping","timestamp":"2026-06-25T19:13:47.059Z"}
+{"level":"info","message":"✅ Static file serving enabled for /uploads/profiles","timestamp":"2026-06-25T19:13:47.087Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:13:47.119Z"}
+{"level":"info","message":"🚀 Starting JWLoversMatch Server","timestamp":"2026-06-25T19:13:47.129Z"}
+{"level":"info","message":"📦 Version: 1.0.0","timestamp":"2026-06-25T19:13:47.172Z"}
+{"level":"info","message":"🌐 Environment: development","timestamp":"2026-06-25T19:13:47.187Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:13:47.203Z"}
+{"level":"info","message":"==================================================","timestamp":"2026-06-25T19:13:47.227Z"}
+{"level":"info","message":"📊 Rate Limiting System","timestamp":"2026-06-25T19:13:47.253Z"}
+{"level":"info","message":"==================================================","timestamp":"2026-06-25T19:13:47.267Z"}
+{"level":"info","message":"✅ Rate limiting ENABLED for development environment","timestamp":"2026-06-25T19:13:47.300Z"}
+{"level":"info","message":"🔧 Storage: Redis with memory fallback","timestamp":"2026-06-25T19:13:47.317Z"}
+{"level":"info","message":"⚡ Circuit Breaker: Disabled","timestamp":"2026-06-25T19:13:47.336Z"}
+{"level":"info","message":"📈 Limits:","timestamp":"2026-06-25T19:13:47.368Z"}
+{"level":"info","message":"   - API: 100 requests/15 minutes","timestamp":"2026-06-25T19:13:47.382Z"}
+{"level":"info","message":"   - Auth: 10 requests/1 hours","timestamp":"2026-06-25T19:13:47.403Z"}
+{"level":"info","message":"   - Messages: 60 messages/minute","timestamp":"2026-06-25T19:13:47.424Z"}
+{"level":"info","message":"   - Registration: 5 registrations/24 hours","timestamp":"2026-06-25T19:13:47.443Z"}
+{"level":"info","message":"   - Socket: 120 events/minute","timestamp":"2026-06-25T19:13:47.466Z"}
+{"level":"info","message":"   - Search: 30 searches/minute","timestamp":"2026-06-25T19:13:47.485Z"}
+{"level":"info","message":"   - Upload: 50 uploads/hour","timestamp":"2026-06-25T19:13:47.511Z"}
+{"level":"info","message":"   - Profile Views: 60 views/minute","timestamp":"2026-06-25T19:13:47.532Z"}
+{"level":"info","message":"💡 Development mode: Limits are 10x higher","timestamp":"2026-06-25T19:13:47.538Z"}
+{"level":"info","message":"💡 Localhost requests are exempt from rate limiting","timestamp":"2026-06-25T19:13:47.543Z"}
+{"level":"info","message":"==================================================","timestamp":"2026-06-25T19:13:47.552Z"}
+{"level":"info","message":"🚀 Starting service initialization...","timestamp":"2026-06-25T19:13:47.568Z"}
+{"level":"info","message":"🔄 Initializing Encryption Service...","timestamp":"2026-06-25T19:13:47.579Z"}
+{"level":"info","message":"🔐 Encryption salt: 4fbdf60f...","timestamp":"2026-06-25T19:13:47.593Z"}
+{"level":"info","message":"✅ Encryption Service initialized","timestamp":"2026-06-25T19:13:47.992Z"}
+{"level":"info","message":"🔄 Initializing Redis...","timestamp":"2026-06-25T19:13:48.006Z"}
+{"level":"info","message":"🔄 Initializing Redis connections...","timestamp":"2026-06-25T19:13:48.017Z"}
+{"level":"info","message":"✅ Redis Pub Client connected","timestamp":"2026-06-25T19:13:48.092Z"}
+{"level":"info","message":"✅ Redis Sub Client connected","timestamp":"2026-06-25T19:13:48.106Z"}
+{"level":"info","message":"✅ Redis connection test successful","timestamp":"2026-06-25T19:13:48.158Z"}
+{"level":"info","message":"✅ Redis connected: PONG","timestamp":"2026-06-25T19:13:48.185Z"}
+{"level":"info","message":"✅ Redis client made globally available","timestamp":"2026-06-25T19:13:48.202Z"}
+{"level":"info","message":"🔄 Connecting to MongoDB...","timestamp":"2026-06-25T19:13:48.216Z"}
+{"level":"info","message":"✅ Redis Sub Client ready","timestamp":"2026-06-25T19:13:48.294Z"}
+{"level":"info","message":"✅ MongoDB connected: ac-ycssmpd-shard-00-01.tvw48ir.mongodb.net","timestamp":"2026-06-25T19:13:50.065Z"}
+{"level":"info","message":"📊 Database: jwlovers_match","timestamp":"2026-06-25T19:13:50.066Z"}
+{"level":"info","message":"🔌 Pool: min=10, max=50","timestamp":"2026-06-25T19:13:50.070Z"}
+{"level":"info","message":"🔄 Starting background index creation...","timestamp":"2026-06-25T19:13:50.072Z"}
+{"level":"info","message":"✅ MongoDB connected","timestamp":"2026-06-25T19:13:50.083Z"}
+{"level":"info","message":"🔄 Initializing Chat Service...","timestamp":"2026-06-25T19:13:50.085Z"}
+{"level":"info","message":"✅ Chat Service initialized","timestamp":"2026-06-25T19:13:50.087Z"}
+{"level":"info","message":"🔄 Initializing Conversation Service Wrapper...","timestamp":"2026-06-25T19:13:50.089Z"}
+{"level":"info","message":"✅ Conversation Service Wrapper initialized","timestamp":"2026-06-25T19:13:50.090Z"}
+{"level":"info","message":"🔄 Setting up WebSocket...","timestamp":"2026-06-25T19:13:50.092Z"}
+{"level":"warn","message":"⚠️ Socket validation schemas not found, using empty schema","timestamp":"2026-06-25T19:13:50.095Z"}
+{"level":"info","message":"WebSocket service initialized","timestamp":"2026-06-25T19:13:50.098Z"}
+{"level":"info","message":"✅ WebSocket server setup completed","timestamp":"2026-06-25T19:13:50.106Z"}
+{"level":"info","message":"✅ WebSocket middleware setup","timestamp":"2026-06-25T19:13:50.281Z"}
+{"level":"info","message":"✅ WebSocket initialized","timestamp":"2026-06-25T19:13:50.282Z"}
+{"level":"info","message":"🔄 Initializing Presence Service...","timestamp":"2026-06-25T19:13:50.286Z"}
+{"level":"info","message":"✅ Presence Service initialized","timestamp":"2026-06-25T19:13:50.307Z"}
+{"level":"info","message":"🔄 Setting up Controller Bridge...","timestamp":"2026-06-25T19:13:50.311Z"}
+{"level":"info","message":"✅ Controller Bridge initialized","timestamp":"2026-06-25T19:13:50.313Z"}
+{"level":"info","message":"🔄 Injecting services into controllers...","timestamp":"2026-06-25T19:13:50.317Z"}
+{"level":"info","message":"✅ WebSocketService injected into ChatController","timestamp":"2026-06-25T19:13:50.431Z"}
+{"level":"info","message":"✅ RedisService injected into MessageService","timestamp":"2026-06-25T19:13:50.451Z"}
+{"level":"info","message":"✅ EncryptionService injected into MessageService","timestamp":"2026-06-25T19:13:50.473Z"}
+{"level":"info","message":"✅ Service injection completed","timestamp":"2026-06-25T19:13:50.477Z"}
+{"level":"info","message":"🔄 Finalizing WebSocket setup...","timestamp":"2026-06-25T19:13:50.504Z"}
+{"level":"info","message":"✅ WebSocket event handlers setup","timestamp":"2026-06-25T19:13:50.523Z"}
+{"level":"info","message":"✅ PresenceService injected into WebSocketService","timestamp":"2026-06-25T19:13:50.536Z"}
+{"level":"info","message":"✅ PresenceService injected into WebSocketService","timestamp":"2026-06-25T19:13:50.553Z"}
+{"level":"info","message":"✅ EncryptionService injected into WebSocketService","timestamp":"2026-06-25T19:13:50.570Z"}
+{"level":"info","message":"✅ EncryptionService injected into WebSocketService","timestamp":"2026-06-25T19:13:50.585Z"}
+{"level":"info","message":"✅ WebSocket ready (0 connections)","timestamp":"2026-06-25T19:13:50.591Z"}
+{"level":"info","message":"✅ WebSocket setup finalized","timestamp":"2026-06-25T19:13:50.598Z"}
+{"level":"info","message":"🎉 All services initialized successfully","timestamp":"2026-06-25T19:13:50.603Z"}
+{"level":"info","message":"✅ All services exported to Express app","timestamp":"2026-06-25T19:13:50.613Z"}
+{"level":"info","message":"✅ Socket.io injected into PresenceController","timestamp":"2026-06-25T19:13:50.722Z"}
+{"level":"info","message":"✅ WebSocketService injected into ChatController","timestamp":"2026-06-25T19:13:50.725Z"}
+{"level":"info","message":"✅ RedisService injected into MessageService","timestamp":"2026-06-25T19:13:50.731Z"}
+{"level":"info","message":"✅ Enhanced global rate limiting enabled","timestamp":"2026-06-25T19:13:50.732Z"}
+{"level":"info","message":"📦 Loading application routes...","timestamp":"2026-06-25T19:13:50.734Z"}
+{"level":"info","message":"✅ Chat routes mounted at /api/chat (21 endpoints)","timestamp":"2026-06-25T19:13:51.509Z"}
+{"level":"info","message":"✅ Auth routes mounted at /api/auth (31 endpoints)","timestamp":"2026-06-25T19:13:52.412Z"}
+{"level":"info","message":"✅ User routes mounted at /api/users (15 endpoints)","timestamp":"2026-06-25T19:13:52.701Z"}
+{"level":"info","message":"✅ Presence routes mounted at /api/presence (20 endpoints)","timestamp":"2026-06-25T19:13:52.786Z"}
+{"level":"info","message":"✅ Match routes mounted at /api/match (33 endpoints)","timestamp":"2026-06-25T19:13:52.864Z"}
+{"level":"info","message":"✅ Profile routes mounted at /api/profile (25 endpoints)","timestamp":"2026-06-25T19:13:53.169Z"}
+{"level":"info","message":"✅ Admin routes mounted at /api/admin (52 endpoints)","timestamp":"2026-06-25T19:13:53.720Z"}
+{"level":"info","message":"✅ WebSocket Management routes mounted at /api/websocket (10 endpoints)","timestamp":"2026-06-25T19:13:54.007Z"}
+{"level":"info","message":"✅ Health routes mounted at /api/health (1 endpoints)","timestamp":"2026-06-25T19:13:54.160Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:13:54.164Z"}
+{"level":"info","message":"📊 Route Loading Summary:","timestamp":"2026-06-25T19:13:54.166Z"}
+{"level":"info","message":"✅ Successful: 9/9","timestamp":"2026-06-25T19:13:54.168Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:13:54.168Z"}
+{"level":"info","message":"📊 Routes loaded: 9/9","timestamp":"2026-06-25T19:13:54.174Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:13:54.188Z"}
+{"level":"info","message":"🚀 Server running on http://0.0.0.0:5000","timestamp":"2026-06-25T19:13:54.190Z"}
+{"level":"info","message":"🔗 Health check: http://0.0.0.0:5000/health","timestamp":"2026-06-25T19:13:54.193Z"}
+{"level":"info","message":"📊 System status: http://0.0.0.0:5000/api/system/status","timestamp":"2026-06-25T19:13:54.196Z"}
+{"level":"info","message":"🔍 Diagnostics: http://0.0.0.0:5000/api/diagnostics/routes","timestamp":"2026-06-25T19:13:54.199Z"}
+{"level":"info","message":"📈 Rate limit metrics: http://0.0.0.0:5000/api/rate-limit/metrics","timestamp":"2026-06-25T19:13:54.201Z"}
+{"level":"info","message":"🔌 WebSocket Health: http://0.0.0.0:5000/api/websocket/health","timestamp":"2026-06-25T19:13:54.203Z"}
+{"level":"info","message":"🔌 WebSocket: ws://0.0.0.0:5000 ✅ Ready (0 connections)","timestamp":"2026-06-25T19:13:54.204Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-25T19:13:54.205Z"}
+{"level":"info","message":"💾 Memory: 60MB / 83MB","timestamp":"2026-06-25T19:13:54.208Z"}
+{"level":"info","message":"🔐 Encryption: AES-256-GCM ✅","timestamp":"2026-06-25T19:13:54.211Z"}
+{"level":"info","message":"🔐 E2EE: ✅ Enabled","timestamp":"2026-06-25T19:13:54.215Z"}
+{"level":"info","message":"⚡ Redis: ✅ Ready","timestamp":"2026-06-25T19:13:54.215Z"}
+{"level":"info","message":"🗄️  MongoDB: ✅ Connected","timestamp":"2026-06-25T19:13:54.216Z"}
+{"level":"info","message":"⚡ Rate Limiting: ✅ Enabled","timestamp":"2026-06-25T19:13:54.217Z"}
+{"level":"info","message":"🔒 Security Headers: ✅ Enabled","timestamp":"2026-06-25T19:13:54.217Z"}
+{"level":"info","message":"🛡️  Content Moderation: ✅ Enabled","timestamp":"2026-06-25T19:13:54.218Z"}
+{"level":"info","message":"🔞 Age Verification: ✅ Required","timestamp":"2026-06-25T19:13:54.218Z"}
+{"level":"info","message":"🔗 CORS Origins: 3 origins","timestamp":"2026-06-25T19:13:54.219Z"}
+{"level":"info","message":"📊 Routes: 9/9 loaded","timestamp":"2026-06-25T19:13:54.219Z"}
+{"level":"info","message":"============================================================","timestamp":"2026-06-25T19:13:54.220Z"}
+{"level":"info","message":"💡 Development flags:","timestamp":"2026-06-25T19:13:54.220Z"}
+{"level":"info","message":"💡 Debug endpoints available:","timestamp":"2026-06-25T19:13:54.221Z"}
+{"level":"info","message":"   http://0.0.0.0:5000/api/diagnostics/routes","timestamp":"2026-06-25T19:13:54.222Z"}
+{"level":"info","message":"   http://0.0.0.0:5000/api/system/status","timestamp":"2026-06-25T19:13:54.222Z"}
+{"level":"info","message":"✅ Conversation indexes already exist, skipping","timestamp":"2026-06-25T19:13:54.233Z"}
+{"level":"info","message":"✅ Message indexes already exist, skipping","timestamp":"2026-06-25T19:13:54.254Z"}
+{"level":"info","message":"✅ Background index creation completed","timestamp":"2026-06-25T19:13:54.260Z"}
