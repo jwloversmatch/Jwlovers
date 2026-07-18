@@ -438,9 +438,9 @@ class MessageService {
 
   // ========== CORE MESSAGE METHODS ==========
 
-  // services/MessageService.js 
-// ONLY THE sendMessage METHOD IS SHOWN - Replace lines 467-780 in your existing file
-// Everything else in your MessageService.js stays the same
+  // services/MessageService.js
+  // ONLY THE sendMessage METHOD IS SHOWN - Replace lines 467-780 in your existing file
+  // Everything else in your MessageService.js stays the same
 
   async sendMessage(data) {
     const startTime = Date.now();
@@ -492,12 +492,15 @@ class MessageService {
           senderId,
           receiverId,
         }).lean();
-        
+
         if (existingByClientId) {
-          logger.info("Duplicate detected by clientMessageId, returning existing", {
-            messageId: existingByClientId._id,
-            clientMessageId,
-          });
+          logger.info(
+            "Duplicate detected by clientMessageId, returning existing",
+            {
+              messageId: existingByClientId._id,
+              clientMessageId,
+            },
+          );
           return {
             ...existingByClientId,
             duplicate: true,
@@ -507,15 +510,19 @@ class MessageService {
 
       // ========== REDIS LOCK FOR CONTENT-BASED DEDUPLICATION ==========
       // 🔥 FIXED: Redis lock with proper syntax for all Redis client versions
-      if (this.redisClient && this.redisService && this.redisService.isReady()) {
+      if (
+        this.redisClient &&
+        this.redisService &&
+        this.redisService.isReady()
+      ) {
         const contentHash = crypto
           .createHash("sha256")
           .update(content || "")
           .digest("hex")
           .substring(0, 32);
-        
+
         const lockKey = `msg:lock:${senderId}:${receiverId}:${contentHash}`;
-        
+
         // Try to acquire a lock
         const lockAcquired = await this.redisService.safeOperation(
           async () => {
@@ -523,7 +530,7 @@ class MessageService {
               // Try modern syntax first (node-redis v4+ or ioredis)
               const result = await this.redisClient.set(lockKey, "processing", {
                 NX: true,
-                EX: 5
+                EX: 5,
               });
               return result === "OK" || result === true;
             } catch (modernErr) {
@@ -534,11 +541,14 @@ class MessageService {
                   "processing",
                   "NX",
                   "EX",
-                  5
+                  5,
                 );
                 return legacyResult === "OK";
               } catch (legacyErr) {
-                logger.warn('Redis SET failed with both syntaxes, proceeding without lock:', legacyErr.message);
+                logger.warn(
+                  "Redis SET failed with both syntaxes, proceeding without lock:",
+                  legacyErr.message,
+                );
                 return true; // Proceed without lock if Redis fails
               }
             }
@@ -546,20 +556,22 @@ class MessageService {
           true, // Default to true if safeOperation fails
           "sendMessage-acquireLock",
         );
-        
+
         if (!lockAcquired) {
           // Another request is processing the same message
-          logger.info("Lock not acquired, waiting for other request to complete");
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
+          logger.info(
+            "Lock not acquired, waiting for other request to complete",
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
           // Check if the other request succeeded
           const existing = await Message.findOne({
             senderId,
             receiverId,
             originalContent: content, // Match on PLAINTEXT not encrypted
-            createdAt: { $gte: new Date(Date.now() - 5000) }
+            createdAt: { $gte: new Date(Date.now() - 5000) },
           }).lean();
-          
+
           if (existing) {
             logger.info("Message was already processed by another request", {
               messageId: existing._id,
@@ -611,11 +623,11 @@ class MessageService {
 
       // ========== FIND OR CREATE CONVERSATION ==========
       let conversation;
-      
+
       if (conversationId && isValidObjectId(conversationId)) {
         conversation = await Conversation.findById(conversationId);
         if (!conversation) throw new Error("Conversation not found");
-        
+
         const isParticipant = conversation.participants.some(
           (p) => p.toString() === senderId.toString(),
         );
@@ -623,23 +635,22 @@ class MessageService {
           throw new Error("User is not a participant in this conversation");
       } else {
         // Use findOneAndUpdate with upsert for atomic conversation creation
-        conversation = await Conversation.findOneAndUpdate(
-          { participants: { $all: [senderId, receiverId] } },
-          {
-            $setOnInsert: {
-              participants: [senderId, receiverId],
-              createdAt: new Date(),
-              unreadCount: {},
-            },
-            $set: {
-              lastMessageAt: new Date(),
-            },
-          },
-          { 
-            upsert: true, 
-            new: true,
-          }
-        );
+        // Safe find-or-create (no ambiguous participants updates)
+        let conversation = await Conversation.findOne({
+          participants: { $all: [senderId, receiverId] },
+        });
+
+        if (!conversation) {
+          conversation = await Conversation.create({
+            participants: [senderId, receiverId],
+            createdAt: new Date(),
+            unreadCount: {},
+            lastMessageAt: new Date(),
+          });
+        } else {
+          conversation.lastMessageAt = new Date();
+          await conversation.save();
+        }
       }
 
       const conversationIdString = conversation._id.toString();
@@ -692,19 +703,27 @@ class MessageService {
           senderId,
           receiverId,
         }).lean();
-        
+
         if (finalCheck) {
           logger.info("Duplicate detected in final check", {
             messageId: finalCheck._id,
           });
-          
+
           // Release Redis lock
-          if (this.redisClient && this.redisService && this.redisService.isReady()) {
-            const contentHash = crypto.createHash("sha256").update(content || "").digest("hex").substring(0, 32);
+          if (
+            this.redisClient &&
+            this.redisService &&
+            this.redisService.isReady()
+          ) {
+            const contentHash = crypto
+              .createHash("sha256")
+              .update(content || "")
+              .digest("hex")
+              .substring(0, 32);
             const lockKey = `msg:lock:${senderId}:${receiverId}:${contentHash}`;
             await this.redisClient.del(lockKey).catch(() => {});
           }
-          
+
           return {
             ...finalCheck,
             duplicate: true,
@@ -757,11 +776,15 @@ class MessageService {
             [`unreadCount.${receiverId.toString()}`]: 1,
           },
         },
-        { new: true }
+        { new: true },
       );
 
       // ========== RELEASE REDIS LOCK ==========
-      if (this.redisClient && this.redisService && this.redisService.isReady()) {
+      if (
+        this.redisClient &&
+        this.redisService &&
+        this.redisService.isReady()
+      ) {
         const contentHash = crypto
           .createHash("sha256")
           .update(content || "")
@@ -799,7 +822,6 @@ class MessageService {
         conversationId: conversation._id,
         duplicate: false,
       };
-
     } catch (error) {
       logger.error("Error in sendMessage", {
         error: error.message,
@@ -879,111 +901,112 @@ class MessageService {
   }
 
   async markMessagesAsRead(messageIds, userId) {
-  // Add retry logic for WriteConflict errors
-  const maxRetries = 3;
-  let attempt = 0;
-  
-  while (attempt < maxRetries) {
-    const session = await mongoose.startSession();
-    try {
-      session.startTransaction();
+    // Add retry logic for WriteConflict errors
+    const maxRetries = 3;
+    let attempt = 0;
 
-      const invalidIds = messageIds.filter(
-        (id) => !mongoose.Types.ObjectId.isValid(id),
-      );
-      if (invalidIds.length > 0)
-        throw new Error(
-          `Invalid message IDs: ${invalidIds.slice(0, 5).join(", ")}`,
+    while (attempt < maxRetries) {
+      const session = await mongoose.startSession();
+      try {
+        session.startTransaction();
+
+        const invalidIds = messageIds.filter(
+          (id) => !mongoose.Types.ObjectId.isValid(id),
         );
+        if (invalidIds.length > 0)
+          throw new Error(
+            `Invalid message IDs: ${invalidIds.slice(0, 5).join(", ")}`,
+          );
 
-      const messages = await Message.find({
-        _id: { $in: messageIds },
-        $or: [{ receiverId: userId }, { senderId: userId }],
-      }).session(session);
+        const messages = await Message.find({
+          _id: { $in: messageIds },
+          $or: [{ receiverId: userId }, { senderId: userId }],
+        }).session(session);
 
-      if (messages.length !== messageIds.length)
-        throw new Error("Not authorized to mark some messages as read");
+        if (messages.length !== messageIds.length)
+          throw new Error("Not authorized to mark some messages as read");
 
-      // 🔥 FIX: Use bulkWrite instead of updateMany to avoid WriteConflict
-      const bulkOps = messageIds.map(id => ({
-        updateOne: {
-          filter: { 
-            _id: id, 
-            status: { $in: ["sent", "delivered"] } 
+        // 🔥 FIX: Use bulkWrite instead of updateMany to avoid WriteConflict
+        const bulkOps = messageIds.map((id) => ({
+          updateOne: {
+            filter: {
+              _id: id,
+              status: { $in: ["sent", "delivered"] },
+            },
+            update: {
+              $addToSet: { readBy: userId },
+              $set: { status: "read", readAt: new Date() },
+            },
           },
-          update: {
-            $addToSet: { readBy: userId },
-            $set: { status: "read", readAt: new Date() }
+        }));
+
+        const updateResult = await Message.bulkWrite(bulkOps, { session });
+
+        const conversationUpdates = new Map();
+        let firstSenderId = null;
+        let firstConversationId = null;
+
+        messages.forEach((msg) => {
+          if (!firstConversationId && msg.conversationId) {
+            firstConversationId = msg.conversationId;
+            firstSenderId = msg.senderId;
           }
-        }
-      }));
+          if (
+            msg.conversationId &&
+            msg.receiverId.toString() === userId.toString()
+          ) {
+            const convId = msg.conversationId.toString();
+            conversationUpdates.set(
+              convId,
+              (conversationUpdates.get(convId) || 0) - 1,
+            );
+          }
+        });
 
-      const updateResult = await Message.bulkWrite(bulkOps, { session });
-
-      const conversationUpdates = new Map();
-      let firstSenderId = null;
-      let firstConversationId = null;
-
-      messages.forEach((msg) => {
-        if (!firstConversationId && msg.conversationId) {
-          firstConversationId = msg.conversationId;
-          firstSenderId = msg.senderId;
-        }
-        if (
-          msg.conversationId &&
-          msg.receiverId.toString() === userId.toString()
-        ) {
-          const convId = msg.conversationId.toString();
-          conversationUpdates.set(
-            convId,
-            (conversationUpdates.get(convId) || 0) - 1,
+        // 🔥 FIX: Update conversations one at a time to avoid conflicts
+        for (const [conversationId, count] of conversationUpdates.entries()) {
+          await Conversation.findByIdAndUpdate(
+            conversationId,
+            { $inc: { [`unreadCount.${userId}`]: count } },
+            { session },
           );
         }
-      });
 
-      // 🔥 FIX: Update conversations one at a time to avoid conflicts
-      for (const [conversationId, count] of conversationUpdates.entries()) {
-        await Conversation.findByIdAndUpdate(
-          conversationId,
-          { $inc: { [`unreadCount.${userId}`]: count } },
-          { session }
-        );
+        await session.commitTransaction();
+
+        logger.info("Messages marked as read successfully", {
+          count: updateResult.modifiedCount || 0,
+          userId,
+          attempt: attempt + 1,
+        });
+
+        return {
+          modifiedCount: updateResult.modifiedCount || 0,
+          conversationId: firstConversationId,
+          senderId: firstSenderId,
+        };
+      } catch (error) {
+        await session.abortTransaction();
+
+        // Retry on WriteConflict (code 112)
+        if (error.code === 112 && attempt < maxRetries - 1) {
+          attempt++;
+          logger.warn(
+            `⚠️  WriteConflict in markMessagesAsRead, retrying (${attempt}/${maxRetries})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 100 * attempt)); // exponential backoff
+          continue;
+        }
+
+        logger.error("Error in markMessagesAsRead:", error);
+        throw error;
+      } finally {
+        session.endSession();
       }
-
-      await session.commitTransaction();
-
-      logger.info('Messages marked as read successfully', {
-        count: updateResult.modifiedCount || 0,
-        userId,
-        attempt: attempt + 1
-      });
-
-      return {
-        modifiedCount: updateResult.modifiedCount || 0,
-        conversationId: firstConversationId,
-        senderId: firstSenderId,
-      };
-      
-    } catch (error) {
-      await session.abortTransaction();
-      
-      // Retry on WriteConflict (code 112)
-      if (error.code === 112 && attempt < maxRetries - 1) {
-        attempt++;
-        logger.warn(`⚠️  WriteConflict in markMessagesAsRead, retrying (${attempt}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // exponential backoff
-        continue;
-      }
-      
-      logger.error('Error in markMessagesAsRead:', error);
-      throw error;
-    } finally {
-      session.endSession();
     }
+
+    throw new Error("Failed to mark messages as read after multiple retries");
   }
-  
-  throw new Error('Failed to mark messages as read after multiple retries');
-}
 
   async getMessageById(messageId) {
     if (!mongoose.Types.ObjectId.isValid(messageId))
