@@ -637,37 +637,31 @@ class MessageService {
         // Use findOneAndUpdate with upsert for atomic conversation creation
         let conversation;
 
-        if (conversationId && isValidObjectId(conversationId)) {
+        if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
           conversation = await Conversation.findById(conversationId);
-          if (!conversation) throw new Error("Conversation not found");
         } else {
-          // Try to find existing conversation
           conversation = await Conversation.findOne({
             participants: { $all: [senderId, receiverId] },
           });
-
-          if (!conversation) {
-            // Create a new one
-            conversation = await Conversation.create({
-              participants: [senderId, receiverId],
-              createdAt: new Date(),
-              unreadCount: {},
-              lastMessageAt: new Date(),
-            });
-            console.log("✅ Created new conversation:", conversation._id);
-          } else {
-            conversation.lastMessageAt = new Date();
-            await conversation.save();
-          }
         }
 
-        // 🔒 Safety check – if still undefined, something went wrong
+        if (!conversation) {
+          conversation = await Conversation.create({
+            participants: [senderId, receiverId],
+            createdAt: new Date(),
+            unreadCount: {},
+            lastMessageAt: new Date(),
+          });
+        } else {
+          conversation.lastMessageAt = new Date();
+          await conversation.save();
+        }
+
+        // Safety net
         if (!conversation || !conversation._id) {
-          throw new Error("Conversation could not be found or created");
+          throw new Error("Failed to find or create conversation");
         }
-
         const conversationIdString = conversation._id.toString();
-
         if (!conversation) {
           conversation = await Conversation.create({
             participants: [senderId, receiverId],
