@@ -621,61 +621,43 @@ class MessageService {
       // ========== RATE LIMITING ==========
       await this.checkRateLimit(senderId, receiverId);
 
-      // ========== FIND OR CREATE CONVERSATION ==========
-      let conversation;
+      // ========== FIND OR CREATE CONVERSATION (BULLETPROOF) ==========
+let conversation = null;
 
-      if (conversationId && isValidObjectId(conversationId)) {
-        conversation = await Conversation.findById(conversationId);
-        if (!conversation) throw new Error("Conversation not found");
+if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
+  // Use the provided conversation ID
+  conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    throw new Error('Conversation not found');
+  }
+} else {
+  // Look for an existing conversation between these two users
+  conversation = await Conversation.findOne({
+    participants: { $all: [senderId, receiverId] }
+  });
 
-        const isParticipant = conversation.participants.some(
-          (p) => p.toString() === senderId.toString(),
-        );
-        if (!isParticipant)
-          throw new Error("User is not a participant in this conversation");
-      } else {
-        // Use findOneAndUpdate with upsert for atomic conversation creation
-        let conversation;
+  if (!conversation) {
+    // Create a brand new conversation
+    conversation = await Conversation.create({
+      participants: [senderId, receiverId],
+      createdAt: new Date(),
+      unreadCount: {},
+      lastMessageAt: new Date(),
+    });
+    logger.info('Created new conversation', { conversationId: conversation._id });
+  } else {
+    // Update the existing conversation's last activity timestamp
+    conversation.lastMessageAt = new Date();
+    await conversation.save();
+  }
+}
 
-        if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
-          conversation = await Conversation.findById(conversationId);
-        } else {
-          conversation = await Conversation.findOne({
-            participants: { $all: [senderId, receiverId] },
-          });
-        }
+// Final safety check – will never be hit because the above always returns a document
+if (!conversation || !conversation._id) {
+  throw new Error('Failed to find or create conversation');
+}
 
-        if (!conversation) {
-          conversation = await Conversation.create({
-            participants: [senderId, receiverId],
-            createdAt: new Date(),
-            unreadCount: {},
-            lastMessageAt: new Date(),
-          });
-        } else {
-          conversation.lastMessageAt = new Date();
-          await conversation.save();
-        }
-
-        // Safety net
-        if (!conversation || !conversation._id) {
-          throw new Error("Failed to find or create conversation");
-        }
-        const conversationIdString = conversation._id.toString();
-        if (!conversation) {
-          conversation = await Conversation.create({
-            participants: [senderId, receiverId],
-            createdAt: new Date(),
-            unreadCount: {},
-            lastMessageAt: new Date(),
-          });
-        } else {
-          conversation.lastMessageAt = new Date();
-          await conversation.save();
-        }
-      }
-
-      const conversationIdString = conversation._id.toString();
+const conversationIdString = conversation._id.toString();
 
       // ========== ENCRYPT CONTENT ==========
       let encryptedContent = content;
