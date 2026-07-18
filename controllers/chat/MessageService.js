@@ -635,10 +635,38 @@ class MessageService {
           throw new Error("User is not a participant in this conversation");
       } else {
         // Use findOneAndUpdate with upsert for atomic conversation creation
-        // Safe find-or-create (no ambiguous participants updates)
-        let conversation = await Conversation.findOne({
-          participants: { $all: [senderId, receiverId] },
-        });
+        let conversation;
+
+        if (conversationId && isValidObjectId(conversationId)) {
+          conversation = await Conversation.findById(conversationId);
+          if (!conversation) throw new Error("Conversation not found");
+        } else {
+          // Try to find existing conversation
+          conversation = await Conversation.findOne({
+            participants: { $all: [senderId, receiverId] },
+          });
+
+          if (!conversation) {
+            // Create a new one
+            conversation = await Conversation.create({
+              participants: [senderId, receiverId],
+              createdAt: new Date(),
+              unreadCount: {},
+              lastMessageAt: new Date(),
+            });
+            console.log("✅ Created new conversation:", conversation._id);
+          } else {
+            conversation.lastMessageAt = new Date();
+            await conversation.save();
+          }
+        }
+
+        // 🔒 Safety check – if still undefined, something went wrong
+        if (!conversation || !conversation._id) {
+          throw new Error("Conversation could not be found or created");
+        }
+
+        const conversationIdString = conversation._id.toString();
 
         if (!conversation) {
           conversation = await Conversation.create({
