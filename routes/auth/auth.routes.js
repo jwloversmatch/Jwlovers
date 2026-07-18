@@ -42,17 +42,18 @@ const createDevelopmentLimiter = (options) => {
     ...options,
     max: isDevelopment ? options.max * devMultiplier : options.max,
     keyGenerator: (req) => {
-      const rawIp = ipKeyGenerator(req);
-      // Normalize the IP to a string
-      const ip = Array.isArray(rawIp) ? rawIp[0] : rawIp || "";
+      const rawIp = ipKeyGenerator(req) || req.ip || "127.0.0.1";
+      const ip = Array.isArray(rawIp) ? rawIp[0] : rawIp;
+      const ipStr = typeof ip === "string" ? ip : String(ip || "");
+
       const isLocalhost =
-        ip === "127.0.0.1" || ip === "::1" || ip.includes("localhost");
+        ipStr === "127.0.0.1" || ipStr === "::1" || ipStr.includes("localhost");
 
       if (isDevelopment && isLocalhost) {
         return `${options.keyPrefix || "dev"}:localhost`;
       }
 
-      return options.keyGenerator ? options.keyGenerator(req) : req.ip;
+      return options.keyGenerator ? options.keyGenerator(req) : ipStr;
     },
     skip: (req) => {
       if (
