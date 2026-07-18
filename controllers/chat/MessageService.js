@@ -638,7 +638,6 @@ class MessageService {
           { 
             upsert: true, 
             new: true,
-            setDefaultsOnInsert: true 
           }
         );
       }
