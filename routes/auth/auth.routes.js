@@ -12,7 +12,7 @@ const {
 const RATE_LIMIT_DISABLED = process.env.DISABLE_RATE_LIMITING === "true";
 
 // ========== FIXED: Import AuthController.js (NOT AuthenticationController.js) ==========
-const AuthController = require("@controllers/auth/AuthController"); 
+const AuthController = require("@controllers/auth/AuthController");
 const UserController = require("@controllers/user/UserController");
 const userController = new UserController();
 const authController = new AuthController();
@@ -42,7 +42,9 @@ const createDevelopmentLimiter = (options) => {
     ...options,
     max: isDevelopment ? options.max * devMultiplier : options.max,
     keyGenerator: (req) => {
-      const ip = ipKeyGenerator(req);
+      const rawIp = ipKeyGenerator(req);
+      // Normalize the IP to a string
+      const ip = Array.isArray(rawIp) ? rawIp[0] : rawIp || "";
       const isLocalhost =
         ip === "127.0.0.1" || ip === "::1" || ip.includes("localhost");
 
@@ -153,7 +155,7 @@ router.get("/health", async (req, res) => {
     if (typeof authController.healthCheck === "function") {
       return authController.healthCheck(req, res);
     }
-    
+
     res.json({
       success: true,
       status: "healthy",
@@ -162,8 +164,8 @@ router.get("/health", async (req, res) => {
       version: process.env.APP_VERSION || "1.0.0",
       relatedServices: {
         profile: "Available at /api/v1/profile",
-        dating: "Coming soon"
-      }
+        dating: "Coming soon",
+      },
     });
   } catch (error) {
     res.status(503).json({
@@ -192,19 +194,21 @@ router.post(
 // ========== SINGLE REGISTRATION ENDPOINT (PUBLIC) ==========
 router.post("/register", rateLimits.registration, (req, res) => {
   console.log("📝 /register endpoint called with body:", req.body);
-  
-  const { sessionId, inviteCode, role = 'user' } = req.body;
-  
+
+  const { sessionId, inviteCode, role = "user" } = req.body;
+
   const normalizedRole = role.toString().toLowerCase();
   console.log(`👤 Registration role: ${normalizedRole}`);
-  
+
   let registrationType;
-  const isStaffRole = ['moderator', 'admin', 'super_admin'].includes(normalizedRole);
-  
+  const isStaffRole = ["moderator", "admin", "super_admin"].includes(
+    normalizedRole,
+  );
+
   if (inviteCode && isStaffRole) {
-    registrationType = 'staff';
+    registrationType = "staff";
     console.log("👔 Staff registration detected");
-    
+
     const { employeeId, department, jobTitle } = req.body;
     if (!employeeId || !department || !jobTitle) {
       return res.status(400).json({
@@ -212,10 +216,15 @@ router.post("/register", rateLimits.registration, (req, res) => {
         error: "Staff registration requires employee information",
         missingFields: {
           employeeId: !employeeId,
-          department: !department, 
-          jobTitle: !jobTitle
+          department: !department,
+          jobTitle: !jobTitle,
         },
-        requiredForStaff: ["inviteCode", "employeeId", "department", "jobTitle"],
+        requiredForStaff: [
+          "inviteCode",
+          "employeeId",
+          "department",
+          "jobTitle",
+        ],
         example: {
           firstName: "John",
           lastName: "Doe",
@@ -225,14 +234,14 @@ router.post("/register", rateLimits.registration, (req, res) => {
           inviteCode: "ABC123DEF456",
           employeeId: "EMP001",
           department: "Engineering",
-          jobTitle: "Senior Developer"
-        }
+          jobTitle: "Senior Developer",
+        },
       });
     }
   } else {
-    registrationType = 'dating';
+    registrationType = "dating";
     console.log("💑 Dating registration detected");
-    
+
     if (!sessionId) {
       return res.status(403).json({
         success: false,
@@ -242,16 +251,16 @@ router.post("/register", rateLimits.registration, (req, res) => {
         howToGetSessionId: {
           step1: "GET /api/auth/security-question",
           step2: "POST /api/auth/validate-answer with {questionId, answer}",
-          step3: "Use returned sessionId in registration"
+          step3: "Use returned sessionId in registration",
         },
-        note: "After registration, create profile at /api/v1/profile"
+        note: "After registration, create profile at /api/v1/profile",
       });
     }
   }
-  
+
   req.body.role = normalizedRole;
   req.registrationType = registrationType;
-  
+
   // ✅ Now this works because authController is AuthController.js which HAS register method
   return authController.register(req, res);
 });
@@ -259,13 +268,13 @@ router.post("/register", rateLimits.registration, (req, res) => {
 // ========== LEGACY STAFF REGISTRATION (PUBLIC) ==========
 router.post("/register/staff", rateLimits.staffRegistration, (req, res) => {
   console.log("👔 /register/staff (legacy) route called");
-  
-  req.registrationType = 'staff';
-  
+
+  req.registrationType = "staff";
+
   if (!req.body.role) {
-    req.body.role = 'moderator';
+    req.body.role = "moderator";
   }
-  
+
   return authController.register(req, res);
 });
 
@@ -291,9 +300,13 @@ router.get("/verify-email/:token", apiLimiter, (req, res) => {
   return authController.verifyEmail(req, res);
 });
 
-router.post("/resend-verification", rateLimits.resendVerification, (req, res) => {
-  return authController.resendVerificationEmail(req, res);
-});
+router.post(
+  "/resend-verification",
+  rateLimits.resendVerification,
+  (req, res) => {
+    return authController.resendVerificationEmail(req, res);
+  },
+);
 
 // ========== PASSWORD MANAGEMENT ENDPOINTS (PUBLIC) ==========
 router.post("/forgot-password", rateLimits.forgotPassword, (req, res) => {
@@ -310,9 +323,14 @@ router.get("/me", apiLimiter, protect, (req, res) => {
 });
 
 // ========== PASSWORD CHANGE (PROTECTED) ==========
-router.put("/change-password", rateLimits.passwordChange, protect, (req, res) => {
-  return authController.changePassword(req, res);
-});
+router.put(
+  "/change-password",
+  rateLimits.passwordChange,
+  protect,
+  (req, res) => {
+    return authController.changePassword(req, res);
+  },
+);
 
 // ========== PROFILE REDIRECT (PROTECTED) ==========
 router.post("/profile", protect, (req, res) => {
@@ -323,21 +341,21 @@ router.post("/profile", protect, (req, res) => {
       create: {
         url: "/api/v1/profile",
         method: "POST",
-        description: "Create a new profile"
+        description: "Create a new profile",
       },
       get: {
         url: "/api/v1/profile/me",
         method: "GET",
-        description: "Get your profile"
+        description: "Get your profile",
       },
       update: {
         url: "/api/v1/profile",
         method: "PUT",
-        description: "Update your profile"
-      }
+        description: "Update your profile",
+      },
     },
     documentation: "All profile endpoints are available under /api/v1/profile",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -367,7 +385,10 @@ router.get("/users", apiLimiter, (req, res) => {
 });
 
 router.put("/profile/private", apiLimiter, (req, res) => {
-  if (userController && typeof userController.updatePrivateInfo === "function") {
+  if (
+    userController &&
+    typeof userController.updatePrivateInfo === "function"
+  ) {
     return userController.updatePrivateInfo(req, res);
   }
   return res.status(500).json({
@@ -407,28 +428,30 @@ router.put("/presence", apiLimiter, (req, res) => {
 });
 
 router.delete("/account", rateLimits.deleteAccount, protect, (req, res) => {
-  console.log('DELETE /account request:', {
+  console.log("DELETE /account request:", {
     body: req.body,
     user: req.user?.id,
-    method: req.method
+    method: req.method,
   });
-  
+
   if (!userController || typeof userController.deleteAccount !== "function") {
     return res.status(500).json({
       success: false,
       error: "User controller not properly loaded",
     });
   }
-  
+
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).json({
       success: false,
       error: "Password verification required",
-      instructions: "Send DELETE request with JSON body: {\"password\": \"your-password\"}",
-      example: "curl -X DELETE -H 'Content-Type: application/json' -d '{\"password\":\"your-password\"}' http://localhost:3000/api/auth/account"
+      instructions:
+        'Send DELETE request with JSON body: {"password": "your-password"}',
+      example:
+        "curl -X DELETE -H 'Content-Type: application/json' -d '{\"password\":\"your-password\"}' http://localhost:3000/api/auth/account",
     });
   }
-  
+
   return userController.deleteAccount(req, res);
 });
 
@@ -486,7 +509,10 @@ router.post(
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
   rateLimits.adminResetPassword,
   (req, res) => {
-    if (userController && typeof userController.adminResetPassword === "function") {
+    if (
+      userController &&
+      typeof userController.adminResetPassword === "function"
+    ) {
       return userController.adminResetPassword(req, res);
     }
     return res.status(501).json({
@@ -501,7 +527,10 @@ router.post(
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
   rateLimits.adminUnlockAccount,
   (req, res) => {
-    if (userController && typeof userController.adminUnlockAccount === "function") {
+    if (
+      userController &&
+      typeof userController.adminUnlockAccount === "function"
+    ) {
       return userController.adminUnlockAccount(req, res);
     }
     return res.status(501).json({
@@ -516,14 +545,17 @@ router.get(
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
   apiLimiter,
   (req, res) => {
-    if (!userController || typeof userController.adminGetDeactivatedUsers !== "function") {
+    if (
+      !userController ||
+      typeof userController.adminGetDeactivatedUsers !== "function"
+    ) {
       return res.status(500).json({
         success: false,
         error: "User controller not properly loaded",
       });
     }
     return userController.adminGetDeactivatedUsers(req, res);
-  }
+  },
 );
 
 router.post(
@@ -531,14 +563,17 @@ router.post(
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
   apiLimiter,
   (req, res) => {
-    if (!userController || typeof userController.adminReactivateAccount !== "function") {
+    if (
+      !userController ||
+      typeof userController.adminReactivateAccount !== "function"
+    ) {
       return res.status(500).json({
         success: false,
         error: "User controller not properly loaded",
       });
     }
     return userController.adminReactivateAccount(req, res);
-  }
+  },
 );
 
 router.get(
@@ -546,14 +581,17 @@ router.get(
   authorize(ROLES.ADMIN, ROLES.SUPER_ADMIN),
   apiLimiter,
   (req, res) => {
-    if (!userController || typeof userController.adminGetReactivationHistory !== "function") {
+    if (
+      !userController ||
+      typeof userController.adminGetReactivationHistory !== "function"
+    ) {
       return res.status(500).json({
         success: false,
         error: "User controller not properly loaded",
       });
     }
     return userController.adminGetReactivationHistory(req, res);
-  }
+  },
 );
 
 // ========== 404 HANDLER ==========
