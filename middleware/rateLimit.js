@@ -61,7 +61,7 @@ class RedisCircuitBreaker {
           {
             error: error.message,
             lastFailureTime: new Date(this.lastFailureTime).toISOString(),
-          }
+          },
         );
       }
 
@@ -152,7 +152,7 @@ const createEnhancedRedisStore = () => {
           } catch (sendError) {
             // If sendCommand fails, log and return null
             logger.warn(
-              `Redis command ${command} not supported via sendCommand`
+              `Redis command ${command} not supported via sendCommand`,
             );
             return null;
           }
@@ -303,12 +303,15 @@ const getUserRateLimitInfo = async (userId) => {
     let isPremium = false;
     let boostMultiplier = 1;
 
-    if (baseUser.userType === 'DatingUser') {
+    if (baseUser.userType === "DatingUser") {
       datingUser = await DatingUser.findById(userId).lean();
       if (datingUser) {
         isPremium = datingUser.isPremium;
         // Check if boost is active
-        if (datingUser.boost?.isActive && datingUser.boost.expiresAt > new Date()) {
+        if (
+          datingUser.boost?.isActive &&
+          datingUser.boost.expiresAt > new Date()
+        ) {
           boostMultiplier = datingUser.boost.multiplier || 2;
         }
       }
@@ -321,7 +324,7 @@ const getUserRateLimitInfo = async (userId) => {
       boostMultiplier,
       role: baseUser.role,
       userType: baseUser.userType,
-      accountStatus: baseUser.accountStatus
+      accountStatus: baseUser.accountStatus,
     };
   } catch (error) {
     logger.warn("Failed to get user rate limit info:", error.message);
@@ -341,10 +344,10 @@ const getRateLimitConfig = () => {
         userTypeLimits: {
           DatingUser: 150,
           Staff: 300,
-          Admin: 500
+          Admin: 500,
         },
         premiumMultiplier: 2, // Premium users get 2x limit
-        boostMultiplier: 3 // Boost active gets 3x limit
+        boostMultiplier: 3, // Boost active gets 3x limit
       },
       auth: {
         windowMs: 60 * 60 * 1000,
@@ -354,15 +357,15 @@ const getRateLimitConfig = () => {
         roleLimits: {
           moderator: 20,
           admin: 50,
-          super_admin: 100
-        }
+          super_admin: 100,
+        },
       },
       messages: {
         windowMs: 60 * 1000,
         max: parseInt(process.env.RATE_LIMIT_MESSAGES_MAX) || 60,
         blockDuration: 5 * 60 * 1000,
         // NEW: Premium users can send more messages
-        premiumMultiplier: 3
+        premiumMultiplier: 3,
       },
       registration: {
         windowMs: 24 * 60 * 60 * 1000,
@@ -373,7 +376,7 @@ const getRateLimitConfig = () => {
         windowMs: 60 * 1000,
         max: parseInt(process.env.RATE_LIMIT_SOCKET_MAX) || 120,
         // NEW: Premium users get higher socket limits
-        premiumMultiplier: 2
+        premiumMultiplier: 2,
       },
       dating: {
         windowMs: 60 * 1000,
@@ -382,8 +385,8 @@ const getRateLimitConfig = () => {
         swipesPerMinute: 60,
         likesPerHour: 100,
         superLikesPerDay: 5,
-        premiumSuperLikesPerDay: 25
-      }
+        premiumSuperLikesPerDay: 25,
+      },
     },
     development: {
       api: {
@@ -392,10 +395,10 @@ const getRateLimitConfig = () => {
         userTypeLimits: {
           DatingUser: 2000,
           Staff: 3000,
-          Admin: 5000
+          Admin: 5000,
         },
         premiumMultiplier: 2,
-        boostMultiplier: 3
+        boostMultiplier: 3,
       },
       auth: {
         windowMs: 60 * 60 * 1000,
@@ -403,13 +406,13 @@ const getRateLimitConfig = () => {
         roleLimits: {
           moderator: 200,
           admin: 500,
-          super_admin: 1000
-        }
+          super_admin: 1000,
+        },
       },
       messages: {
         windowMs: 60 * 1000,
         max: 600,
-        premiumMultiplier: 3
+        premiumMultiplier: 3,
       },
       registration: {
         windowMs: 24 * 60 * 60 * 1000,
@@ -418,7 +421,7 @@ const getRateLimitConfig = () => {
       socket: {
         windowMs: 60 * 1000,
         max: 1200,
-        premiumMultiplier: 2
+        premiumMultiplier: 2,
       },
       dating: {
         windowMs: 60 * 1000,
@@ -426,8 +429,8 @@ const getRateLimitConfig = () => {
         swipesPerMinute: 600,
         likesPerHour: 1000,
         superLikesPerDay: 50,
-        premiumSuperLikesPerDay: 250
-      }
+        premiumSuperLikesPerDay: 250,
+      },
     },
     test: {
       api: {
@@ -436,10 +439,10 @@ const getRateLimitConfig = () => {
         userTypeLimits: {
           DatingUser: 10000,
           Staff: 15000,
-          Admin: 20000
+          Admin: 20000,
         },
         premiumMultiplier: 2,
-        boostMultiplier: 3
+        boostMultiplier: 3,
       },
       auth: {
         windowMs: 60 * 60 * 1000,
@@ -447,13 +450,13 @@ const getRateLimitConfig = () => {
         roleLimits: {
           moderator: 1000,
           admin: 2000,
-          super_admin: 5000
-        }
+          super_admin: 5000,
+        },
       },
       messages: {
         windowMs: 60 * 1000,
         max: 3000,
-        premiumMultiplier: 3
+        premiumMultiplier: 3,
       },
       registration: {
         windowMs: 24 * 60 * 60 * 1000,
@@ -462,7 +465,7 @@ const getRateLimitConfig = () => {
       socket: {
         windowMs: 60 * 1000,
         max: 5000,
-        premiumMultiplier: 2
+        premiumMultiplier: 2,
       },
       dating: {
         windowMs: 60 * 1000,
@@ -470,8 +473,8 @@ const getRateLimitConfig = () => {
         swipesPerMinute: 3000,
         likesPerHour: 5000,
         superLikesPerDay: 250,
-        premiumSuperLikesPerDay: 1250
-      }
+        premiumSuperLikesPerDay: 1250,
+      },
     },
   };
 
@@ -480,23 +483,30 @@ const getRateLimitConfig = () => {
 
   // Override with environment variables if present
   const overrides = [
-    'RATE_LIMIT_API_MAX', 'RATE_LIMIT_AUTH_MAX', 'RATE_LIMIT_MESSAGES_MAX',
-    'RATE_LIMIT_REGISTRATION_MAX', 'RATE_LIMIT_SOCKET_MAX', 'RATE_LIMIT_DATING_MAX'
+    "RATE_LIMIT_API_MAX",
+    "RATE_LIMIT_AUTH_MAX",
+    "RATE_LIMIT_MESSAGES_MAX",
+    "RATE_LIMIT_REGISTRATION_MAX",
+    "RATE_LIMIT_SOCKET_MAX",
+    "RATE_LIMIT_DATING_MAX",
   ];
-  
-  overrides.forEach(envVar => {
+
+  overrides.forEach((envVar) => {
     if (process.env[envVar]) {
-      const key = envVar.toLowerCase().replace('rate_limit_', '').replace('_max', '');
+      const key = envVar
+        .toLowerCase()
+        .replace("rate_limit_", "")
+        .replace("_max", "");
       config[key].max = parseInt(process.env[envVar]);
     }
   });
 
   logger.info(`📊 Rate limit config loaded for ${env} environment`);
   logger.info(
-    `   API: ${config.api.max} requests/${config.api.windowMs / 60000} minutes`
+    `   API: ${config.api.max} requests/${config.api.windowMs / 60000} minutes`,
   );
   logger.info(
-    `   Dating: ${config.dating.max} actions/${config.dating.windowMs / 60000} minutes`
+    `   Dating: ${config.dating.max} actions/${config.dating.windowMs / 60000} minutes`,
   );
   logger.info(`   Premium multiplier: ${config.api.premiumMultiplier}x`);
   logger.info(`   Boost multiplier: ${config.api.boostMultiplier}x`);
@@ -515,20 +525,23 @@ const RATE_LIMIT_CONFIG = {
 // NEW: Improved rate limit handler with user-specific messages
 const rateLimitHandler = (req, res, options) => {
   const retryAfter = Math.ceil(options.windowMs / 1000);
-  
+
   // Determine message based on endpoint and user type
   let message = options.message || "Too many requests, please try again later.";
-  
-  const isDatingEndpoint = req.path.includes("/dating") || req.path.includes("/swipe");
-  const isAuthEndpoint = req.path.includes("/auth") || req.path.includes("/login");
+
+  const isDatingEndpoint =
+    req.path.includes("/dating") || req.path.includes("/swipe");
+  const isAuthEndpoint =
+    req.path.includes("/auth") || req.path.includes("/login");
   const isProfileEndpoint = req.path.includes("/profile");
-  
+
   if (isDatingEndpoint) {
     message = "Too many dating actions. Please slow down and be thoughtful.";
   } else if (isAuthEndpoint) {
     message = "Too many authentication attempts. Please try again later.";
   } else if (isProfileEndpoint) {
-    message = "Too many profile updates. Please wait before making more changes.";
+    message =
+      "Too many profile updates. Please wait before making more changes.";
   }
 
   // Log with user context
@@ -542,15 +555,22 @@ const rateLimitHandler = (req, res, options) => {
     key: options.key,
     retryAfter,
     limit: options.limit || options.max,
-    userLimit: options.userLimit || 'N/A'
+    userLimit: options.userLimit || "N/A",
   });
 
+  const limitValue = options.limit ?? options.max;
+  const retryAfter = Math.ceil(options.windowMs / 1000);
   // Set rate limit headers
   res.setHeader("Retry-After", retryAfter);
-  res.setHeader("X-RateLimit-Limit", options.limit || options.max);
-  res.setHeader("X-RateLimit-Remaining", 0);
-  res.setHeader("X-RateLimit-Reset", Math.floor(Date.now() / 1000) + retryAfter);
-  
+  if (limitValue != null) {
+    res.setHeader("X-RateLimit-Limit", limitValue);
+    res.setHeader("X-RateLimit-Remaining", 0);
+    res.setHeader(
+      "X-RateLimit-Reset",
+      Math.floor(Date.now() / 1000) + retryAfter,
+    );
+  }
+
   // Add user-specific info if available
   if (req.user?.userType) {
     res.setHeader("X-RateLimit-User-Type", req.user.userType);
@@ -568,10 +588,11 @@ const rateLimitHandler = (req, res, options) => {
     userType: req.user?.userType,
     isPremium: req.user?.dating?.isPremium || false,
     timestamp: new Date().toISOString(),
-    suggestion: isDatingEndpoint ? 
-      "Dating should be about quality, not quantity. Take your time!" : 
-      "Consider upgrading to premium for higher limits.",
-    documentation: process.env.API_DOCS_URL || "https://docs.example.com/rate-limiting"
+    suggestion: isDatingEndpoint
+      ? "Dating should be about quality, not quantity. Take your time!"
+      : "Consider upgrading to premium for higher limits.",
+    documentation:
+      process.env.API_DOCS_URL || "https://docs.example.com/rate-limiting",
   });
 };
 
@@ -606,7 +627,7 @@ const shouldSkipRateLimit = (req) => {
       parts[0] === 10 ||
       (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
       (parts[0] === 192 && parts[1] === 168) ||
-      (parts[0] === 169 && parts[1] === 254) 
+      (parts[0] === 169 && parts[1] === 254)
     );
   };
 
@@ -618,7 +639,7 @@ const shouldSkipRateLimit = (req) => {
   }
 
   // NEW: Skip for super admins
-  if (req.user?.role === 'super_admin') {
+  if (req.user?.role === "super_admin") {
     return true;
   }
 
@@ -630,7 +651,7 @@ const shouldSkipRateLimit = (req) => {
 
   if (apiKey && unlimitedKeys.includes(apiKey)) {
     logger.debug(
-      `Rate limit skipped for unlimited API key: ${apiKey.substring(0, 8)}...`
+      `Rate limit skipped for unlimited API key: ${apiKey.substring(0, 8)}...`,
     );
     return true;
   }
@@ -651,8 +672,8 @@ const getKeyGenerator = (type) => {
     case "auth":
       return async (req) => {
         const email = req.body?.email;
-        const userType = req.body?.userType || 'DatingUser';
-        
+        const userType = req.body?.userType || "DatingUser";
+
         if (email && validator.isEmail(email)) {
           return `auth:${ipKeyGenerator(req)}:${email.toLowerCase().trim()}:${userType}`;
         }
@@ -662,7 +683,7 @@ const getKeyGenerator = (type) => {
     case "registration":
       return async (req) => {
         const email = req.body?.email;
-        const userType = req.body?.userType || 'DatingUser';
+        const userType = req.body?.userType || "DatingUser";
 
         if (email && validator.isEmail(email)) {
           return `reg:${ipKeyGenerator(req)}:${email.toLowerCase().trim()}:${userType}`;
@@ -673,21 +694,24 @@ const getKeyGenerator = (type) => {
     case "messages":
       return async (req) => {
         const userId = req.user?.id;
-        const conversationId = req.params?.conversationId || req.body?.conversationId;
-        const userType = req.user?.userType || 'unknown';
+        const conversationId =
+          req.params?.conversationId || req.body?.conversationId;
+        const userType = req.user?.userType || "unknown";
 
         if (userId && conversationId) {
           return `msg:user:${userId}:type:${userType}:conv:${conversationId}`;
         }
 
-        return userId ? `msg:user:${userId}:type:${userType}` : `msg:ip:${ipKeyGenerator(req)}`;
+        return userId
+          ? `msg:user:${userId}:type:${userType}`
+          : `msg:ip:${ipKeyGenerator(req)}`;
       };
 
     case "user":
       return async (req) => {
         if (req.user?.id) {
-          const userType = req.user.userType || 'unknown';
-          const isPremium = req.user.dating?.isPremium ? 'premium' : 'free';
+          const userType = req.user.userType || "unknown";
+          const isPremium = req.user.dating?.isPremium ? "premium" : "free";
           return `user:${req.user.id}:type:${userType}:tier:${isPremium}`;
         }
         return `ip:${ipKeyGenerator(req)}`;
@@ -696,9 +720,9 @@ const getKeyGenerator = (type) => {
     case "dating":
       return async (req) => {
         const userId = req.user?.id;
-        const action = req.body?.action || 'swipe';
-        const userType = req.user?.userType || 'unknown';
-        const isPremium = req.user?.dating?.isPremium ? 'premium' : 'free';
+        const action = req.body?.action || "swipe";
+        const userType = req.user?.userType || "unknown";
+        const isPremium = req.user?.dating?.isPremium ? "premium" : "free";
 
         if (userId) {
           return `dating:${action}:user:${userId}:type:${userType}:tier:${isPremium}`;
@@ -709,8 +733,8 @@ const getKeyGenerator = (type) => {
     default:
       return async (req) => {
         const apiKey = req.headers["x-api-key"];
-        const userType = req.user?.userType || 'anonymous';
-        
+        const userType = req.user?.userType || "anonymous";
+
         return apiKey
           ? `${ipKeyGenerator(req)}:${apiKey}:type:${userType}`
           : `${ipKeyGenerator(req)}:type:${userType}`;
@@ -722,9 +746,9 @@ const getKeyGenerator = (type) => {
 const getDatingKeyGenerator = (action) => {
   return async (req) => {
     const userId = req.user?.id;
-    const userType = req.user?.userType || 'unknown';
-    const isPremium = req.user?.dating?.isPremium ? 'premium' : 'free';
-    
+    const userType = req.user?.userType || "unknown";
+    const isPremium = req.user?.dating?.isPremium ? "premium" : "free";
+
     if (userId) {
       return `dating:${action}:user:${userId}:type:${userType}:tier:${isPremium}`;
     }
@@ -735,9 +759,9 @@ const getDatingKeyGenerator = (action) => {
 const getUploadKeyGenerator = () => {
   return async (req) => {
     const userId = req.user?.id;
-    const userType = req.user?.userType || 'unknown';
-    const isPremium = req.user?.dating?.isPremium ? 'premium' : 'free';
-    
+    const userType = req.user?.userType || "unknown";
+    const isPremium = req.user?.dating?.isPremium ? "premium" : "free";
+
     return userId
       ? `upload:user:${userId}:type:${userType}:tier:${isPremium}`
       : `upload:ip:${ipKeyGenerator(req)}`;
@@ -747,9 +771,9 @@ const getUploadKeyGenerator = () => {
 const getSearchKeyGenerator = () => {
   return async (req) => {
     const userId = req.user?.id;
-    const userType = req.user?.userType || 'unknown';
-    const isPremium = req.user?.dating?.isPremium ? 'premium' : 'free';
-    
+    const userType = req.user?.userType || "unknown";
+    const isPremium = req.user?.dating?.isPremium ? "premium" : "free";
+
     return userId
       ? `search:user:${userId}:type:${userType}:tier:${isPremium}`
       : `search:ip:${ipKeyGenerator(req)}`;
@@ -760,20 +784,20 @@ const getProfileViewKeyGenerator = () => {
   return async (req) => {
     const profileId = req.params?.userId || req.params?.id;
     const userId = req.user?.id;
-    const userType = req.user?.userType || 'unknown';
-    
+    const userType = req.user?.userType || "unknown";
+
     if (userId) {
-      return `profile:view:user:${userId}:type:${userType}:profile:${profileId || 'general'}`;
+      return `profile:view:user:${userId}:type:${userType}:profile:${profileId || "general"}`;
     }
-    return `profile:view:ip:${ipKeyGenerator(req)}:profile:${profileId || 'general'}`;
+    return `profile:view:ip:${ipKeyGenerator(req)}:profile:${profileId || "general"}`;
   };
 };
 
 const getPasswordResetKeyGenerator = () => {
   return async (req) => {
     const email = req.body?.email;
-    const userType = req.body?.userType || 'DatingUser';
-    
+    const userType = req.body?.userType || "DatingUser";
+
     if (email && validator.isEmail(email)) {
       return `password_reset:${ipKeyGenerator(req)}:${email.toLowerCase().trim()}:type:${userType}`;
     }
@@ -784,8 +808,8 @@ const getPasswordResetKeyGenerator = () => {
 const getEmailResendKeyGenerator = () => {
   return async (req) => {
     const email = req.body?.email;
-    const userType = req.body?.userType || 'DatingUser';
-    
+    const userType = req.body?.userType || "DatingUser";
+
     if (email && validator.isEmail(email)) {
       return `email_resend:${ipKeyGenerator(req)}:${email.toLowerCase().trim()}:type:${userType}`;
     }
@@ -796,9 +820,9 @@ const getEmailResendKeyGenerator = () => {
 const getProfileUpdateKeyGenerator = () => {
   return async (req) => {
     const userId = req.user?.id;
-    const userType = req.user?.userType || 'unknown';
-    const isPremium = req.user?.dating?.isPremium ? 'premium' : 'free';
-    
+    const userType = req.user?.userType || "unknown";
+    const isPremium = req.user?.dating?.isPremium ? "premium" : "free";
+
     return userId
       ? `profile_update:user:${userId}:type:${userType}:tier:${isPremium}`
       : `profile_update:ip:${ipKeyGenerator(req)}`;
@@ -808,34 +832,34 @@ const getProfileUpdateKeyGenerator = () => {
 // NEW: Helper function to calculate dynamic limits based on user info
 const calculateDynamicLimit = async (req, baseLimit, config) => {
   let limit = baseLimit;
-  
+
   // If we have user info, apply multipliers
   if (req.user?.id) {
     const userInfo = await getUserRateLimitInfo(req.user.id);
-    
+
     if (userInfo) {
       // Apply user type multiplier
       if (config.userTypeLimits && config.userTypeLimits[userInfo.userType]) {
         limit = config.userTypeLimits[userInfo.userType];
       }
-      
+
       // Apply role-based limits for auth
       if (config.roleLimits && config.roleLimits[userInfo.role]) {
         limit = config.roleLimits[userInfo.role];
       }
-      
+
       // Apply premium multiplier
       if (userInfo.isPremium && config.premiumMultiplier) {
         limit = Math.floor(limit * config.premiumMultiplier);
       }
-      
+
       // Apply boost multiplier (stackable with premium)
       if (userInfo.boostMultiplier > 1 && config.boostMultiplier) {
         limit = Math.floor(limit * userInfo.boostMultiplier);
       }
     }
   }
-  
+
   return limit;
 };
 
@@ -847,7 +871,7 @@ const createStore = () => {
       return createEnhancedRedisStore();
     } else {
       logger.warn("Redis not available, using memory store for rate limiting");
-      return undefined; 
+      return undefined;
     }
   } catch (error) {
     logger.error("Failed to create rate limit store:", error);
@@ -876,11 +900,11 @@ const createDynamicLimiter = (options = {}) => {
       // Calculate dynamic limit based on user
       const configSection = config[configPath] || config.api;
       const limit = await calculateDynamicLimit(req, baseMax, configSection);
-      
+
       // Store the calculated limit for logging
       req.calculatedRateLimit = limit;
       req.rateLimitConfig = configPath;
-      
+
       return limit;
     },
     message,
@@ -1001,7 +1025,9 @@ const superLikeLimiter = createDynamicLimiter({
   baseMax: async (req) => {
     // Different limits for premium vs free users
     const isPremium = req.user?.dating?.isPremium;
-    return isPremium ? config.dating.premiumSuperLikesPerDay : config.dating.superLikesPerDay;
+    return isPremium
+      ? config.dating.premiumSuperLikesPerDay
+      : config.dating.superLikesPerDay;
   },
   message: "Daily super like limit reached.",
   keyGenerator: getDatingKeyGenerator("super_like"),
@@ -1013,25 +1039,27 @@ const rateLimitInfoMiddleware = (req, res, next) => {
 
   res.send = function (body) {
     // Add rate limit info headers
-    if (req.rateLimit && typeof req.rateLimit === 'object') {
+    if (req.rateLimit && typeof req.rateLimit === "object") {
       try {
-        const limit = req.rateLimit.limit || req.calculatedRateLimit || req.rateLimit.max;
-        const remaining = req.rateLimit.remaining || 
-                         (limit !== undefined ? limit - (req.rateLimit.used || 0) : undefined);
-        
+        const limit =
+          req.rateLimit.limit || req.calculatedRateLimit || req.rateLimit.max;
+        const remaining =
+          req.rateLimit.remaining ||
+          (limit !== undefined ? limit - (req.rateLimit.used || 0) : undefined);
+
         if (limit !== undefined && limit !== null) {
           res.setHeader("X-RateLimit-Limit", limit);
         }
-        
+
         if (remaining !== undefined && remaining !== null) {
           res.setHeader("X-RateLimit-Remaining", remaining);
         }
-        
+
         if (req.rateLimit.resetTime) {
           const reset = Math.ceil(req.rateLimit.resetTime.getTime() / 1000);
           res.setHeader("X-RateLimit-Reset", reset);
         }
-        
+
         // Add user-specific headers
         if (req.user?.userType) {
           res.setHeader("X-RateLimit-User-Type", req.user.userType);
@@ -1043,7 +1071,7 @@ const rateLimitInfoMiddleware = (req, res, next) => {
           res.setHeader("X-RateLimit-Config", req.rateLimitConfig);
         }
       } catch (error) {
-        logger.debug('Error setting rate limit headers:', error.message);
+        logger.debug("Error setting rate limit headers:", error.message);
       }
     }
 
@@ -1067,7 +1095,7 @@ const socketRateLimit = (socket, next) => {
   const key = `socket:user:${userId}:type:${userType}`;
   const ipKey = `socket:ip:${ip}`;
   const windowMs = config.socket.windowMs;
-  
+
   // Calculate dynamic limits
   let userMax = config.socket.max;
   if (isPremium && config.socket.premiumMultiplier) {
@@ -1109,23 +1137,23 @@ const socketRateLimit = (socket, next) => {
         // Check both limits
         if (userCount > userMax) {
           logger.warn(
-            `Socket rate limit exceeded for user ${userId}: ${userCount}/${userMax}`
+            `Socket rate limit exceeded for user ${userId}: ${userCount}/${userMax}`,
           );
           return next(
             new Error(
-              `Rate limit exceeded: ${userCount}/${userMax} events per minute`
-            )
+              `Rate limit exceeded: ${userCount}/${userMax} events per minute`,
+            ),
           );
         }
 
         if (ipCount > ipMax) {
           logger.warn(
-            `Socket IP rate limit exceeded for IP ${ip}: ${ipCount}/${ipMax}`
+            `Socket IP rate limit exceeded for IP ${ip}: ${ipCount}/${ipMax}`,
           );
           return next(
             new Error(
-              `IP rate limit exceeded: ${ipCount}/${ipMax} events per minute`
-            )
+              `IP rate limit exceeded: ${ipCount}/${ipMax} events per minute`,
+            ),
           );
         }
 
@@ -1137,7 +1165,7 @@ const socketRateLimit = (socket, next) => {
             remaining: userMax - userCount,
             reset: Math.ceil((now + windowMs) / 1000),
             userType,
-            isPremium
+            isPremium,
           },
           ip: {
             current: ipCount,
@@ -1175,42 +1203,42 @@ const createTypedRateLimiter = (type, customOptions = {}) => {
       baseMax: 30,
       message: "Too many presence requests.",
       keyGenerator: (req) => `presence:${ipKeyGenerator(req)}`,
-      configPath: "api"
+      configPath: "api",
     },
     profile: {
       windowMs: 60000,
       baseMax: 20,
       message: "Too many profile requests.",
       keyGenerator: (req) => `profile:${ipKeyGenerator(req)}`,
-      configPath: "api"
+      configPath: "api",
     },
     admin: {
       windowMs: 30000,
       baseMax: 10,
       message: "Too many admin requests.",
       keyGenerator: (req) => `admin:${ipKeyGenerator(req)}`,
-      configPath: "auth"
+      configPath: "auth",
     },
     dating_swipe: {
       windowMs: config.dating.windowMs,
       baseMax: config.dating.swipesPerMinute,
       message: "Too many swipes.",
       keyGenerator: getDatingKeyGenerator("swipe"),
-      configPath: "dating"
+      configPath: "dating",
     },
     dating_like: {
       windowMs: 60 * 60 * 1000,
       baseMax: config.dating.likesPerHour,
       message: "Too many likes.",
       keyGenerator: getDatingKeyGenerator("like"),
-      configPath: "dating"
+      configPath: "dating",
     },
     default: {
       windowMs: 15 * 60 * 1000,
       baseMax: 100,
       message: "Too many requests.",
       keyGenerator: ipKeyGenerator,
-      configPath: "api"
+      configPath: "api",
     },
   };
 
@@ -1262,7 +1290,7 @@ const getRateLimitInfo = async (key, prefix = "rl:") => {
           resetTime,
           timeUntilReset,
           isExceeded: parsed.totalHits >= parsed.limit,
-          key: key
+          key: key,
         };
       }
     }
@@ -1323,14 +1351,14 @@ const getRateLimitHealth = async () => {
         dating: config.dating,
       },
       userTypes: {
-        DatingUser: config.api.userTypeLimits?.DatingUser || 'default',
-        Staff: config.api.userTypeLimits?.Staff || 'default',
-        Admin: config.api.userTypeLimits?.Admin || 'default'
+        DatingUser: config.api.userTypeLimits?.DatingUser || "default",
+        Staff: config.api.userTypeLimits?.Staff || "default",
+        Admin: config.api.userTypeLimits?.Admin || "default",
       },
       multipliers: {
         premium: config.api.premiumMultiplier || 1,
-        boost: config.api.boostMultiplier || 1
-      }
+        boost: config.api.boostMultiplier || 1,
+      },
     };
   } catch (error) {
     return {
@@ -1346,22 +1374,22 @@ const getUserRateLimitStatus = async (userId) => {
     const userInfo = await getUserRateLimitInfo(userId);
     if (!userInfo) return null;
 
-    const userKey = `user:${userId}:type:${userInfo.userType}:tier:${userInfo.isPremium ? 'premium' : 'free'}`;
-    
+    const userKey = `user:${userId}:type:${userInfo.userType}:tier:${userInfo.isPremium ? "premium" : "free"}`;
+
     // Check API limits
     const apiLimit = await getRateLimitInfo(userKey);
-    
+
     // Check dating-specific limits if applicable
     let datingLimits = null;
-    if (userInfo.userType === 'DatingUser') {
+    if (userInfo.userType === "DatingUser") {
       const swipeKey = `dating:swipe:user:${userId}`;
       const likeKey = `dating:like:user:${userId}`;
       const superLikeKey = `dating:super_like:user:${userId}`;
-      
+
       datingLimits = {
         swipes: await getRateLimitInfo(swipeKey),
         likes: await getRateLimitInfo(likeKey),
-        superLikes: await getRateLimitInfo(superLikeKey)
+        superLikes: await getRateLimitInfo(superLikeKey),
       };
     }
 
@@ -1371,16 +1399,16 @@ const getUserRateLimitStatus = async (userId) => {
         type: userInfo.userType,
         role: userInfo.role,
         isPremium: userInfo.isPremium,
-        boostMultiplier: userInfo.boostMultiplier
+        boostMultiplier: userInfo.boostMultiplier,
       },
       limits: {
         api: apiLimit,
-        dating: datingLimits
+        dating: datingLimits,
       },
       multipliers: {
         premium: config.api.premiumMultiplier,
-        boost: config.api.boostMultiplier
-      }
+        boost: config.api.boostMultiplier,
+      },
     };
   } catch (error) {
     logger.error("Failed to get user rate limit status:", error);
@@ -1401,19 +1429,19 @@ module.exports = {
   passwordResetLimiter,
   emailResendLimiter,
   profileUpdateLimiter,
-  
+
   // Dating-specific limiters
   swipeLimiter,
   likeLimiter,
   superLikeLimiter,
-  
+
   // Socket rate limiting
   socketRateLimit,
-  
+
   // Factory functions
   createDynamicRateLimiter: createDynamicLimiter,
   createTypedRateLimiter,
-  
+
   // Utility functions
   resetRateLimit,
   getRateLimitInfo,
@@ -1422,28 +1450,28 @@ module.exports = {
   clearMemoryStore,
   getRateLimitHealth,
   getUserRateLimitStatus,
-  
+
   // Middleware
   rateLimitInfoMiddleware,
   shouldSkipRateLimit,
-  
+
   // Configuration
   RATE_LIMIT_CONFIG,
-  
+
   // For monitoring
   redisCircuitBreaker,
-  
+
   // Export ipKeyGenerator
   ipKeyGenerator,
-  
+
   // Export the store creation function for testing
   createEnhancedRedisStore,
-  
+
   // Export the store instance
   rateLimitStore,
-  
+
   // Export helper functions
   calculateDynamicLimit,
   getUserRateLimitInfo,
-  getKeyGenerator
+  getKeyGenerator,
 };
