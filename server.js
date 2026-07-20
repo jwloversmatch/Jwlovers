@@ -22,6 +22,7 @@ const {
   redisCircuitBreaker,
   RATE_LIMIT_CONFIG,
 } = require("@middleware/rateLimit");
+require('./services/push.service'); 
 
 // ========== INITIALIZATION ==========
 validateEnvVars();
@@ -235,6 +236,13 @@ const startServer = async () => {
           redisService: services.redisService,
           webSocketService: services.webSocketService
         }
+      },
+
+       { 
+        path: "/api/push", 
+        file: "routes/push/push.routes.js", 
+        name: "Push Notifications",
+        deps: {}
       },
     ]; 
 

@@ -7,6 +7,7 @@ const { BaseUser } = require("@models/User");
 const Block = require("@models/Block.model");
 const notificationService = require("@services/notification.service");
 const logger = require("@utils/logger");
+const pushService = require("@services/push.service");
 
 // ========== CONFIGURATION ==========
 const CONFIG = {
@@ -68,7 +69,6 @@ class MessageService {
   }
 
   // ========== RATE LIMITING ==========
-
   async checkRateLimit(senderId, receiverId) {
     if (
       !this.redisClient ||
@@ -128,7 +128,6 @@ class MessageService {
   }
 
   // ========== SAFETY VALIDATION ==========
-
   async validateMessageSafety(senderId, receiverId, content, type) {
     if (type !== "text" || !content) {
       return {
@@ -228,7 +227,6 @@ class MessageService {
   }
 
   // ========== DEDUPLICATION ==========
-
   async checkDuplicate(senderId, receiverId, content, clientMessageId) {
     if (this.redisClient && this.redisService && this.redisService.isReady()) {
       const now = Date.now();
@@ -307,7 +305,6 @@ class MessageService {
   }
 
   // ========== STATISTICS ==========
-
   async getTotalUnreadCount(userId) {
     try {
       if (!mongoose.Types.ObjectId.isValid(userId)) return 0;
@@ -439,9 +436,6 @@ class MessageService {
   // ========== CORE MESSAGE METHODS ==========
 
   // services/MessageService.js
-  // ONLY THE sendMessage METHOD IS SHOWN - Replace lines 467-780 in your existing file
-  // Everything else in your MessageService.js stays the same
-
   async sendMessage(data) {
     const startTime = Date.now();
 
@@ -509,7 +503,6 @@ class MessageService {
       }
 
       // ========== REDIS LOCK FOR CONTENT-BASED DEDUPLICATION ==========
-      // 🔥 FIXED: Redis lock with proper syntax for all Redis client versions
       if (
         this.redisClient &&
         this.redisService &&
@@ -523,18 +516,15 @@ class MessageService {
 
         const lockKey = `msg:lock:${senderId}:${receiverId}:${contentHash}`;
 
-        // Try to acquire a lock
         const lockAcquired = await this.redisService.safeOperation(
           async () => {
             try {
-              // Try modern syntax first (node-redis v4+ or ioredis)
               const result = await this.redisClient.set(lockKey, "processing", {
                 NX: true,
                 EX: 5,
               });
               return result === "OK" || result === true;
             } catch (modernErr) {
-              // Fallback to legacy syntax (node-redis v3)
               try {
                 const legacyResult = await this.redisClient.set(
                   lockKey,
@@ -549,26 +539,24 @@ class MessageService {
                   "Redis SET failed with both syntaxes, proceeding without lock:",
                   legacyErr.message,
                 );
-                return true; // Proceed without lock if Redis fails
+                return true;
               }
             }
           },
-          true, // Default to true if safeOperation fails
+          true,
           "sendMessage-acquireLock",
         );
 
         if (!lockAcquired) {
-          // Another request is processing the same message
           logger.info(
             "Lock not acquired, waiting for other request to complete",
           );
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
-          // Check if the other request succeeded
           const existing = await Message.findOne({
             senderId,
             receiverId,
-            originalContent: content, // Match on PLAINTEXT not encrypted
+            originalContent: content,
             createdAt: { $gte: new Date(Date.now() - 5000) },
           }).lean();
 
@@ -581,7 +569,6 @@ class MessageService {
               duplicate: true,
             };
           }
-          // If no existing message found, proceed (lock may have timed out)
         }
       }
 
@@ -622,42 +609,39 @@ class MessageService {
       await this.checkRateLimit(senderId, receiverId);
 
       // ========== FIND OR CREATE CONVERSATION (BULLETPROOF) ==========
-let conversation = null;
+      let conversation = null;
 
-if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
-  // Use the provided conversation ID
-  conversation = await Conversation.findById(conversationId);
-  if (!conversation) {
-    throw new Error('Conversation not found');
-  }
-} else {
-  // Look for an existing conversation between these two users
-  conversation = await Conversation.findOne({
-    participants: { $all: [senderId, receiverId] }
-  });
+      if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
+        conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+          throw new Error("Conversation not found");
+        }
+      } else {
+        conversation = await Conversation.findOne({
+          participants: { $all: [senderId, receiverId] },
+        });
 
-  if (!conversation) {
-    // Create a brand new conversation
-    conversation = await Conversation.create({
-      participants: [senderId, receiverId],
-      createdAt: new Date(),
-      unreadCount: {},
-      lastMessageAt: new Date(),
-    });
-    logger.info('Created new conversation', { conversationId: conversation._id });
-  } else {
-    // Update the existing conversation's last activity timestamp
-    conversation.lastMessageAt = new Date();
-    await conversation.save();
-  }
-}
+        if (!conversation) {
+          conversation = await Conversation.create({
+            participants: [senderId, receiverId],
+            createdAt: new Date(),
+            unreadCount: {},
+            lastMessageAt: new Date(),
+          });
+          logger.info("Created new conversation", {
+            conversationId: conversation._id,
+          });
+        } else {
+          conversation.lastMessageAt = new Date();
+          await conversation.save();
+        }
+      }
 
-// Final safety check – will never be hit because the above always returns a document
-if (!conversation || !conversation._id) {
-  throw new Error('Failed to find or create conversation');
-}
+      if (!conversation || !conversation._id) {
+        throw new Error("Failed to find or create conversation");
+      }
 
-const conversationIdString = conversation._id.toString();
+      const conversationIdString = conversation._id.toString();
 
       // ========== ENCRYPT CONTENT ==========
       let encryptedContent = content;
@@ -713,7 +697,6 @@ const conversationIdString = conversation._id.toString();
             messageId: finalCheck._id,
           });
 
-          // Release Redis lock
           if (
             this.redisClient &&
             this.redisService &&
@@ -812,13 +795,29 @@ const conversationIdString = conversation._id.toString();
         })
         .lean();
 
+      // ========== NOTIFICATIONS ==========
       if (receiver.settings?.notifications?.messages !== false) {
+        // Existing in‑app/email notification
         this.sendNotificationAsync(
           receiverId,
           senderId,
           content,
           savedMessage._id,
         ).catch((err) => logger.error("Notification error:", err));
+
+        // 🔔 Push notification for offline/background users
+        pushService
+          .sendToUser(receiverId, {
+            title: "New message",
+            body: content.substring(0, 100),
+            icon: "/logo192.png",
+            data: {
+              conversationId: conversationIdString,
+              messageId: savedMessage._id.toString(),
+              senderId: senderId.toString(),
+            },
+          })
+          .catch((err) => logger.error("Push notification error:", err));
       }
 
       return {
@@ -1203,6 +1202,5 @@ const conversationIdString = conversation._id.toString();
   }
 }
 
-// Singleton export
 const messageService = new MessageService();
 module.exports = messageService;
