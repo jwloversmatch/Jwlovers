@@ -8,7 +8,7 @@ const { validateEnvVars } = require("./config/env-validator");
 
 // Import our modular components
 const ServerConfig = require("./config/ServerConfig");
-const MiddlewareSetup = require("./config/MiddlewareSetup"); 
+const MiddlewareSetup = require("./config/MiddlewareSetup");
 const ServiceInitializer = require("./loaders/ServiceInitializer");
 const RouteLoader = require("./loaders/RouteLoader");
 const APIEndpoints = require("./handlers/APIEndpoints");
@@ -22,7 +22,7 @@ const {
   redisCircuitBreaker,
   RATE_LIMIT_CONFIG,
 } = require("@middleware/rateLimit");
-require('./services/push.service'); 
+require("./services/push.service");
 
 // ========== INITIALIZATION ==========
 validateEnvVars();
@@ -41,27 +41,28 @@ const middlewareSetup = new MiddlewareSetup(app, config, logger);
 middlewareSetup.setupAll();
 middlewareSetup.setupRateLimitInfo(rateLimitInfoMiddleware);
 
- // ===== RENDER KEEP-AWAKE PING ENDPOINT =====
-    app.get('/ping', (req, res) => {
-      res.status(200).json({
-        status: 'success',
-        message: 'Server is awake and active',
-        timestamp: new Date().toISOString()
-      });
-    });
-    logger.info("Render keep-awake endpoint registered at /ping");
+// ===== RENDER KEEP-AWAKE PING ENDPOINT =====
+app.get("/ping", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Server is awake and active",
+    timestamp: new Date().toISOString(),
+  });
+});
+logger.info("Render keep-awake endpoint registered at /ping");
 
 // ========== STATIC FILE SERVING FOR UPLOADS ==========
 // MUST be before API routes so /uploads/profiles is accessible
-app.use('/uploads/profiles', 
-  express.static(path.join(process.cwd(), 'uploads/profiles'), {
-    maxAge: '1d',
+app.use(
+  "/uploads/profiles",
+  express.static(path.join(process.cwd(), "uploads/profiles"), {
+    maxAge: "1d",
     etag: true,
     lastModified: true,
     setHeaders: (res, path) => {
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-    }
-  })
+      res.setHeader("Cache-Control", "public, max-age=86400");
+    },
+  }),
 );
 logger.info("✅ Static file serving enabled for /uploads/profiles");
 
@@ -72,10 +73,10 @@ const startServer = async () => {
 
     // Ensure upload directories exist
     const uploadDirs = [
-      path.join(process.cwd(), 'uploads', 'temp'),
-      path.join(process.cwd(), 'uploads', 'profiles')
+      path.join(process.cwd(), "uploads", "temp"),
+      path.join(process.cwd(), "uploads", "profiles"),
     ];
-    uploadDirs.forEach(dir => {
+    uploadDirs.forEach((dir) => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
         logger.info(`📁 Created upload directory: ${dir}`);
@@ -85,7 +86,7 @@ const startServer = async () => {
     // Initialize all services
     const serviceInitializer = new ServiceInitializer(server, config, logger);
     const services = await serviceInitializer.initializeAll();
-    
+
     // Export services to Express app
     serviceInitializer.exportToApp(app);
 
@@ -97,10 +98,15 @@ const startServer = async () => {
         presenceController.setIo(io);
         logger.info("✅ Socket.io injected into PresenceController");
       } else {
-        logger.warn("⚠️  WebSocket IO not available — presence events will not be emitted in real-time");
+        logger.warn(
+          "⚠️  WebSocket IO not available — presence events will not be emitted in real-time",
+        );
       }
     } catch (injectionError) {
-      logger.error("❌ Failed to inject Socket.io into PresenceController:", injectionError.message);
+      logger.error(
+        "❌ Failed to inject Socket.io into PresenceController:",
+        injectionError.message,
+      );
     }
     // ──────────────────────────────────────────────────────────────────────
 
@@ -111,10 +117,15 @@ const startServer = async () => {
         chatController.setWebSocketService(services.webSocketService);
         logger.info("✅ WebSocketService injected into ChatController");
       } else {
-        logger.warn("⚠️  WebSocketService not available for ChatController — real-time message events won't fire");
+        logger.warn(
+          "⚠️  WebSocketService not available for ChatController — real-time message events won't fire",
+        );
       }
     } catch (injectionError) {
-      logger.error("❌ Failed to inject WebSocketService into ChatController:", injectionError.message);
+      logger.error(
+        "❌ Failed to inject WebSocketService into ChatController:",
+        injectionError.message,
+      );
     }
     // ──────────────────────────────────────────────────────────────────────
 
@@ -125,10 +136,15 @@ const startServer = async () => {
         messageService.setRedisService(services.redisService);
         logger.info("✅ RedisService injected into MessageService");
       } else {
-        logger.warn("⚠️  RedisService not available for MessageService — rate limiting and deduplication will be skipped");
+        logger.warn(
+          "⚠️  RedisService not available for MessageService — rate limiting and deduplication will be skipped",
+        );
       }
     } catch (injectionError) {
-      logger.error("❌ Failed to inject RedisService into MessageService:", injectionError.message);
+      logger.error(
+        "❌ Failed to inject RedisService into MessageService:",
+        injectionError.message,
+      );
     }
     // ──────────────────────────────────────────────────────────────────────
 
@@ -140,126 +156,167 @@ const startServer = async () => {
 
     // Load routes
     const routeLoader = new RouteLoader(app, logger);
-    
+
     // Define all routes with proper dependencies
     const routeDefinitions = [
-      { 
-        path: "/api/chat", 
-        file: "routes/chat/chat.routes.js", 
+      {
+        path: "/api/chat",
+        file: "routes/chat/chat.routes.js",
         name: "Chat",
-        deps: { 
+        deps: {
           webSocketService: services.webSocketService,
           presenceService: services.presenceService,
-          chatService: services.chatService || services.conversationServiceWrapper,
+          chatService:
+            services.chatService || services.conversationServiceWrapper,
           encryptionService: services.encryptionService,
-          redisService: services.redisService
-        }
+          redisService: services.redisService,
+        },
       },
-      { 
-        path: "/api/auth", 
-        file: "routes/auth/auth.routes.js", 
+      {
+        path: "/api/auth",
+        file: "routes/auth/auth.routes.js",
         name: "Auth",
-        deps: { 
+        deps: {
           authService: services.authService,
           encryptionService: services.encryptionService,
           redisService: services.redisService,
-          databaseService: services.databaseService
-        }
+          databaseService: services.databaseService,
+        },
       },
-      { 
-        path: "/api/users", 
-        file: "routes/user/user.routes.js", 
+      {
+        path: "/api/users",
+        file: "routes/user/user.routes.js",
         name: "User",
-        deps: { 
+        deps: {
           userService: services.userService,
           databaseService: services.databaseService,
-          encryptionService: services.encryptionService
-        }
+          encryptionService: services.encryptionService,
+        },
       },
-      { 
-        path: "/api/presence", 
-        file: "routes/presence/presence.routes.js", 
+      {
+        path: "/api/presence",
+        file: "routes/presence/presence.routes.js",
         name: "Presence",
-        deps: { 
+        deps: {
           presenceService: services.presenceService,
           webSocketService: services.webSocketService,
-          redisService: services.redisService
-        }
+          redisService: services.redisService,
+        },
       },
-      { 
-        path: "/api/match", 
-        file: "routes/match/match.routes.js", 
+      {
+        path: "/api/match",
+        file: "routes/match/match.routes.js",
         name: "Match",
-        deps: { 
+        deps: {
           matchService: services.matchService,
           databaseService: services.databaseService,
-          redisService: services.redisService
-        }
+          redisService: services.redisService,
+        },
       },
-      { 
-        path: "/api/profile", 
-        file: "routes/profile/profile.routes.js", 
+      {
+        path: "/api/profile",
+        file: "routes/profile/profile.routes.js",
         name: "Profile",
-        deps: { 
+        deps: {
           profileService: services.profileService,
           databaseService: services.databaseService,
-          encryptionService: services.encryptionService
-        }
+          encryptionService: services.encryptionService,
+        },
       },
-      { 
-        path: "/api/admin", 
-        file: "routes/admin/admin.routes.js", 
+      {
+        path: "/api/admin",
+        file: "routes/admin/admin.routes.js",
         name: "Admin",
-        deps: { 
+        deps: {
           adminService: services.adminService,
           databaseService: services.databaseService,
-          redisService: services.redisService
-        }
+          redisService: services.redisService,
+        },
       },
-      { 
-        path: "/api/websocket", 
-        file: "routes/websocket/websocket.routes.js", 
+      {
+        path: "/api/websocket",
+        file: "routes/websocket/websocket.routes.js",
         name: "WebSocket Management",
-        deps: { 
-          webSocketService: services.webSocketService, 
+        deps: {
+          webSocketService: services.webSocketService,
           presenceService: services.presenceService,
           io: services.io,
-          redisService: services.redisService
-        }
+          redisService: services.redisService,
+        },
       },
-      { 
-        path: "/api/health", 
-        file: "routes/health/health.routes.js", 
+      {
+        path: "/api/health",
+        file: "routes/health/health.routes.js",
         name: "Health",
-        deps: { 
+        deps: {
           databaseService: services.databaseService,
           redisService: services.redisService,
-          webSocketService: services.webSocketService
-        }
+          webSocketService: services.webSocketService,
+        },
       },
-
-       { 
-        path: "/api/push", 
-        file: "routes/push.routes.js", 
-        name: "Push Notifications",
-        deps: {}
-      },
-    ]; 
+    ];
 
     const loadedRoutes = routeLoader.loadAllRoutes(routeDefinitions);
+
+    // ── Push Notifications (inline, no file loader) ─────────────────
+    try {
+      const { protect } = require("@middleware/authmiddleware");
+      const PushSubscription = require("@models/PushSubscription");
+      const pushRouter = express.Router();
+
+      pushRouter.post("/subscribe", protect, async (req, res) => {
+        try {
+          const { endpoint, keys, userAgent, device } = req.body;
+          await PushSubscription.findOneAndUpdate(
+            { endpoint },
+            {
+              userId: req.user.id,
+              endpoint,
+              keys: { p256dh: keys.p256dh, auth: keys.auth },
+              userAgent: userAgent || req.headers["user-agent"],
+              device: device || "web",
+              updatedAt: new Date(),
+            },
+            { upsert: true, new: true },
+          );
+          res.json({ success: true });
+        } catch (error) {
+          logger.error("Push subscribe error:", error);
+          res.status(500).json({ success: false, error: error.message });
+        }
+      });
+
+      pushRouter.delete("/unsubscribe", protect, async (req, res) => {
+        try {
+          const { endpoint } = req.body;
+          await PushSubscription.deleteOne({ endpoint, userId: req.user.id });
+          res.json({ success: true });
+        } catch (error) {
+          logger.error("Push unsubscribe error:", error);
+          res.status(500).json({ success: false, error: error.message });
+        }
+      });
+
+      app.use("/api/push", pushRouter);
+      logger.info("✅ Push Notification routes mounted (inline)");
+    } catch (err) {
+      logger.error("❌ Failed to mount push routes:", err.message);
+    }
 
     // Add diagnostic endpoint for route information
     app.use("/api/diagnostics", routeLoader.createDiagnosticRouter());
 
     // Log route metrics
     const routeMetrics = routeLoader.getRouteMetrics();
-    logger.info(`📊 Routes loaded: ${routeMetrics.successful}/${routeMetrics.total}`);
+    logger.info(
+      `📊 Routes loaded: ${routeMetrics.successful}/${routeMetrics.total}`,
+    );
 
     // Load test routes in development
     if (config.app.environment === "development" && config.features.mockData) {
       routeLoader.loadRoute("/api/test", "routes/test.routes.js", "Test", {
         databaseService: services.databaseService,
-        redisService: services.redisService
+        redisService: services.redisService,
       });
     }
 
@@ -270,52 +327,52 @@ const startServer = async () => {
       config.rateLimiting,
       getRateLimitMetrics,
       redisCircuitBreaker,
-      RATE_LIMIT_CONFIG
+      RATE_LIMIT_CONFIG,
     );
 
-   
-
     // Add WebSocket health check endpoint
-    app.get('/api/websocket/health', (req, res) => {
-      const webSocketService = app.get('WebSocketService');
-      const io = webSocketService?.getIo?.() || app.get('io');
-      
+    app.get("/api/websocket/health", (req, res) => {
+      const webSocketService = app.get("WebSocketService");
+      const io = webSocketService?.getIo?.() || app.get("io");
+
       res.json({
-        status: io ? 'healthy' : 'unhealthy',
+        status: io ? "healthy" : "unhealthy",
         connections: io?.engine?.clientsCount || 0,
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
-        service: webSocketService ? 'available' : 'unavailable',
-        environment: config.app.environment
+        service: webSocketService ? "available" : "unavailable",
+        environment: config.app.environment,
       });
     });
 
     // Add system status endpoint
-    app.get('/api/system/status', (req, res) => {
-      const services = app.get('services') || {};
+    app.get("/api/system/status", (req, res) => {
+      const services = app.get("services") || {};
       const routeMetrics = routeLoader.getRouteMetrics();
-      
+
       res.json({
-        status: 'running',
+        status: "running",
         server: {
           uptime: process.uptime(),
           environment: config.app.environment,
           host: config.app.host,
-          port: config.app.port
+          port: config.app.port,
         },
         services: {
-          mongodb: services.databaseService?.isConnected?.() ? 'connected' : 'disconnected',
-          redis: services.redisService?.isReady?.() ? 'ready' : 'not_ready',
-          websocket: services.webSocketService ? 'available' : 'unavailable',
-          encryption: services.encryptionService ? 'available' : 'unavailable'
+          mongodb: services.databaseService?.isConnected?.()
+            ? "connected"
+            : "disconnected",
+          redis: services.redisService?.isReady?.() ? "ready" : "not_ready",
+          websocket: services.webSocketService ? "available" : "unavailable",
+          encryption: services.encryptionService ? "available" : "unavailable",
         },
         routes: routeMetrics,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     });
 
     // Connection monitoring (development only)
-    if (services.webSocketService && config.app.environment === 'development') {
+    if (services.webSocketService && config.app.environment === "development") {
       setInterval(() => {
         try {
           const io = services.webSocketService.getIo();
@@ -324,7 +381,9 @@ const startServer = async () => {
             logger.debug(`📊 WebSocket connections: ${connections}`);
             if (connections > 0 || Math.random() < 0.1) {
               const memoryUsage = process.memoryUsage();
-              logger.debug(`💾 Memory: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB used`);
+              logger.debug(
+                `💾 Memory: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB used`,
+              );
             }
           }
         } catch (error) {
@@ -348,8 +407,13 @@ const startServer = async () => {
         if (services.webSocketService) {
           try {
             const io = services.webSocketService.getIo();
-            if (io) logger.error(`WebSocket connections at crash: ${io.engine?.clientsCount || 0}`);
-          } catch (wsError) { /* ignore */ }
+            if (io)
+              logger.error(
+                `WebSocket connections at crash: ${io.engine?.clientsCount || 0}`,
+              );
+          } catch (wsError) {
+            /* ignore */
+          }
         }
         process.exit(1);
       }
@@ -359,13 +423,12 @@ const startServer = async () => {
       logger.info("Server closed");
       clearAllIntervals();
     });
-
   } catch (error) {
     logger.error("❌ Failed to start server:", error);
     logger.error("Stack trace:", error.stack);
-    
+
     try {
-      const services = app.get('services') || {};
+      const services = app.get("services") || {};
       if (services.webSocketService?.cleanup) {
         await services.webSocketService.cleanup();
         logger.info("✅ WebSocket service cleaned up after startup failure");
@@ -374,15 +437,21 @@ const startServer = async () => {
         try {
           const client = services.redisService.getClient?.();
           if (client) await client.quit();
-        } catch (redisError) { /* ignore */ }
+        } catch (redisError) {
+          /* ignore */
+        }
       }
       if (services.databaseService?.close) {
-        try { await services.databaseService.close(); } catch (dbError) { /* ignore */ }
+        try {
+          await services.databaseService.close();
+        } catch (dbError) {
+          /* ignore */
+        }
       }
     } catch (cleanupError) {
       logger.error("Error during startup failure cleanup:", cleanupError);
     }
-    
+
     process.exit(1);
   }
 };
@@ -390,7 +459,7 @@ const startServer = async () => {
 // ========== LOGGING HELPER ==========
 function logServerStartup(config, services, logger, routeMetrics = null) {
   let wsStatus = "❌ Not available";
-  
+
   const webSocketService = services.webSocketService;
   if (webSocketService?.getIo) {
     const io = webSocketService.getIo();
@@ -404,35 +473,76 @@ function logServerStartup(config, services, logger, routeMetrics = null) {
   const totalMemoryMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
 
   logger.info("=".repeat(60));
-  logger.info(`🚀 Server running on http://${config.app.host}:${config.app.port}`);
-  logger.info(`🔗 Health check: http://${config.app.host}:${config.app.port}/health`);
-  logger.info(`📊 System status: http://${config.app.host}:${config.app.port}/api/system/status`);
-  logger.info(`🔍 Diagnostics: http://${config.app.host}:${config.app.port}/api/diagnostics/routes`);
-  logger.info(`📈 Rate limit metrics: http://${config.app.host}:${config.app.port}/api/rate-limit/metrics`);
-  logger.info(`🔌 WebSocket Health: http://${config.app.host}:${config.app.port}/api/websocket/health`);
-  logger.info(`🔌 WebSocket: ws://${config.app.host}:${config.app.port} ${wsStatus}`);
+  logger.info(
+    `🚀 Server running on http://${config.app.host}:${config.app.port}`,
+  );
+  logger.info(
+    `🔗 Health check: http://${config.app.host}:${config.app.port}/health`,
+  );
+  logger.info(
+    `📊 System status: http://${config.app.host}:${config.app.port}/api/system/status`,
+  );
+  logger.info(
+    `🔍 Diagnostics: http://${config.app.host}:${config.app.port}/api/diagnostics/routes`,
+  );
+  logger.info(
+    `📈 Rate limit metrics: http://${config.app.host}:${config.app.port}/api/rate-limit/metrics`,
+  );
+  logger.info(
+    `🔌 WebSocket Health: http://${config.app.host}:${config.app.port}/api/websocket/health`,
+  );
+  logger.info(
+    `🔌 WebSocket: ws://${config.app.host}:${config.app.port} ${wsStatus}`,
+  );
   logger.info(`📡 Environment: ${config.app.environment}`);
   logger.info(`💾 Memory: ${usedMemoryMB}MB / ${totalMemoryMB}MB`);
-  logger.info(`🔐 Encryption: ${config.encryption.algorithm} ${services.encryptionService ? '✅' : '❌'}`);
-  logger.info(`🔐 E2EE: ${config.features.e2ee ? "✅ Enabled" : "❌ Disabled"}`);
-  logger.info(`⚡ Redis: ${services.redisService?.isReady?.() ? "✅ Ready" : "❌ Not Ready"}`);
-  logger.info(`🗄️  MongoDB: ${services.databaseService?.isConnected?.() ? "✅ Connected" : "❌ Not Connected"}`);
-  logger.info(`⚡ Rate Limiting: ${config.rateLimiting.enabled ? "✅ Enabled" : "❌ Disabled"}`);
-  logger.info(`🔒 Security Headers: ${config.security.headersEnabled ? "✅ Enabled" : "❌ Disabled"}`);
-  logger.info(`🛡️  Content Moderation: ${config.features.contentModeration ? "✅ Enabled" : "❌ Disabled"}`);
-  logger.info(`🔞 Age Verification: ${config.features.ageVerification ? "✅ Required" : "❌ Not Required"}`);
-  logger.info(`🔗 CORS Origins: ${config.cors.allowAll ? 'All (*)' : (config.cors.origins?.length || 0) + ' origins'}`);
-  if (routeMetrics) logger.info(`📊 Routes: ${routeMetrics.successful}/${routeMetrics.total} loaded`);
+  logger.info(
+    `🔐 Encryption: ${config.encryption.algorithm} ${services.encryptionService ? "✅" : "❌"}`,
+  );
+  logger.info(
+    `🔐 E2EE: ${config.features.e2ee ? "✅ Enabled" : "❌ Disabled"}`,
+  );
+  logger.info(
+    `⚡ Redis: ${services.redisService?.isReady?.() ? "✅ Ready" : "❌ Not Ready"}`,
+  );
+  logger.info(
+    `🗄️  MongoDB: ${services.databaseService?.isConnected?.() ? "✅ Connected" : "❌ Not Connected"}`,
+  );
+  logger.info(
+    `⚡ Rate Limiting: ${config.rateLimiting.enabled ? "✅ Enabled" : "❌ Disabled"}`,
+  );
+  logger.info(
+    `🔒 Security Headers: ${config.security.headersEnabled ? "✅ Enabled" : "❌ Disabled"}`,
+  );
+  logger.info(
+    `🛡️  Content Moderation: ${config.features.contentModeration ? "✅ Enabled" : "❌ Disabled"}`,
+  );
+  logger.info(
+    `🔞 Age Verification: ${config.features.ageVerification ? "✅ Required" : "❌ Not Required"}`,
+  );
+  logger.info(
+    `🔗 CORS Origins: ${config.cors.allowAll ? "All (*)" : (config.cors.origins?.length || 0) + " origins"}`,
+  );
+  if (routeMetrics)
+    logger.info(
+      `📊 Routes: ${routeMetrics.successful}/${routeMetrics.total} loaded`,
+    );
   logger.info("=".repeat(60));
 
   if (config.app.environment === "development") {
     logger.info("💡 Development flags:");
-    if (process.env.SKIP_AUTH === "true") logger.warn("   ⚠️ SKIP_AUTH is enabled!");
-    if (process.env.DISABLE_RATE_LIMITING_DEV === "true") logger.warn("   ⚠️ DISABLE_RATE_LIMITING_DEV is enabled!");
+    if (process.env.SKIP_AUTH === "true")
+      logger.warn("   ⚠️ SKIP_AUTH is enabled!");
+    if (process.env.DISABLE_RATE_LIMITING_DEV === "true")
+      logger.warn("   ⚠️ DISABLE_RATE_LIMITING_DEV is enabled!");
     if (config.cors.allowAll) logger.warn("   ⚠️ ALLOW_CORS_ALL is enabled!");
     logger.info("💡 Debug endpoints available:");
-    logger.info(`   http://${config.app.host}:${config.app.port}/api/diagnostics/routes`);
-    logger.info(`   http://${config.app.host}:${config.app.port}/api/system/status`);
+    logger.info(
+      `   http://${config.app.host}:${config.app.port}/api/diagnostics/routes`,
+    );
+    logger.info(
+      `   http://${config.app.host}:${config.app.port}/api/system/status`,
+    );
   }
 }
 
@@ -440,7 +550,7 @@ function logServerStartup(config, services, logger, routeMetrics = null) {
 const intervals = new Set();
 
 function clearAllIntervals() {
-  intervals.forEach(intervalId => clearInterval(intervalId));
+  intervals.forEach((intervalId) => clearInterval(intervalId));
   intervals.clear();
 }
 
@@ -461,21 +571,33 @@ const gracefulShutdown = async (signal) => {
 
     clearAllIntervals();
 
-    const services = app.get('services') || {};
-    
+    const services = app.get("services") || {};
+
     if (services.webSocketService?.cleanup) {
-      try { await services.webSocketService.cleanup(); logger.info("✅ WebSocket service cleaned up"); }
-      catch (error) { logger.error("⚠️ Error cleaning up WebSocketService:", error.message); }
+      try {
+        await services.webSocketService.cleanup();
+        logger.info("✅ WebSocket service cleaned up");
+      } catch (error) {
+        logger.error("⚠️ Error cleaning up WebSocketService:", error.message);
+      }
     }
 
     if (services.presenceService?.cleanup) {
-      try { await services.presenceService.cleanup(); logger.info("✅ PresenceService cleaned up"); }
-      catch (error) { logger.error("⚠️ Error cleaning up PresenceService:", error.message); }
+      try {
+        await services.presenceService.cleanup();
+        logger.info("✅ PresenceService cleaned up");
+      } catch (error) {
+        logger.error("⚠️ Error cleaning up PresenceService:", error.message);
+      }
     }
 
     if (services.controllerBridge?.cleanup) {
-      try { await services.controllerBridge.cleanup(); logger.info("✅ Controller Bridge cleaned up"); }
-      catch (error) { logger.error("⚠️ Error cleaning up Controller Bridge:", error.message); }
+      try {
+        await services.controllerBridge.cleanup();
+        logger.info("✅ Controller Bridge cleaned up");
+      } catch (error) {
+        logger.error("⚠️ Error cleaning up Controller Bridge:", error.message);
+      }
     }
 
     try {
@@ -489,30 +611,51 @@ const gracefulShutdown = async (signal) => {
         if (pubClient) await pubClient.quit();
         logger.info("✅ Redis connections closed");
       }
-    } catch (error) { logger.error("⚠️ Error closing Redis:", error.message); }
+    } catch (error) {
+      logger.error("⚠️ Error closing Redis:", error.message);
+    }
 
     try {
-      const databaseService = services.databaseService || app.get("DatabaseService");
+      const databaseService =
+        services.databaseService || app.get("DatabaseService");
       if (databaseService?.close) {
         await databaseService.close();
         logger.info("✅ Database connections closed");
       }
-    } catch (error) { logger.error("⚠️ Error closing MongoDB:", error.message); }
+    } catch (error) {
+      logger.error("⚠️ Error closing MongoDB:", error.message);
+    }
 
     try {
       const WebSocketEmitter = require("./emitters/WebSocketEmitter");
-      if (WebSocketEmitter.cleanup) { WebSocketEmitter.cleanup(); logger.info("✅ WebSocketEmitter cleaned up"); }
-    } catch (error) { /* ignore if doesn't exist */ }
+      if (WebSocketEmitter.cleanup) {
+        WebSocketEmitter.cleanup();
+        logger.info("✅ WebSocketEmitter cleaned up");
+      }
+    } catch (error) {
+      /* ignore if doesn't exist */
+    }
 
-    ['redisClient', 'redis', 'io', 'getSocketIO', 'getWebSocketService', 'presenceService', 'getPresenceService']
-      .forEach(ref => { if (global[ref]) delete global[ref]; });
+    [
+      "redisClient",
+      "redis",
+      "io",
+      "getSocketIO",
+      "getWebSocketService",
+      "presenceService",
+      "getPresenceService",
+    ].forEach((ref) => {
+      if (global[ref]) delete global[ref];
+    });
 
     logger.info(`✅ Shutdown complete (${Date.now() - shutdownStart}ms)`);
     process.exit(0);
   });
 
   setTimeout(() => {
-    logger.error(`❌ Forced shutdown after ${config.limits.shutdownTimeout || 10000}ms timeout`);
+    logger.error(
+      `❌ Forced shutdown after ${config.limits.shutdownTimeout || 10000}ms timeout`,
+    );
     clearAllIntervals();
     process.exit(1);
   }, config.limits.shutdownTimeout || 10000);
@@ -520,10 +663,14 @@ const gracefulShutdown = async (signal) => {
 
 // ========== PROCESS EVENT HANDLERS ==========
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT",  () => gracefulShutdown("SIGINT"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("❌ Unhandled Rejection at:", { promise, reason: reason.message || reason, stack: reason.stack });
+  logger.error("❌ Unhandled Rejection at:", {
+    promise,
+    reason: reason.message || reason,
+    stack: reason.stack,
+  });
 });
 
 process.on("uncaughtException", (error) => {
@@ -539,15 +686,15 @@ startServer();
 module.exports = {
   app,
   server,
-  getServices:          () => app.get("services"),
-  getRedisService:      () => app.get("RedisService"),
+  getServices: () => app.get("services"),
+  getRedisService: () => app.get("RedisService"),
   getEncryptionService: () => app.get("EncryptionService"),
-  getDatabaseService:   () => app.get("DatabaseService"),
-  getWebSocketService:  () => app.get("WebSocketService"),
-  getPresenceService:   () => app.get("PresenceService"),
-  getControllerBridge:  () => app.get("controllerBridge"),
-  getIo:                () => app.get("io"),
-  getLogger:            () => logger,
-  getConfig:            () => config,
-  getRouteLoader:       () => app.get("routeLoader"),
+  getDatabaseService: () => app.get("DatabaseService"),
+  getWebSocketService: () => app.get("WebSocketService"),
+  getPresenceService: () => app.get("PresenceService"),
+  getControllerBridge: () => app.get("controllerBridge"),
+  getIo: () => app.get("io"),
+  getLogger: () => logger,
+  getConfig: () => config,
+  getRouteLoader: () => app.get("routeLoader"),
 };
