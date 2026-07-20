@@ -559,7 +559,6 @@ const rateLimitHandler = (req, res, options) => {
   });
 
   const limitValue = options.limit ?? options.max;
-  const retryAfter = Math.ceil(options.windowMs / 1000);
   // Set rate limit headers
   res.setHeader("Retry-After", retryAfter);
   if (limitValue != null) {
