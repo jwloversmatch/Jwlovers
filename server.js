@@ -240,7 +240,7 @@ const startServer = async () => {
 
        { 
         path: "/api/push", 
-        file: "routes/push/push.routes.js", 
+        file: "routes/push.routes.js", 
         name: "Push Notifications",
         deps: {}
       },
