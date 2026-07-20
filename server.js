@@ -258,11 +258,12 @@ const startServer = async () => {
 
     const loadedRoutes = routeLoader.loadAllRoutes(routeDefinitions);
 
-    // ── Push Notifications (inline, no file loader) ─────────────────
+    // ── Push Notifications (inline, NO FILE LOADER) ─────────────────
+    console.log("🔥🔥🔥 MOUNTING INLINE PUSH ROUTES");
     try {
       const { protect } = require("@middleware/authmiddleware");
       const PushSubscription = require("@models/PushSubscription");
-      const pushRouter = express.Router();
+      const pushRouter = require("express").Router();
 
       pushRouter.post("/subscribe", protect, async (req, res) => {
         try {
@@ -298,8 +299,10 @@ const startServer = async () => {
       });
 
       app.use("/api/push", pushRouter);
+      console.log("✅✅✅ PUSH ROUTES MOUNTED SUCCESSFULLY");
       logger.info("✅ Push Notification routes mounted (inline)");
     } catch (err) {
+      console.error("❌❌❌ PUSH MOUNT ERROR:", err);
       logger.error("❌ Failed to mount push routes:", err.message);
     }
 
