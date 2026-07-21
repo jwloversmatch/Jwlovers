@@ -822,7 +822,7 @@ class MessageService {
         // 🔔 Push notification for offline/background users
         pushService
           .sendToUser(receiverId, {
-            title: `New message from ${senderName}`,
+            title: senderName,  
             body: content.substring(0, 100),
             icon: "/logo192.png",
             data: {
