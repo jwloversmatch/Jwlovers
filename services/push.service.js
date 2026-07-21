@@ -14,10 +14,10 @@ if (!VAPID_EMAIL || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
   );
 } else {
   webpush.setVapidDetails(
-    `mailto:${VAPID_EMAIL}`,
-    VAPID_PUBLIC_KEY,
-    VAPID_PRIVATE_KEY
-  );
+  process.env.VAPID_SUBJECT || `mailto:${process.env.VAPID_EMAIL}`,
+  process.env.VAPID_PUBLIC_KEY.trim(),
+  process.env.VAPID_PRIVATE_KEY.trim()
+);
 }
 
 const pushService = {
