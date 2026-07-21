@@ -796,6 +796,7 @@ class MessageService {
         .lean();
 
       // ========== NOTIFICATIONS ==========
+      // ========== NOTIFICATIONS ==========
       if (receiver.settings?.notifications?.messages !== false) {
         // Existing in‑app/email notification
         this.sendNotificationAsync(
@@ -805,16 +806,30 @@ class MessageService {
           savedMessage._id,
         ).catch((err) => logger.error("Notification error:", err));
 
+        // Build sender name from populated message
+        let senderName = "Someone";
+        if (populatedMessage.senderId) {
+          const sender = populatedMessage.senderId;
+          senderName =
+            sender.userName ||
+            [sender.firstName, sender.lastName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() ||
+            "Someone";
+        }
+
         // 🔔 Push notification for offline/background users
         pushService
           .sendToUser(receiverId, {
-            title: "New message",
+            title: `New message from ${senderName}`,
             body: content.substring(0, 100),
             icon: "/logo192.png",
             data: {
               conversationId: conversationIdString,
               messageId: savedMessage._id.toString(),
               senderId: senderId.toString(),
+              senderName,
             },
           })
           .catch((err) => logger.error("Push notification error:", err));
