@@ -636,51 +636,66 @@ class ChatController extends BaseController {
   }
 
   async deleteMessage(req, res) {
-  try {
-    const message = await this.messageService.getMessageById(req.params.messageId);
-    if (!message) {
-      return this.errorResponse(res, 404, "Message not found");
-    }
-
-    const isSender = message.senderId?.toString() === req.user.id;
-    const isReceiver = message.receiverId?.toString() === req.user.id;
-    if (!isSender && !isReceiver) {
-      return this.errorResponse(res, 403, "Not authorized to delete this message");
-    }
-
-    await this.messageService.deleteMessage(req.user.id, req.params.messageId);
-
-    // Real-time emit
-    const convId = message.conversationId?.toString();
-    if (convId) {
-      this.emitToConversation(convId, 'message:deleted', {
-        messageId: req.params.messageId,
-        deletedBy: req.user.id,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      // Fallback: find conversation by participants (optional)
-      try {
-        const conversation = await this.conversationService
-          .getConversationWithUser(req.user.id, isSender ? message.receiverId : message.senderId);
-        if (conversation?.conversationId) {
-          this.emitToConversation(conversation.conversationId, 'message:deleted', {
-            messageId: req.params.messageId,
-            deletedBy: req.user.id,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      } catch (fallbackErr) {
-        logger.warn('Fallback conversation lookup failed:', fallbackErr.message);
+    try {
+      const message = await this.messageService.getMessageById(
+        req.params.messageId,
+      );
+      if (!message) {
+        return this.errorResponse(res, 404, "Message not found");
       }
-    }
 
-    return this.successResponse(res, 200, null, "Message deleted");
-  } catch (error) {
-    logger.error("deleteMessage error:", error);
-    return this.handleError(error, req, res);
+      const userId = req.user.id;
+
+      // Robust extraction of sender and receiver IDs
+      const getUserId = (field) => {
+        if (!field) return null;
+        if (typeof field === "string") return field;
+        if (typeof field._id === "string") return field._id;
+        if (field._id?.toString) return field._id.toString();
+        return field.toString?.() || null;
+      };
+
+      const senderId = getUserId(message.senderId);
+      const receiverId = getUserId(message.receiverId);
+
+      const isSender = senderId === userId;
+      const isReceiver = receiverId === userId;
+
+      if (!isSender && !isReceiver) {
+        return this.errorResponse(
+          res,
+          403,
+          "Not authorized to delete this message",
+        );
+      }
+
+      if (isSender) {
+        // Hard delete – permanently remove for everyone
+        await this.messageService.deleteMessageHard(message._id);
+      } else {
+        // Soft delete – hide from receiver's view
+        await this.messageService.deleteMessageSoft(userId, message._id);
+      }
+
+      // Real-time emit
+      const convId =
+        typeof message.conversationId === "string"
+          ? message.conversationId
+          : message.conversationId?.toString();
+      if (convId) {
+        this.emitToConversation(convId, "message:deleted", {
+          messageId: req.params.messageId,
+          deletedBy: userId,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      return this.successResponse(res, 200, null, "Message deleted");
+    } catch (error) {
+      logger.error("deleteMessage error:", error);
+      return this.handleError(error, req, res);
+    }
   }
-}
 
   async deleteMessagesBulk(req, res) {
     try {

@@ -1054,6 +1054,44 @@ class MessageService {
     return { deleted: true, messageId: result._id };
   }
 
+  async deleteMessageHard(messageId) {
+  const message = await Message.findByIdAndDelete(messageId);
+  // Optionally update conversation lastMessage if needed
+  if (message && message.conversationId) {
+    const latest = await Message.findOne({ conversationId: message.conversationId })
+      .sort({ createdAt: -1 }).select('_id content senderId type createdAt clientMessageId').lean();
+    if (latest) {
+      await Conversation.findByIdAndUpdate(message.conversationId, {
+        $set: {
+          lastMessage: {
+            _id: latest._id,
+            content: latest.content?.substring(0, 100) || '',
+            senderId: latest.senderId,
+            type: latest.type || 'text',
+            createdAt: latest.createdAt,
+            clientMessageId: latest.clientMessageId,
+          },
+          lastMessageAt: latest.createdAt,
+          lastMessageSender: latest.senderId,
+        },
+      });
+    } else {
+      await Conversation.findByIdAndUpdate(message.conversationId, {
+        $unset: { lastMessage: '', lastMessageSender: '' },
+        lastMessageAt: null,
+      });
+    }
+  }
+  return { deleted: true, messageId };
+}
+
+async deleteMessageSoft(userId, messageId) {
+  await Message.findByIdAndUpdate(messageId, {
+    $addToSet: { deletedFor: userId }
+  });
+  return { deleted: true, messageId };
+}
+
   async deleteMessagesBulk(userId, messageIds) {
     if (!Array.isArray(messageIds) || messageIds.length === 0)
       throw new Error("messageIds must be a non-empty array");
