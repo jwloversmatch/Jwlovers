@@ -86,6 +86,9 @@ router.delete("/messages/:messageId", chatController.deleteMessage);
 // Edit message
 router.put("/messages/:messageId", chatController.editMessage);
 
+// Report message (placeholder)
+router.post("/messages/:messageId/report", chatController.reportMessage);
+
 // ===================== REACTIONS =====================
 
 // Add reaction to message
